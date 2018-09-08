@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     compile "com.google.apis:google-api-services-sheets:v4-rev492-1.23.0"
+    compile "org.openpnp:opencv:3.2.0-1"
     compile "org.projectlombok:lombok:1.16.12"
 
     testCompile "junit:junit:4.12"
