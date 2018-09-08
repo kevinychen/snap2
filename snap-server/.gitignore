@@ -1,0 +1,8 @@
+.classpath
+.gradle
+.project
+.settings
+/bin/
+/build/
+google-api-credentials.json
+
