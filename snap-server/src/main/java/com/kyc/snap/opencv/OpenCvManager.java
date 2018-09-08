@@ -11,6 +11,8 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
+import com.kyc.snap.image.ImageUtils;
+
 import lombok.Data;
 import nu.pattern.OpenCV;
 
@@ -44,10 +46,7 @@ public class OpenCvManager {
     }
 
     private Mat toMat(BufferedImage image) {
-        BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-        for (int x = 0; x < image.getWidth(); x++)
-            for (int y = 0; y < image.getHeight(); y++)
-                newImage.setRGB(x, y, image.getRGB(x, y));
+        BufferedImage newImage = ImageUtils.copy(image);
         Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
         byte[] data = ((DataBufferByte) newImage.getRaster().getDataBuffer()).getData();
         mat.put(0, 0, data);

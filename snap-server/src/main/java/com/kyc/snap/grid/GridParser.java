@@ -6,8 +6,10 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
+import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.opencv.OpenCvManager.Line;
 
@@ -48,5 +50,17 @@ public class GridParser {
             if (ys.get(i + 1) - ys.get(i) >= minGridSquareSize)
                 rows.add(new Row(ys.get(i), ys.get(i + 1) - ys.get(i)));
         return new GridPosition(rows, cols);
+    }
+
+    public Grid parseGrid(BufferedImage image, GridPosition pos) {
+        Square[][] squares = new Square[pos.getNumRows()][pos.getNumCols()];
+        for (int i = 0; i < pos.getNumRows(); i++)
+            for (int j = 0; j < pos.getNumCols(); j++) {
+                Row row = pos.getRows().get(i);
+                Col col = pos.getCols().get(j);
+                int medianRgb = ImageUtils.medianRgb(image, col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight());
+                squares[i][j] = new Square(medianRgb);
+            }
+        return new Grid(squares);
     }
 }

@@ -10,6 +10,14 @@ public class GridPosition {
     private final List<Row> rows;
     private final List<Col> cols;
 
+    public int getNumRows() {
+        return rows.size();
+    }
+
+    public int getNumCols() {
+        return cols.size();
+    }
+
     @Data
     public static class Row {
 
