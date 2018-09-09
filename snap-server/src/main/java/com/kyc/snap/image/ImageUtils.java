@@ -49,5 +49,9 @@ public class ImageUtils {
         return (medianRed << 16) | (medianGreen << 8) | (medianBlue << 0);
     }
 
+    public static boolean isLight(int rgb) {
+        return ((rgb >> 16) & 0xff) + ((rgb >> 8) & 0xff) + ((rgb >> 0) & 0xff) > 3 * 128;
+    }
+
     private ImageUtils() {}
 }
