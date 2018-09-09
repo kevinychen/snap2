@@ -31,6 +31,10 @@ public class ImageAnnotater {
         this.g = newImage.getGraphics();
     }
 
+    public BufferedImage getImage() {
+        return image;
+    }
+
     public void markPosition(GridPosition pos) {
         g.setColor(Color.red);
         for (Row row : pos.getRows())
