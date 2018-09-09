@@ -20,7 +20,5 @@ public class Crossword {
 
         private final ClueDirection direction;
         private final String clueNumber;
-
-        private final String clue;
     }
 }

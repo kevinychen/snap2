@@ -65,10 +65,10 @@ public class GoogleAPIManager {
         }
     }
 
-    public SpreadsheetManager getSheet(String spreadsheetId) {
+    public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
         try {
             Spreadsheet spreadsheet = sheets.spreadsheets().get(spreadsheetId).execute();
-            return new SpreadsheetManager(sheets.spreadsheets(), spreadsheet);
+            return new SpreadsheetManager(sheets.spreadsheets(), spreadsheet, sheetId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
