@@ -1,13 +1,11 @@
 package com.kyc.snap.crossword;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.kyc.snap.crossword.Crossword.Entry;
-import com.kyc.snap.crossword.CrosswordClues.CluePosition;
+import com.kyc.snap.crossword.CrosswordClues.Clue;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.image.ImageUtils;
@@ -37,14 +35,14 @@ public class CrosswordParser {
                     int numSquares = 2;
                     while (crosswordSquares[i][j + numSquares - 1].canGoAcross)
                         numSquares++;
-                    entries.add(new Entry(i, j, numSquares, ClueDirection.ACROSS, clueNumber + ""));
+                    entries.add(new Entry(i, j, numSquares, ClueDirection.ACROSS, clueNumber));
                     hasEntry = true;
                 }
                 if (square.canGoDown && (i == 0 || !crosswordSquares[i - 1][j].canGoDown)) {
                     int numSquares = 2;
                     while (crosswordSquares[i + numSquares - 1][j].canGoDown)
                         numSquares++;
-                    entries.add(new Entry(i, j, numSquares, ClueDirection.DOWN, clueNumber + ""));
+                    entries.add(new Entry(i, j, numSquares, ClueDirection.DOWN, clueNumber));
                     hasEntry = true;
                 }
                 if (hasEntry)
@@ -56,16 +54,16 @@ public class CrosswordParser {
 
     public CrosswordClues parseClues(String text) {
         ClueDirection currentDirection = null;
-        String currentClueNumber = null;
+        int currentClueNumber = -1;
         String currentClue = "";
-        Map<CluePosition, String> clues = new HashMap<>();
+        List<Clue> clues = new ArrayList<>();
         for (String line : text.split("\n")) {
             String normalizedLine = line.trim().toUpperCase();
             if (!currentClue.isEmpty() && (normalizedLine.startsWith("ACROSS") || normalizedLine.startsWith("DOWN")
                     || Character.isDigit(normalizedLine.charAt(0)))) {
                 Preconditions.checkArgument(currentDirection != null, "No clue direction set");
-                Preconditions.checkArgument(currentClueNumber != null, "No clue number set");
-                clues.put(new CluePosition(currentDirection, currentClueNumber), currentClue);
+                Preconditions.checkArgument(currentClueNumber != -1, "No clue number set");
+                clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
                 currentClue = "";
             }
 
@@ -75,11 +73,11 @@ public class CrosswordParser {
                 currentDirection = ClueDirection.DOWN;
             else {
                 if (Character.isDigit(normalizedLine.charAt(0)))
-                    currentClueNumber = normalizedLine.split("\\D+")[0];
+                    currentClueNumber = Integer.parseInt(normalizedLine.split("\\D+")[0]);
                 currentClue += line;
             }
         }
-        clues.put(new CluePosition(currentDirection, currentClueNumber), currentClue);
+        clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
         return new CrosswordClues(clues);
     }
 

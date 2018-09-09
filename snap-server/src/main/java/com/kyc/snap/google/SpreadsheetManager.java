@@ -12,6 +12,7 @@ import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.Color;
 import com.google.api.services.sheets.v4.model.DimensionProperties;
 import com.google.api.services.sheets.v4.model.DimensionRange;
+import com.google.api.services.sheets.v4.model.ExtendedValue;
 import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.RowData;
@@ -55,7 +56,7 @@ public class SpreadsheetManager {
         }
     }
 
-    public void setBackgroundColor(List<ColoredCell> cells) {
+    public void setBackgroundColors(List<ColoredCell> cells) {
         try {
             spreadsheets.batchUpdate(spreadsheet.getSpreadsheetId(), new BatchUpdateSpreadsheetRequest()
                 .setRequests(cells.stream()
@@ -66,17 +67,40 @@ public class SpreadsheetManager {
                                     .setUserEnteredFormat(new CellFormat()
                                         .setBackgroundColor(toColor(cell.rgb)))))))
                             .setFields("userEnteredFormat.backgroundColor")
-                            .setRange(new GridRange()
-                                .setSheetId(sheetId)
-                                .setStartRowIndex(cell.row)
-                                .setEndRowIndex(cell.row + 1)
-                                .setStartColumnIndex(cell.col)
-                                .setEndColumnIndex(cell.col + 1))))
+                            .setRange(getRange(cell.row, cell.col))))
                     .collect(Collectors.toList())))
                 .execute();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void setValues(List<ValueCell> cells) {
+        try {
+            spreadsheets.batchUpdate(spreadsheet.getSpreadsheetId(), new BatchUpdateSpreadsheetRequest()
+                .setRequests(cells.stream()
+                    .map(cell -> new Request()
+                        .setUpdateCells(new UpdateCellsRequest()
+                            .setRows(ImmutableList.of(new RowData()
+                                .setValues(ImmutableList.of(new CellData()
+                                    .setUserEnteredValue(new ExtendedValue()
+                                        .setStringValue(cell.text))))))
+                            .setFields("userEnteredValue.stringValue")
+                            .setRange(getRange(cell.row, cell.col))))
+                    .collect(Collectors.toList())))
+                .execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private GridRange getRange(int row, int col) {
+        return new GridRange()
+            .setSheetId(sheetId)
+            .setStartRowIndex(row)
+            .setEndRowIndex(row + 1)
+            .setStartColumnIndex(col)
+            .setEndColumnIndex(col + 1);
     }
 
     private static Color toColor(int rgb) {
@@ -93,5 +117,13 @@ public class SpreadsheetManager {
         private final int row;
         private final int col;
         private final int rgb;
+    }
+
+    @Data
+    public static class ValueCell {
+
+        private final int row;
+        private final int col;
+        private final String text;
     }
 }

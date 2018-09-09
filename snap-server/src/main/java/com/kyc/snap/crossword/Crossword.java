@@ -19,6 +19,6 @@ public class Crossword {
         private final int numSquares;
 
         private final ClueDirection direction;
-        private final String clueNumber;
+        private final int clueNumber;
     }
 }

@@ -1,18 +1,19 @@
 package com.kyc.snap.crossword;
 
-import java.util.Map;
+import java.util.List;
 
 import lombok.Data;
 
 @Data
 public class CrosswordClues {
 
-    private final Map<CluePosition, String> clues;
+    private final List<Clue> clues;
 
     @Data
-    public static class CluePosition {
+    public static class Clue {
 
         private final ClueDirection direction;
-        private final String clueNumber;
+        private final int clueNumber;
+        private final String clue;
     }
 }
