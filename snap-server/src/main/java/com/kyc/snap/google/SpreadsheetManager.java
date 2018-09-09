@@ -21,6 +21,7 @@ import com.google.api.services.sheets.v4.model.RowData;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.UpdateCellsRequest;
 import com.google.api.services.sheets.v4.model.UpdateDimensionPropertiesRequest;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import lombok.Data;
@@ -34,6 +35,16 @@ public class SpreadsheetManager {
 
     public String getUrl() {
         return spreadsheet.getSpreadsheetUrl();
+    }
+
+    public String getRef(int row, int col) {
+        Preconditions.checkArgument(col < 26 + 26 * 26, "Column too large to compute ref");
+        StringBuilder ref = new StringBuilder();
+        if (col >= 26)
+            ref.append((char) (col / 26 - 1 + 'A'));
+        ref.append((char) (col % 26 + 'A'));
+        ref.append(row + 1);
+        return ref.toString();
     }
 
     public void clear() {
@@ -55,6 +66,20 @@ public class SpreadsheetManager {
                     .setRange(new DimensionRange()
                         .setSheetId(sheetId)
                         .setDimension("COLUMNS"))));
+    }
+
+    public void setColumnWidths(int width, int startIndex, int endIndex) {
+        executeRequests(
+            new Request()
+                .setUpdateDimensionProperties(new UpdateDimensionPropertiesRequest()
+                    .setProperties(new DimensionProperties()
+                        .setPixelSize(width))
+                    .setFields("pixelSize")
+                    .setRange(new DimensionRange()
+                        .setSheetId(sheetId)
+                        .setDimension("COLUMNS")
+                        .setStartIndex(startIndex)
+                        .setEndIndex(endIndex))));
     }
 
     public void setAutomaticColumnWidths(int startIndex, int endIndex) {
@@ -90,6 +115,19 @@ public class SpreadsheetManager {
                             .setUserEnteredValue(new ExtendedValue()
                                 .setStringValue(cell.text))))))
                     .setFields("userEnteredValue.stringValue")
+                    .setRange(getRange(cell.row, cell.col))))
+            .collect(Collectors.toList()));
+    }
+
+    public void setFormulas(List<ValueCell> cells) {
+        executeRequests(cells.stream()
+            .map(cell -> new Request()
+                .setUpdateCells(new UpdateCellsRequest()
+                    .setRows(ImmutableList.of(new RowData()
+                        .setValues(ImmutableList.of(new CellData()
+                            .setUserEnteredValue(new ExtendedValue()
+                                .setFormulaValue(cell.text))))))
+                    .setFields("userEnteredValue.formulaValue")
                     .setRange(getRange(cell.row, cell.col))))
             .collect(Collectors.toList()));
     }
