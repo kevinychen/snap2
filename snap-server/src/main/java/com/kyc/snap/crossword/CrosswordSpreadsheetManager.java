@@ -25,7 +25,8 @@ public class CrosswordSpreadsheetManager {
     public void toSpreadsheet(Grid grid, Crossword crossword, CrosswordClues clues) {
         SpreadsheetManager spreadsheets = googleApi.getSheet(GoogleAPIManager.SAMPLE_SPREADSHEET_ID, GoogleAPIManager.SAMPLE_SHEET_ID);
 
-        spreadsheets.makeEmptyGrid();
+        spreadsheets.clear();
+        spreadsheets.setAllColumnWidths(20);
 
         List<ColoredCell> coloredCells = new ArrayList<>();
         for (int i = 0; i < grid.getNumRows(); i++)
@@ -33,16 +34,23 @@ public class CrosswordSpreadsheetManager {
                 coloredCells.add(new ColoredCell(i, j, grid.getSquare(i, j).getRgb()));
         spreadsheets.setBackgroundColors(coloredCells);
 
-        Multimap<ClueDirection, Clue> cluesByDirection = Multimaps.index(clues.getClues(), clue -> clue.getDirection());
         ClueDirection[] directions = { ClueDirection.ACROSS, ClueDirection.DOWN };
+        List<Integer> directionColumns = new ArrayList<>();
+        for (int i = 0; i < directions.length; i++)
+            directionColumns.add(grid.getNumCols() + 1 + 4 * i);
+
+        Multimap<ClueDirection, Clue> cluesByDirection = Multimaps.index(clues.getClues(), clue -> clue.getDirection());
         List<ValueCell> valueCells = new ArrayList<>();
         for (int i = 0; i < directions.length; i++) {
             List<Clue> cluesForDirection = cluesByDirection.get(directions[i]).stream()
                     .sorted(Comparator.comparing(clue -> clue.getClueNumber()))
                     .collect(Collectors.toList());
             for (int j = 0; j < cluesForDirection.size(); j++)
-                valueCells.add(new ValueCell(j, grid.getNumCols() + 1 + 4 * i, cluesForDirection.get(j).getClue()));
+                valueCells.add(new ValueCell(j, directionColumns.get(i), cluesForDirection.get(j).getClue()));
         }
         spreadsheets.setValues(valueCells);
+
+        for (int directionColumn : directionColumns)
+            spreadsheets.setAutomaticColumnWidths(directionColumn, directionColumn + 1);
     }
 }

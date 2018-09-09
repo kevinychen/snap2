@@ -2,10 +2,12 @@
 package com.kyc.snap.google;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets;
+import com.google.api.services.sheets.v4.model.AutoResizeDimensionsRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.CellFormat;
@@ -34,60 +36,72 @@ public class SpreadsheetManager {
         return spreadsheet.getSpreadsheetUrl();
     }
 
-    public void makeEmptyGrid() {
-        try {
-            spreadsheets.batchUpdate(spreadsheet.getSpreadsheetId(), new BatchUpdateSpreadsheetRequest()
-                .setRequests(ImmutableList.of(new Request()
-                    .setUpdateCells(new UpdateCellsRequest()
-                        .setFields("userEnteredFormat,userEnteredValue")
-                        .setRange(new GridRange()
-                            .setSheetId(sheetId))),
-                    new Request()
-                        .setUpdateDimensionProperties(new UpdateDimensionPropertiesRequest()
-                            .setProperties(new DimensionProperties()
-                                .setPixelSize(20))
-                            .setFields("pixelSize")
-                            .setRange(new DimensionRange()
-                                .setSheetId(sheetId)
-                                .setDimension("COLUMNS"))))))
-                .execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void clear() {
+        executeRequests(
+            new Request()
+                .setUpdateCells(new UpdateCellsRequest()
+                    .setFields("userEnteredFormat,userEnteredValue")
+                    .setRange(new GridRange()
+                        .setSheetId(sheetId))));
+    }
+
+    public void setAllColumnWidths(int width) {
+        executeRequests(
+            new Request()
+                .setUpdateDimensionProperties(new UpdateDimensionPropertiesRequest()
+                    .setProperties(new DimensionProperties()
+                        .setPixelSize(width))
+                    .setFields("pixelSize")
+                    .setRange(new DimensionRange()
+                        .setSheetId(sheetId)
+                        .setDimension("COLUMNS"))));
+    }
+
+    public void setAutomaticColumnWidths(int startIndex, int endIndex) {
+        executeRequests(
+            new Request()
+                .setAutoResizeDimensions(new AutoResizeDimensionsRequest()
+                    .setDimensions(new DimensionRange()
+                        .setSheetId(sheetId)
+                        .setDimension("COLUMNS")
+                        .setStartIndex(startIndex)
+                        .setEndIndex(endIndex))));
     }
 
     public void setBackgroundColors(List<ColoredCell> cells) {
-        try {
-            spreadsheets.batchUpdate(spreadsheet.getSpreadsheetId(), new BatchUpdateSpreadsheetRequest()
-                .setRequests(cells.stream()
-                    .map(cell -> new Request()
-                        .setUpdateCells(new UpdateCellsRequest()
-                            .setRows(ImmutableList.of(new RowData()
-                                .setValues(ImmutableList.of(new CellData()
-                                    .setUserEnteredFormat(new CellFormat()
-                                        .setBackgroundColor(toColor(cell.rgb)))))))
-                            .setFields("userEnteredFormat.backgroundColor")
-                            .setRange(getRange(cell.row, cell.col))))
-                    .collect(Collectors.toList())))
-                .execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        executeRequests(cells.stream()
+            .map(cell -> new Request()
+                .setUpdateCells(new UpdateCellsRequest()
+                    .setRows(ImmutableList.of(new RowData()
+                        .setValues(ImmutableList.of(new CellData()
+                            .setUserEnteredFormat(new CellFormat()
+                                .setBackgroundColor(toColor(cell.rgb)))))))
+                    .setFields("userEnteredFormat.backgroundColor")
+                    .setRange(getRange(cell.row, cell.col))))
+            .collect(Collectors.toList()));
     }
 
     public void setValues(List<ValueCell> cells) {
+        executeRequests(cells.stream()
+            .map(cell -> new Request()
+                .setUpdateCells(new UpdateCellsRequest()
+                    .setRows(ImmutableList.of(new RowData()
+                        .setValues(ImmutableList.of(new CellData()
+                            .setUserEnteredValue(new ExtendedValue()
+                                .setStringValue(cell.text))))))
+                    .setFields("userEnteredValue.stringValue")
+                    .setRange(getRange(cell.row, cell.col))))
+            .collect(Collectors.toList()));
+    }
+
+    private void executeRequests(Request... requests) {
+        executeRequests(Arrays.asList(requests));
+    }
+
+    private void executeRequests(List<Request> requests) {
         try {
-            spreadsheets.batchUpdate(spreadsheet.getSpreadsheetId(), new BatchUpdateSpreadsheetRequest()
-                .setRequests(cells.stream()
-                    .map(cell -> new Request()
-                        .setUpdateCells(new UpdateCellsRequest()
-                            .setRows(ImmutableList.of(new RowData()
-                                .setValues(ImmutableList.of(new CellData()
-                                    .setUserEnteredValue(new ExtendedValue()
-                                        .setStringValue(cell.text))))))
-                            .setFields("userEnteredValue.stringValue")
-                            .setRange(getRange(cell.row, cell.col))))
-                    .collect(Collectors.toList())))
+            spreadsheets
+                .batchUpdate(spreadsheet.getSpreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(requests))
                 .execute();
         } catch (IOException e) {
             throw new RuntimeException(e);
