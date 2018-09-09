@@ -15,5 +15,6 @@ public class Grid {
     public static class Square {
 
         private final int rgb;
+        private final String text;
     }
 }

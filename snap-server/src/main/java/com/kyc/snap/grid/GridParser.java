@@ -2,10 +2,13 @@ package com.kyc.snap.grid;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import com.google.common.base.Preconditions;
+import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
@@ -19,6 +22,7 @@ import lombok.Data;
 public class GridParser {
 
     private final OpenCvManager openCv;
+    private final GoogleAPIManager googleApi;
 
     public GridLines findGridLines(BufferedImage image, int approxGridSquareSize) {
         List<Line> cardinalLines = openCv.findLines(image, Math.PI / 2, approxGridSquareSize / 2);
@@ -72,13 +76,23 @@ public class GridParser {
     }
 
     public Grid parseGrid(BufferedImage image, GridPosition pos) {
+        Map<GridLocation, BufferedImage> subimages = new HashMap<>();
+        for (Row row : pos.getRows())
+            for (Col col : pos.getCols()) {
+                subimages.put(
+                    new GridLocation(row, col),
+                    image.getSubimage(col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight()));
+            }
+        Map<BufferedImage, String> allText = googleApi.batchFindText(subimages.values());
+
         Square[][] squares = new Square[pos.getNumRows()][pos.getNumCols()];
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
                 Row row = pos.getRows().get(i);
                 Col col = pos.getCols().get(j);
                 int medianRgb = ImageUtils.medianRgb(image, col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight());
-                squares[i][j] = new Square(medianRgb);
+                String text = allText.getOrDefault(subimages.get(new GridLocation(row, col)), "");
+                squares[i][j] = new Square(medianRgb, text);
             }
         return new Grid(squares);
     }
@@ -147,5 +161,12 @@ public class GridParser {
         private final double period;
         private final int start;
         private final int end;
+    }
+
+    @Data
+    private static class GridLocation {
+
+        private final Row row;
+        private final Col col;
     }
 }

@@ -1,9 +1,13 @@
 package com.kyc.snap.image;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 public class ImageUtils {
 
@@ -13,6 +17,16 @@ public class ImageUtils {
             for (int y = 0; y < image.getHeight(); y++)
                 newImage.setRGB(x, y, image.getRGB(x, y));
         return newImage;
+    }
+
+    public static byte[] toBytes(BufferedImage image) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static int medianRgb(BufferedImage image, int startX, int startY, int width, int height) {

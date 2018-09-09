@@ -3,6 +3,7 @@ package com.kyc.snap.image;
 
 import java.awt.Color;
 import java.awt.Desktop;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -12,6 +13,7 @@ import java.nio.file.Files;
 import javax.imageio.ImageIO;
 
 import com.kyc.snap.grid.Grid;
+import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
@@ -44,11 +46,13 @@ public class ImageAnnotater {
     }
 
     public void markGrid(GridPosition pos, Grid grid) {
+        g.setFont(new Font("Helvetica", 0, 14));
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
                 Row row = pos.getRows().get(i);
                 Col col = pos.getCols().get(j);
-                g.setColor(new Color(grid.getSquare(i, j).getRgb()));
+                Square square = grid.getSquare(i, j);
+                g.setColor(new Color(square.getRgb()));
                 g.fillRect(
                     col.getStartX() + col.getWidth() / 3,
                     row.getStartY() + row.getHeight() / 3,
@@ -60,6 +64,11 @@ public class ImageAnnotater {
                     row.getStartY() + row.getHeight() / 3,
                     col.getWidth() / 3,
                     row.getHeight() / 3);
+                g.setColor(Color.blue);
+                g.drawString(
+                    square.getText(),
+                    col.getStartX() + col.getWidth() / 3,
+                    row.getStartY() + 2 * row.getHeight() / 3);
             }
     }
 
