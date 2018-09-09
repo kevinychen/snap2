@@ -17,6 +17,8 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.model.Permission;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
@@ -45,6 +47,7 @@ public class GoogleAPIManager {
     private static final Feature TEXT_DETECTION_FEATURE = Feature.newBuilder().setType(Type.TEXT_DETECTION).build();
     private static final int TEXT_DETECTION_IMAGE_LIMIT = 16; // https://cloud.google.com/vision/quotas
 
+    private final Drive drive;
     private final Sheets sheets;
     private final ImageAnnotatorSettings imageAnnotatorSettings;
 
@@ -53,6 +56,9 @@ public class GoogleAPIManager {
             HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(credentialsFile))
                 .createScoped(ImmutableSet.of(SheetsScopes.DRIVE));
+            drive = new Drive.Builder(httpTransport, JSON_FACTORY, credential)
+                .setApplicationName(APPLICATION_NAME)
+                .build();
             sheets = new Sheets.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
@@ -69,6 +75,17 @@ public class GoogleAPIManager {
         try {
             Spreadsheet spreadsheet = sheets.spreadsheets().get(spreadsheetId).execute();
             return new SpreadsheetManager(sheets.spreadsheets(), spreadsheet, sheetId);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Anyone with a link to the file is given the specified role (either "writer", "reader", or null).
+     */
+    public void grantLinkPermissions(String fileId, String role) {
+        try {
+            drive.permissions().update(fileId, "anyoneWithLink", new Permission().setRole(role)).execute();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

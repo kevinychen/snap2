@@ -14,6 +14,7 @@ repositories {
 }
 
 dependencies {
+    compile 'com.google.apis:google-api-services-drive:v3-rev129-1.25.0'
     compile "com.google.apis:google-api-services-sheets:v4-rev492-1.23.0"
     compile "com.google.cloud:google-cloud-vision:1.12.0"
     compile "org.openpnp:opencv:3.2.0-1"
