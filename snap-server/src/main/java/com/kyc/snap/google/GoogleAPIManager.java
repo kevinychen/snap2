@@ -47,6 +47,7 @@ public class GoogleAPIManager {
     private static final Feature TEXT_DETECTION_FEATURE = Feature.newBuilder().setType(Type.TEXT_DETECTION).build();
     private static final int TEXT_DETECTION_IMAGE_LIMIT = 16; // https://cloud.google.com/vision/quotas
 
+    private final GoogleCredential credential;
     private final Drive drive;
     private final Sheets sheets;
     private final ImageAnnotatorSettings imageAnnotatorSettings;
@@ -54,7 +55,7 @@ public class GoogleAPIManager {
     public GoogleAPIManager(String credentialsFile) {
         try {
             HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-            GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(credentialsFile))
+            credential = GoogleCredential.fromStream(new FileInputStream(credentialsFile))
                 .createScoped(ImmutableSet.of(SheetsScopes.DRIVE));
             drive = new Drive.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
@@ -74,7 +75,7 @@ public class GoogleAPIManager {
     public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
         try {
             Spreadsheet spreadsheet = sheets.spreadsheets().get(spreadsheetId).execute();
-            return new SpreadsheetManager(sheets.spreadsheets(), spreadsheet, sheetId);
+            return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheet, sheetId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

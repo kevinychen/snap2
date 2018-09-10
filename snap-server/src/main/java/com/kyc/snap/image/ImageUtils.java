@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,6 +28,10 @@ public class ImageUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String toDataURL(BufferedImage image) {
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(toBytes(image));
     }
 
     public static int medianRgb(BufferedImage image, int startX, int startY, int width, int height) {

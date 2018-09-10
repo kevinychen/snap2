@@ -1,11 +1,15 @@
 
 package com.kyc.snap.google;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets;
 import com.google.api.services.sheets.v4.model.AutoResizeDimensionsRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
@@ -23,12 +27,22 @@ import com.google.api.services.sheets.v4.model.UpdateCellsRequest;
 import com.google.api.services.sheets.v4.model.UpdateDimensionPropertiesRequest;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.kyc.snap.image.ImageUtils;
 
 import lombok.Data;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 @Data
 public class SpreadsheetManager {
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private final GoogleCredential credential;
     private final Spreadsheets spreadsheets;
     private final Spreadsheet spreadsheet;
     private final int sheetId;
@@ -132,6 +146,50 @@ public class SpreadsheetManager {
             .collect(Collectors.toList()));
     }
 
+    /**
+     * Run a published Google App Script that adds an image to a sheet.
+     *
+     * The published script looks like the following:
+     *
+     * <pre>
+     * function doPost(e) {
+     *   var params = JSON.parse(e.postData.contents);
+     *
+     *   if (SpreadsheetApp.openById(params.spreadsheetId).getOwner().getEmail() != Session.getActiveUser().getEmail()) {
+     *     console.error("Incorrect user");
+     *     return;
+     *   }
+     *
+     *   SpreadsheetApp.openById(params.spreadsheetId).getSheetByName(params.sheetName).insertImage(params.url, params.col, params.row);
+     * }
+     * </pre>
+     *
+     * https://stackoverflow.com/questions/43664483/insert-image-into-google-sheets-cell-using-
+     * google-sheets-api
+     */
+    public void addImage(BufferedImage image, int row, int col) {
+        try {
+            Map<?, ?> body = ImmutableMap.of(
+                "spreadsheetId", spreadsheet.getSpreadsheetId(),
+                "sheetName", getSheetName(),
+                "url", ImageUtils.toDataURL(image),
+                "row", row + 1,
+                "col", col + 1);
+            Response response = new OkHttpClient()
+                .newCall(new okhttp3.Request.Builder()
+                    .url("https://script.google.com/macros/s/AKfycbwtDXpf8019jeigSig5AnEc4QW-rsU_K3NTpfz5vUE0c-ZwT1NV/exec")
+                    .addHeader("Authorization", "Bearer " + getAccessToken())
+                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), MAPPER.writeValueAsBytes(body)))
+                    .build())
+                .execute();
+            String responseMessage = response.body().string();
+            if (!responseMessage.contains("The script completed"))
+                throw new RuntimeException(responseMessage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void executeRequests(Request... requests) {
         executeRequests(Arrays.asList(requests));
     }
@@ -144,6 +202,19 @@ public class SpreadsheetManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getSheetName() {
+        return Iterables.find(spreadsheet.getSheets(), sheet -> sheet.getProperties().getSheetId() == sheetId)
+            .getProperties()
+            .getTitle();
+    }
+
+    private synchronized String getAccessToken() throws IOException {
+        if (credential.getAccessToken() == null) {
+            credential.refreshToken();
+        }
+        return credential.getAccessToken();
     }
 
     private GridRange getRange(int row, int col) {

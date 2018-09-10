@@ -14,9 +14,11 @@ repositories {
 }
 
 dependencies {
-    compile 'com.google.apis:google-api-services-drive:v3-rev129-1.25.0'
+    compile "com.google.apis:google-api-services-drive:v3-rev129-1.25.0"
     compile "com.google.apis:google-api-services-sheets:v4-rev492-1.23.0"
     compile "com.google.cloud:google-cloud-vision:1.12.0"
+    compile "com.squareup.okhttp3:okhttp:3.11.0"
+    compile "io.dropwizard:dropwizard-core:1.2.1"
     compile "org.openpnp:opencv:3.2.0-1"
     compile "org.projectlombok:lombok:1.16.12"
 
