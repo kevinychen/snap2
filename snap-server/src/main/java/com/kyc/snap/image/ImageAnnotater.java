@@ -60,7 +60,7 @@ public class ImageAnnotater {
             for (int j = 0; j < pos.getNumCols(); j++) {
                 Row row = pos.getRows().get(i);
                 Col col = pos.getCols().get(j);
-                Square square = grid.getSquare(i, j);
+                Square square = grid.square(i, j);
                 g.setColor(new Color(square.getRgb()));
                 g.fillRect(
                     col.getStartX() + col.getWidth() / 3,

@@ -8,9 +8,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.kyc.snap.google.GoogleAPIManager;
-import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
 import com.kyc.snap.image.ImageUtils;
@@ -67,30 +65,32 @@ public class GridParser {
         return new GridPosition(rows, cols);
     }
 
-    public Grid parseGrid(BufferedImage image, GridPosition pos, boolean parseText) {
-        Map<GridLocation, String> allText = new HashMap<>();
-        if (parseText) {
-            Map<GridLocation, BufferedImage> subimages = new HashMap<>();
-            for (Row row : pos.getRows())
-                for (Col col : pos.getCols()) {
-                    subimages.put(
-                        new GridLocation(row, col),
-                        image.getSubimage(col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight()));
-                }
-            Map<BufferedImage, String> text = googleApi.batchFindText(subimages.values());
-            allText.putAll(Maps.transformValues(subimages, text::get));
-        }
-
-        Square[][] squares = new Square[pos.getNumRows()][pos.getNumCols()];
+    public void setGridColors(BufferedImage image, GridPosition pos, Grid grid) {
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
                 Row row = pos.getRows().get(i);
                 Col col = pos.getCols().get(j);
                 int medianRgb = ImageUtils.medianRgb(image, col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight());
-                String text = allText.getOrDefault(new GridLocation(row, col), "");
-                squares[i][j] = new Square(medianRgb, text);
+                grid.square(i, j).setRgb(medianRgb);
             }
-        return new Grid(squares);
+    }
+
+    public void setGridText(BufferedImage image, GridPosition pos, Grid grid) {
+        Map<GridLocation, BufferedImage> subimages = new HashMap<>();
+        for (Row row : pos.getRows())
+            for (Col col : pos.getCols()) {
+                subimages.put(
+                    new GridLocation(row, col),
+                    image.getSubimage(col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight()));
+            }
+        Map<BufferedImage, String> allText = googleApi.batchFindText(subimages.values());
+        for (int i = 0; i < pos.getNumRows(); i++)
+            for (int j = 0; j < pos.getNumCols(); j++) {
+                Row row = pos.getRows().get(i);
+                Col col = pos.getCols().get(j);
+                String text = allText.get(subimages.get(new GridLocation(row, col)));
+                grid.square(i, j).setText(text);
+            }
     }
 
     @Data

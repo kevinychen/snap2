@@ -41,7 +41,7 @@ public class CrosswordSpreadsheetManager {
         List<ColoredCell> coloredCells = new ArrayList<>();
         for (int i = 0; i < grid.getNumRows(); i++)
             for (int j = 0; j < grid.getNumCols(); j++) {
-                Square square = grid.getSquare(i, j);
+                Square square = grid.square(i, j);
                 coloredCells.add(new ColoredCell(i + ROW_OFFSET, j + COL_OFFSET, square.getRgb()));
             }
         spreadsheets.setBackgroundColors(coloredCells);
