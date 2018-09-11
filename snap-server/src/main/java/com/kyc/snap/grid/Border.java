@@ -5,6 +5,8 @@ import lombok.Data;
 @Data
 public class Border {
 
+    public static final Border NONE = new Border(-1, 0);
+
     private final int rgb;
     private final int width;
 

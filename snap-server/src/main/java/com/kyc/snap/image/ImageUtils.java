@@ -10,6 +10,8 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import com.kyc.snap.grid.Border;
+
 public class ImageUtils {
 
     public static BufferedImage copy(BufferedImage image) {
@@ -17,6 +19,14 @@ public class ImageUtils {
         for (int x = 0; x < image.getWidth(); x++)
             for (int y = 0; y < image.getHeight(); y++)
                 newImage.setRGB(x, y, image.getRGB(x, y));
+        return newImage;
+    }
+
+    public static BufferedImage rotate90DegreesClockwise(BufferedImage image) {
+        BufferedImage newImage = new BufferedImage(image.getHeight(), image.getWidth(), BufferedImage.TYPE_3BYTE_BGR);
+        for (int x = 0; x < image.getWidth(); x++)
+            for (int y = 0; y < image.getHeight(); y++)
+                newImage.setRGB(image.getHeight() - y - 1, x, image.getRGB(x, y));
         return newImage;
     }
 
@@ -34,22 +44,17 @@ public class ImageUtils {
         return "data:image/png;base64," + Base64.getEncoder().encodeToString(toBytes(image));
     }
 
-    /**
-     * Find the median RGB of the given region of the image. Any pixels outside the bounds of the
-     * original image are ignored.
-     */
     public static int medianRgb(BufferedImage image, int startX, int startY, int width, int height) {
         List<Integer> reds = new ArrayList<>();
         List<Integer> greens = new ArrayList<>();
         List<Integer> blues = new ArrayList<>();
         for (int x = startX; x < startX + width; x++)
-            for (int y = startY; y < startY + height; y++)
-                if (inBounds(image, x, y)) {
-                    int rgb = image.getRGB(x, y);
-                    reds.add((rgb >> 16) & 0xff);
-                    greens.add((rgb >> 8) & 0xff);
-                    blues.add((rgb >> 0) & 0xff);
-                }
+            for (int y = startY; y < startY + height; y++) {
+                int rgb = image.getRGB(x, y);
+                reds.add((rgb >> 16) & 0xff);
+                greens.add((rgb >> 8) & 0xff);
+                blues.add((rgb >> 0) & 0xff);
+            }
         Collections.sort(reds);
         Collections.sort(greens);
         Collections.sort(blues);
@@ -59,8 +64,30 @@ public class ImageUtils {
         return (medianRed << 16) | (medianGreen << 8) | (medianBlue << 0);
     }
 
-    public static boolean inBounds(BufferedImage image, int x, int y) {
-        return x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight();
+    public static Border findVerticalBorder(BufferedImage image) {
+        List<Integer> medianRgbs = new ArrayList<>();
+        for (int x = 0; x < image.getWidth(); x++)
+            medianRgbs.add(medianRgb(image, x, 0, 1, image.getHeight()));
+
+        int borderStart = 0;
+        while (borderStart < medianRgbs.size() && !isDifferent(medianRgbs.get(borderStart), medianRgbs.get(0)))
+            borderStart++;
+        int borderEnd = medianRgbs.size() - 1;
+        while (borderEnd >= borderStart && !isDifferent(medianRgbs.get(borderEnd), medianRgbs.get(medianRgbs.size() - 1)))
+            borderEnd--;
+
+        if (borderStart > borderEnd)
+            return Border.NONE;
+
+        int sumRed = 0, sumGreen = 0, sumBlue = 0;
+        for (int i = borderStart; i <= borderEnd; i++) {
+            sumRed += (medianRgbs.get(i) >> 16) & 0xff;
+            sumGreen += (medianRgbs.get(i) >> 8) & 0xff;
+            sumBlue += (medianRgbs.get(i) >> 0) & 0xff;
+        }
+        int borderWidth = borderEnd - borderStart + 1;
+        int averageRgb = ((sumRed / borderWidth) << 16) | ((sumGreen / borderWidth) << 8) | ((sumBlue / borderWidth) << 0);
+        return new Border(averageRgb, borderWidth);
     }
 
     public static boolean isLight(int rgb) {

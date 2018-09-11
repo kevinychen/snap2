@@ -28,5 +28,7 @@ public class Grid {
 
         private int rgb = -1;
         private String text = "";
+        private Border rightBorder = Border.NONE;
+        private Border bottomBorder = Border.NONE;
     }
 }
