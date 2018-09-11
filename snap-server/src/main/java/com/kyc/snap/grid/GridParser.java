@@ -40,21 +40,22 @@ public class GridParser {
             else
                 verticalLines.add((int) line.getX1());
         }
-        return new GridLines(horizontalLines, verticalLines);
+
+        return new GridLines(
+            deduplicateCloseMarks(horizontalLines, approxGridSquareSize / 4),
+            deduplicateCloseMarks(verticalLines, approxGridSquareSize / 4));
     }
 
-    public GridPosition getGridPosition(GridLines lines, int approxGridSquareSize) {
+    public GridPosition getGridPosition(GridLines lines) {
         List<Integer> horizontalLines = new ArrayList<>(lines.getHorizontalLines());
         List<Row> rows = new ArrayList<>();
         for (int i = 0; i + 1 < horizontalLines.size(); i++)
-            if (horizontalLines.get(i + 1) - horizontalLines.get(i) >= approxGridSquareSize / 2)
-                rows.add(new Row(horizontalLines.get(i), horizontalLines.get(i + 1) - horizontalLines.get(i)));
+            rows.add(new Row(horizontalLines.get(i), horizontalLines.get(i + 1) - horizontalLines.get(i)));
 
         List<Integer> verticalLines = new ArrayList<>(lines.getVerticalLines());
         List<Col> cols = new ArrayList<>();
         for (int i = 0; i + 1 < verticalLines.size(); i++)
-            if (verticalLines.get(i + 1) - verticalLines.get(i) >= approxGridSquareSize / 2)
-                cols.add(new Col(verticalLines.get(i), verticalLines.get(i + 1) - verticalLines.get(i)));
+            cols.add(new Col(verticalLines.get(i), verticalLines.get(i + 1) - verticalLines.get(i)));
 
         return new GridPosition(rows, cols);
     }
@@ -102,6 +103,23 @@ public class GridParser {
         return new Grid(squares);
     }
 
+    private static TreeSet<Integer> deduplicateCloseMarks(TreeSet<Integer> marks, int minError) {
+        List<Integer> orderedMarks = new ArrayList<>(marks);
+        TreeSet<Integer> deduplicatedMarks = new TreeSet<>();
+        int start = 0;
+        while (start < orderedMarks.size()) {
+            int end = start;
+            int sumMarks = 0;
+            while (end < orderedMarks.size() && orderedMarks.get(end) - orderedMarks.get(start) < minError) {
+                sumMarks += orderedMarks.get(end);
+                end++;
+            }
+            deduplicatedMarks.add(sumMarks / (end - start));
+            start = end;
+        }
+        return deduplicatedMarks;
+    }
+
     private static EvenSequence findEvenSequence(TreeSet<Integer> marks, int approxPeriod) {
         int highestMark = marks.last();
         int minError = approxPeriod / 4;
@@ -124,7 +142,7 @@ public class GridParser {
         double bestPeriod = Double.NaN;
         int bestOffset = -1;
         long bestScore = Long.MAX_VALUE;
-        for (double period = betterApproxPeriod - 1; period <= betterApproxPeriod + 1; period += 1. / 16)
+        for (double period = betterApproxPeriod - 2; period <= betterApproxPeriod + 2; period += 1. / 16)
             for (int offset = 0; offset < period; offset++) {
                 TreeSet<Integer> offsetMarks = new TreeSet<>();
                 for (double mark = offset - period; mark < highestMark + period; mark += period)

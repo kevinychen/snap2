@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.Grid.Square;
+import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
@@ -35,6 +36,14 @@ public class ImageAnnotater {
 
     public BufferedImage getImage() {
         return image;
+    }
+
+    public void markLines(GridLines lines) {
+        g.setColor(Color.red);
+        for (int y : lines.getHorizontalLines())
+            g.drawLine(0, y, image.getWidth(), y);
+        for (int x : lines.getVerticalLines())
+            g.drawLine(x, 0, x, image.getHeight());
     }
 
     public void markPosition(GridPosition pos) {
