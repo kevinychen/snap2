@@ -13,11 +13,11 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.kyc.snap.crossword.CrosswordClues.Clue;
-import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.ColoredCell;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
 import com.kyc.snap.grid.Grid;
+import com.kyc.snap.grid.Grid.Square;
 
 import lombok.Data;
 
@@ -32,19 +32,23 @@ public class CrosswordSpreadsheetManager {
     private static final int[] DROW = { 0, 1 };
     private static final int[] DCOL = { 1, 0 };
 
-    private final GoogleAPIManager googleApi;
+    private final SpreadsheetManager spreadsheets;
 
-    public void toSpreadsheet(Grid grid, Crossword crossword, CrosswordClues clues) {
-        SpreadsheetManager spreadsheets = googleApi.getSheet(GoogleAPIManager.SAMPLE_SPREADSHEET_ID, GoogleAPIManager.SAMPLE_SHEET_ID);
-
+    public void toSpreadsheet(Grid grid) {
         spreadsheets.clear();
         spreadsheets.setAllColumnWidths(20);
 
         List<ColoredCell> coloredCells = new ArrayList<>();
         for (int i = 0; i < grid.getNumRows(); i++)
-            for (int j = 0; j < grid.getNumCols(); j++)
-                coloredCells.add(new ColoredCell(i + ROW_OFFSET, j + COL_OFFSET, grid.getSquare(i, j).getRgb()));
+            for (int j = 0; j < grid.getNumCols(); j++) {
+                Square square = grid.getSquare(i, j);
+                coloredCells.add(new ColoredCell(i + ROW_OFFSET, j + COL_OFFSET, square.getRgb()));
+            }
         spreadsheets.setBackgroundColors(coloredCells);
+    }
+
+    public void toSpreadsheet(Grid grid, Crossword crossword, CrosswordClues clues) {
+        toSpreadsheet(grid);
 
         List<Integer> directionColumns = new ArrayList<>();
         for (int i = 0; i < DIRECTIONS.length; i++)
@@ -53,7 +57,7 @@ public class CrosswordSpreadsheetManager {
         Multimap<ClueDirection, Clue> cluesByDirection = Multimaps.index(clues.getClues(), clue -> clue.getDirection());
         Multimap<ClueKey, Crossword.Entry> crosswordEntries = Multimaps.index(crossword.getEntries(),
             entry -> new ClueKey(entry.getDirection(), entry.getClueNumber()));
-        Multimap<Square, SquareIndex> gridToAnswers = ArrayListMultimap.create();
+        Multimap<Location, LocationAndIndex> gridToAnswers = ArrayListMultimap.create();
 
         List<ValueCell> valueCells = new ArrayList<>();
         valueCells.add(new ValueCell(UNKNOWN_MARKER_ROW, UNKNOWN_MARKER_COL, "."));
@@ -76,7 +80,7 @@ public class CrosswordSpreadsheetManager {
                         "IF(%1$s=\"\", %2$s, %1$s)",
                         spreadsheets.getRef(row + ROW_OFFSET, col + COL_OFFSET),
                         spreadsheets.getRef(UNKNOWN_MARKER_ROW, UNKNOWN_MARKER_COL)));
-                    gridToAnswers.put(new Square(row, col), new SquareIndex(j, directionColumns.get(i) + 2, k));
+                    gridToAnswers.put(new Location(row, col), new LocationAndIndex(j, directionColumns.get(i) + 2, k));
                 }
                 formulaCells.add(new ValueCell(
                     j + ROW_OFFSET,
@@ -88,8 +92,8 @@ public class CrosswordSpreadsheetManager {
             }
         }
 
-        for (Square gridSquare : gridToAnswers.keySet()) {
-            Collection<SquareIndex> answers = gridToAnswers.get(gridSquare);
+        for (Location gridLoc : gridToAnswers.keySet()) {
+            Collection<LocationAndIndex> answers = gridToAnswers.get(gridLoc);
             String refArray = Joiner.on(";").join(answers.stream()
                 .map(answer -> String.format(
                     "MID(%s,%d,1)",
@@ -107,8 +111,8 @@ public class CrosswordSpreadsheetManager {
                 refArray,
                 filterArray);
             formulaCells.add(new ValueCell(
-                gridSquare.row + ROW_OFFSET,
-                gridSquare.col + COL_OFFSET,
+                gridLoc.row + ROW_OFFSET,
+                gridLoc.col + COL_OFFSET,
                 String.format("=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),\"\")",
                     allCharsExpression)));
         }
@@ -130,14 +134,14 @@ public class CrosswordSpreadsheetManager {
     }
 
     @Data
-    private static class Square {
+    private static class Location {
 
         private final int row;
         private final int col;
     }
 
     @Data
-    private static class SquareIndex {
+    private static class LocationAndIndex {
 
         private final int row;
         private final int col;

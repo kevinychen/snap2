@@ -96,7 +96,7 @@ public class GridParser {
                 Row row = pos.getRows().get(i);
                 Col col = pos.getCols().get(j);
                 int medianRgb = ImageUtils.medianRgb(image, col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight());
-                String text = allText.get(new GridLocation(row, col));
+                String text = allText.getOrDefault(new GridLocation(row, col), "");
                 squares[i][j] = new Square(medianRgb, text);
             }
         return new Grid(squares);

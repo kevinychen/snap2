@@ -13,6 +13,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets;
 import com.google.api.services.sheets.v4.model.AutoResizeDimensionsRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
+import com.google.api.services.sheets.v4.model.Border;
 import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.Color;
@@ -23,12 +24,14 @@ import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.RowData;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.UpdateBordersRequest;
 import com.google.api.services.sheets.v4.model.UpdateCellsRequest;
 import com.google.api.services.sheets.v4.model.UpdateDimensionPropertiesRequest;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.image.ImageUtils;
 
 import lombok.Data;
@@ -146,6 +149,20 @@ public class SpreadsheetManager {
             .collect(Collectors.toList()));
     }
 
+    public void setBorders(List<BorderedCell> cells) {
+        executeRequests(cells.stream()
+            .map(cell -> new Request()
+                .setUpdateBorders(new UpdateBordersRequest()
+                    .setRight(new Border()
+                        .setStyle(toStyle(cell.rightBorder.getStyle()))
+                        .setColor(toColor(cell.rightBorder.getRgb())))
+                    .setBottom(new Border()
+                        .setStyle(toStyle(cell.bottomBorder.getStyle()))
+                        .setColor(toColor(cell.bottomBorder.getRgb())))
+                    .setRange(getRange(cell.row, cell.col))))
+            .collect(Collectors.toList()));
+    }
+
     /**
      * Run a published Google App Script that adds an image to a sheet.
      *
@@ -234,6 +251,21 @@ public class SpreadsheetManager {
             .setBlue(color.getBlue() / 255f);
     }
 
+    private static String toStyle(Style style) {
+        switch (style) {
+            case NONE:
+                return "NONE";
+            case THIN:
+                return "SOLID";
+            case MEDIUM:
+                return "SOLID_MEDIUM";
+            case THICK:
+                return "SOLID_THICK";
+            default:
+                throw new RuntimeException("Invalid style: " + style);
+        }
+    }
+
     @Data
     public static class ColoredCell {
 
@@ -248,5 +280,14 @@ public class SpreadsheetManager {
         private final int row;
         private final int col;
         private final String text;
+    }
+
+    @Data
+    public static class BorderedCell {
+
+        private final int row;
+        private final int col;
+        private final com.kyc.snap.grid.Border rightBorder;
+        private final com.kyc.snap.grid.Border bottomBorder;
     }
 }
