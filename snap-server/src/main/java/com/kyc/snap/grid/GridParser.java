@@ -43,8 +43,8 @@ public class GridParser {
         }
 
         return new GridLines(
-            deduplicateCloseMarks(horizontalLines, approxGridSquareSize / 4),
-            deduplicateCloseMarks(verticalLines, approxGridSquareSize / 4));
+            Utils.deduplicateCloseMarks(horizontalLines, approxGridSquareSize / 4),
+            Utils.deduplicateCloseMarks(verticalLines, approxGridSquareSize / 4));
     }
 
     public GridLines getInterpolatedGridLines(GridLines lines) {
@@ -91,23 +91,6 @@ public class GridParser {
                 squares[i][j] = new Square(medianRgb, text);
             }
         return new Grid(squares);
-    }
-
-    private static TreeSet<Integer> deduplicateCloseMarks(TreeSet<Integer> marks, int minError) {
-        List<Integer> orderedMarks = new ArrayList<>(marks);
-        TreeSet<Integer> deduplicatedMarks = new TreeSet<>();
-        int start = 0;
-        while (start < orderedMarks.size()) {
-            int end = start;
-            int sumMarks = 0;
-            while (end < orderedMarks.size() && orderedMarks.get(end) - orderedMarks.get(start) < minError) {
-                sumMarks += orderedMarks.get(end);
-                end++;
-            }
-            deduplicatedMarks.add(sumMarks / (end - start));
-            start = end;
-        }
-        return deduplicatedMarks;
     }
 
     @Data

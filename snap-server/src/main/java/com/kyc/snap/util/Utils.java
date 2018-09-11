@@ -13,6 +13,26 @@ import java.util.stream.IntStream;
 public class Utils {
 
     /**
+     * Replaces sets of marks that are less than minDistance with a single mark at the average point.
+     */
+    public static TreeSet<Integer> deduplicateCloseMarks(TreeSet<Integer> marks, int minDistance) {
+        List<Integer> orderedMarks = new ArrayList<>(marks);
+        TreeSet<Integer> deduplicatedMarks = new TreeSet<>();
+        int start = 0;
+        while (start < orderedMarks.size()) {
+            int end = start;
+            int sumMarks = 0;
+            while (end < orderedMarks.size() && orderedMarks.get(end) - orderedMarks.get(start) < minDistance) {
+                sumMarks += orderedMarks.get(end);
+                end++;
+            }
+            deduplicatedMarks.add(sumMarks / (end - start));
+            start = end;
+        }
+        return deduplicatedMarks;
+    }
+
+    /**
      * Find the approximate period of the given marks.
      *
      * https://math.stackexchange.com/questions/914288/how-to-find-the-approximate-basic-period-or-
@@ -43,6 +63,10 @@ public class Utils {
         return finePeriod;
     }
 
+    /**
+     * Returns a list of increasing integers with roughly the same difference between adjacent
+     * values and contain all the marks (other than outliers).
+     */
     public static TreeSet<Integer> findInterpolatedSequence(Collection<Integer> marks) {
         int maxMark = Collections.max(marks);
 
