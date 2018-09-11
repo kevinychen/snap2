@@ -98,7 +98,7 @@ public class ImageUtils {
         int redDiff = ((rgb1 >> 16) & 0xff) - ((rgb2 >> 16) & 0xff);
         int greenDiff = ((rgb1 >> 8) & 0xff) - ((rgb2 >> 8) & 0xff);
         int blueDiff = ((rgb1 >> 0) & 0xff) - ((rgb2 >> 0) & 0xff);
-        return redDiff * redDiff + greenDiff * greenDiff + blueDiff * blueDiff > 3 * 128 * 128;
+        return redDiff * redDiff + greenDiff * greenDiff + blueDiff * blueDiff > 3 * 64 * 64;
     }
 
     private ImageUtils() {}
