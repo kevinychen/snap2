@@ -61,6 +61,7 @@ public class ImageAnnotater {
                 Row row = pos.getRows().get(i);
                 Col col = pos.getCols().get(j);
                 Square square = grid.square(i, j);
+
                 g.setColor(new Color(square.getRgb()));
                 g.fillRect(
                     col.getStartX() + col.getWidth() / 3,
@@ -73,23 +74,25 @@ public class ImageAnnotater {
                     row.getStartY() + row.getHeight() / 3,
                     col.getWidth() / 3,
                     row.getHeight() / 3);
+
+                g.setColor(Color.blue);
+                g.drawString(
+                    square.getText(),
+                    col.getStartX() + col.getWidth() / 3,
+                    row.getStartY() + 2 * row.getHeight() / 3);
+
                 g.setColor(new Color(square.getRightBorder().getRgb()));
                 g.fillRect(
-                    col.getStartX() + 2 * col.getWidth() / 3 + 1,
+                    col.getStartX() + col.getWidth() * 2 / 3 + 1,
                     row.getStartY() + row.getHeight() / 3,
                     square.getRightBorder().getWidth(),
                     row.getHeight() / 3);
                 g.setColor(new Color(square.getBottomBorder().getRgb()));
                 g.fillRect(
                     col.getStartX() + col.getWidth() / 3,
-                    row.getStartY() + 2 * row.getHeight() / 3 + 1,
+                    row.getStartY() + row.getHeight() * 2 / 3 + 1,
                     col.getWidth() / 3,
                     square.getBottomBorder().getWidth());
-                g.setColor(Color.blue);
-                g.drawString(
-                    square.getText(),
-                    col.getStartX() + col.getWidth() / 3,
-                    row.getStartY() + 2 * row.getHeight() / 3);
             }
     }
 

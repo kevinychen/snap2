@@ -9,17 +9,26 @@
       <div id="image-container">
         <img id="image" alt="" />
         <canvas id="lines-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
+        <canvas id="grid-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
       </div>
     </div>
     <div class="section-div">
-      <input id="operation-find-grid-lines" type="button" value="Find grid lines">
-      <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
-      <input id="operation-find-implicit-lines" type="button" value="Find implicit grid lines">
-      <input id="operation-grid-position" type="button" value="Find grid position">
-      <input id="operation-find-grid-colors" type="button" value="Parse grid colors">
-      <input id="operation-find-grid-text" type="button" value="Parse grid text">
-      <input id="operation-find-grid-borders" type="button" value="Parse grid borders">
-      <input id="operation-export-to-spreadsheet" type="button" value="Export to Google sheet">
+      <div id="operation-group-lines" class="operation-group">
+        <input id="operation-find-grid-lines" type="button" value="Find grid lines">
+        <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
+        <input id="operation-find-implicit-lines" type="button" value="Find implicit grid lines">
+      </div>
+      <div id="operation-group-position" class="operation-group">
+        <input id="operation-grid-position" type="button" value="Find grid position">
+      </div>
+      <div id="operation-group-grid" class="operation-group">
+        <input id="operation-find-grid-colors" type="button" value="Parse grid colors">
+        <input id="operation-find-grid-text" type="button" value="Parse grid text">
+        <input id="operation-find-grid-borders" type="button" value="Parse grid borders">
+      </div>
+      <div id="operation-group-spreadsheet" class="operation-group">
+        <input id="operation-export-to-spreadsheet" type="button" value="Export to Google sheet">
+      </div>
     </div>
     <div class="section-div">
       <div id="spreadsheet-url">
@@ -50,8 +59,13 @@
       }
     }
 
+    function rgbToStyle(rgb) {
+      return 'rgb(' + ((rgb >> 16) & 0xff) + ',' + ((rgb >> 8) & 0xff) + ',' + ((rgb >> 0) & 0xff) + ')';
+    }
+
     function drawLines(lines) {
       session.lines = lines;
+      $('#operation-group-position').show();
 
       const image = $('#image')[0];
       const canvas = $('#lines-canvas')[0];
@@ -76,16 +90,62 @@
 
     function drawGrid(grid) {
       session.grid = grid;
-      console.log(grid);
+      $('#operation-group-spreadsheet').show();
+
+      const image = $('#image')[0];
+      const canvas = $('#grid-canvas')[0];
+      const widthRatio = canvas.width / image.naturalWidth;
+      const heightRatio = canvas.height / image.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      for (var i = 0; i < grid.numRows; i++) {
+        for (var j = 0; j < grid.numCols; j++) {
+          const row = session.pos.rows[i];
+          const col = session.pos.cols[j];
+          const square = grid.squares[i][j];
+
+          ctx.beginPath();
+          ctx.rect(
+              widthRatio * (col.startX + col.width / 3),
+              heightRatio * (row.startY + row.height / 3),
+              widthRatio * (col.width / 3),
+              heightRatio * (row.height / 3));
+          ctx.fillStyle = rgbToStyle(square.rgb);
+          ctx.fill();
+          ctx.strokeStyle = 'red';
+          ctx.stroke();
+
+          ctx.strokeStyle = 'blue';
+          ctx.strokeText(square.text,
+              widthRatio * (col.startX + col.width / 3),
+              heightRatio * (row.startY + 2 * row.height / 3));
+
+          ctx.beginPath();
+          ctx.rect(
+              widthRatio * (col.startX + col.width * 2 / 3 + 1),
+              heightRatio * (row.startY + row.height / 3),
+              widthRatio * (square.rightBorder.width),
+              heightRatio * (row.height / 3));
+          ctx.fillStyle = rgbToStyle(square.rightBorder.rgb);
+          ctx.fill();
+          ctx.rect(
+              widthRatio * (col.startX + col.width / 3),
+              heightRatio * (row.startY + row.height * 2 / 3 + 1),
+              widthRatio * (col.width / 3),
+              heightRatio * (square.bottomBorder.width));
+          ctx.fillStyle = rgbToStyle(square.bottomBorder.rgb);
+          ctx.fill();
+        }
+      }
     }
 
     $(document).ready(function() {
       $('#image-input').change(e => {
-	    const image = e.target.files[0];
+        const image = e.target.files[0];
         const formData = new FormData();
         formData.append('image', image);
         post('/session', formData, sessionId => {
           session.sessionId = sessionId;
+          $('#operation-group-lines').show();
           $('#image').attr('src', URL.createObjectURL(image));
         });
       });
@@ -95,7 +155,7 @@
       $('#operation-find-implicit-lines').click(e => sessionPost('/lines/implicit', drawLines));
       $('#operation-grid-position').click(e => sessionPost('/position', pos => {
         session.pos = pos;
-        console.log(pos);
+        $('#operation-group-grid').show();
       }));
       $('#operation-find-grid-colors').click(e => sessionPost('/grid/colors', drawGrid));
       $('#operation-find-grid-text').click(e => sessionPost('/grid/text', drawGrid));
@@ -132,6 +192,11 @@
 
     [type=button] {
       display: block;
+    }
+
+    .operation-group {
+      display: none;
+      margin-bottom: 10px;
     }
   </style>
 </html>
