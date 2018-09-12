@@ -40,14 +40,17 @@ public class CrosswordSpreadsheetManager {
         spreadsheets.setAllColumnWidths(20);
 
         List<ColoredCell> coloredCells = new ArrayList<>();
+        List<ValueCell> valueCells = new ArrayList<>();
         List<BorderedCell> borderedCells = new ArrayList<>();
         for (int i = 0; i < grid.getNumRows(); i++)
             for (int j = 0; j < grid.getNumCols(); j++) {
                 Square square = grid.square(i, j);
                 coloredCells.add(new ColoredCell(i + ROW_OFFSET, j + COL_OFFSET, square.getRgb()));
+                valueCells.add(new ValueCell(i + ROW_OFFSET, j + COL_OFFSET, square.getText().trim()));
                 borderedCells.add(new BorderedCell(i + ROW_OFFSET, j + COL_OFFSET, square.getRightBorder(), square.getBottomBorder()));
             }
         spreadsheets.setBackgroundColors(coloredCells);
+        spreadsheets.setValues(valueCells);
         spreadsheets.setBorders(borderedCells);
     }
 
@@ -72,7 +75,7 @@ public class CrosswordSpreadsheetManager {
                 .collect(Collectors.toList());
             for (int j = 0; j < cluesForDirection.size(); j++) {
                 Clue clue = cluesForDirection.get(j);
-                valueCells.add(new ValueCell(j + ROW_OFFSET, directionColumns.get(i) + COL_OFFSET, clue.getClue()));
+                valueCells.add(new ValueCell(j + ROW_OFFSET, directionColumns.get(i) + COL_OFFSET, clue.getClue().trim()));
 
                 Crossword.Entry crosswordEntry = Iterables
                     .getOnlyElement(crosswordEntries.get(new ClueKey(clue.getDirection(), clue.getClueNumber())));
