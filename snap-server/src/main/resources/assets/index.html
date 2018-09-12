@@ -2,13 +2,16 @@
   <head>
   </head>
   <body>
-    <div id="image-div">
+    <div class="section-div">
       <form id="image-form" method="post" enctype="multipart/form-data">
         <input id="image-input" type="file" name="image">
       </form>
-      <img id="image" alt="" />
+      <div id="image-container">
+        <img id="image" alt="" />
+        <canvas id="lines-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
+      </div>
     </div>
-    <div id="operations-div">
+    <div class="section-div">
       <input id="operation-find-grid-lines" type="button" value="Find grid lines">
       <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
       <input id="operation-find-implicit-lines" type="button" value="Find implicit grid lines">
@@ -18,7 +21,7 @@
       <input id="operation-find-grid-borders" type="button" value="Parse grid borders">
       <input id="operation-export-to-spreadsheet" type="button" value="Export to Google sheet">
     </div>
-    <div id="misc-div">
+    <div class="section-div">
       <div id="spreadsheet-url">
         <span>Spreadsheet URL:</span>
         <a id="spreadsheet-url-link" href="#" target="_blank"></span>
@@ -49,7 +52,26 @@
 
     function drawLines(lines) {
       session.lines = lines;
-      console.log(lines);
+
+      const image = $('#image')[0];
+      const canvas = $('#lines-canvas')[0];
+      const widthRatio = canvas.width / image.naturalWidth;
+      const heightRatio = canvas.height / image.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'red';
+      for (var row of lines.horizontalLines) {
+        ctx.beginPath();
+        ctx.moveTo(0, row * heightRatio);
+        ctx.lineTo(canvas.width, row * heightRatio);
+        ctx.stroke();
+      }
+      for (var col of lines.verticalLines) {
+        ctx.beginPath();
+        ctx.moveTo(col * widthRatio, 0);
+        ctx.lineTo(col * widthRatio, canvas.height);
+        ctx.stroke();
+      }
     }
 
     function drawGrid(grid) {
@@ -70,7 +92,7 @@
 
       $('#operation-find-grid-lines').click(e => sessionPost('/lines', drawLines));
       $('#operation-interpolate-grid-lines').click(e => sessionPost('/lines/interpolate', drawLines));
-      $('#operation-find-implicit-grid-lines').click(e => sessionPost('/lines/implicit', drawLines));
+      $('#operation-find-implicit-lines').click(e => sessionPost('/lines/implicit', drawLines));
       $('#operation-grid-position').click(e => sessionPost('/position', pos => {
         session.pos = pos;
         console.log(pos);
@@ -85,15 +107,27 @@
     });
   </script>
   <style>
-    div {
+    .section-div {
       float: left;
       margin: 20px;
       width: calc(33% - 60px);
     }
 
+    #image-container {
+      position: relative;
+    }
+
     #image {
       max-height: 100%;
       max-width: 100%;
+    }
+
+    .overlay-canvas {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      width: 100%;
+      height: 100%;
     }
 
     [type=button] {
