@@ -112,18 +112,18 @@ public class GridParser {
                 Square square = grid.square(i, j);
                 if (j < pos.getNumCols() - 1) {
                     Border rightBorder = ImageUtils.findVerticalBorder(image.getSubimage(
-                        col.getStartX() + col.getWidth() * 7 / 8,
-                        row.getStartY() + row.getHeight() / 8,
-                        col.getWidth() / 8 + pos.getCols().get(j + 1).getWidth() / 8,
-                        row.getHeight() * 3 / 4));
+                        col.getStartX() + col.getWidth() / 2,
+                        row.getStartY(),
+                        col.getWidth() / 2 + pos.getCols().get(j + 1).getWidth() / 2,
+                        row.getHeight()));
                     square.setRightBorder(rightBorder);
                 }
                 if (i < pos.getNumRows() - 1) {
                     Border bottomBorder = ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
-                        col.getStartX() + col.getWidth() / 8,
-                        row.getStartY() + 7 * row.getHeight() / 8,
-                        col.getWidth() * 3 / 4,
-                        row.getHeight() / 8 + pos.getRows().get(i + 1).getHeight() / 8)));
+                        col.getStartX(),
+                        row.getStartY() + row.getHeight() / 2,
+                        col.getWidth(),
+                        row.getHeight() / 2 + pos.getRows().get(i + 1).getHeight() / 2)));
                     square.setBottomBorder(bottomBorder);
                 }
             }

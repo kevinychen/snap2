@@ -65,29 +65,35 @@ public class ImageUtils {
     }
 
     public static Border findVerticalBorder(BufferedImage image) {
+        int leftRgb = medianRgb(image, 0, 0, image.getWidth() / 3, image.getHeight());
+        int rightRgb = medianRgb(image, image.getWidth() * 2 / 3, 0, image.getWidth() / 3, image.getHeight());
+
         List<Integer> medianRgbs = new ArrayList<>();
         for (int x = 0; x < image.getWidth(); x++)
             medianRgbs.add(medianRgb(image, x, 0, 1, image.getHeight()));
 
-        int borderStart = 0;
-        while (borderStart < medianRgbs.size() && !isDifferent(medianRgbs.get(borderStart), medianRgbs.get(0)))
-            borderStart++;
-        int borderEnd = medianRgbs.size() - 1;
-        while (borderEnd >= borderStart && !isDifferent(medianRgbs.get(borderEnd), medianRgbs.get(medianRgbs.size() - 1)))
-            borderEnd--;
-
-        if (borderStart > borderEnd)
-            return Border.NONE;
-
-        int sumRed = 0, sumGreen = 0, sumBlue = 0;
-        for (int i = borderStart; i <= borderEnd; i++) {
-            sumRed += (medianRgbs.get(i) >> 16) & 0xff;
-            sumGreen += (medianRgbs.get(i) >> 8) & 0xff;
-            sumBlue += (medianRgbs.get(i) >> 0) & 0xff;
+        Border border = Border.NONE;
+        int minCenterProximity = Integer.MAX_VALUE;
+        int start = 0;
+        while (start < medianRgbs.size()) {
+            int end = start;
+            int sumRed = 0, sumGreen = 0, sumBlue = 0;
+            while (end < medianRgbs.size() && isDifferent(medianRgbs.get(end), leftRgb) & isDifferent(medianRgbs.get(end), rightRgb)) {
+                sumRed += (medianRgbs.get(end) >> 16) & 0xff;
+                sumGreen += (medianRgbs.get(end) >> 8) & 0xff;
+                sumBlue += (medianRgbs.get(end) >> 0) & 0xff;
+                end++;
+            }
+            int centerProximity = Math.abs(start + end - image.getWidth());
+            if (end > start && centerProximity < minCenterProximity) {
+                int borderWidth = end - start;
+                int averageRgb = ((sumRed / borderWidth) << 16) | ((sumGreen / borderWidth) << 8) | ((sumBlue / borderWidth) << 0);
+                border = new Border(averageRgb, borderWidth);
+                minCenterProximity = centerProximity;
+            }
+            start = end + 1;
         }
-        int borderWidth = borderEnd - borderStart + 1;
-        int averageRgb = ((sumRed / borderWidth) << 16) | ((sumGreen / borderWidth) << 8) | ((sumBlue / borderWidth) << 0);
-        return new Border(averageRgb, borderWidth);
+        return border;
     }
 
     public static boolean isLight(int rgb) {
