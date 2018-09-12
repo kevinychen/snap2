@@ -1,11 +1,13 @@
 package com.kyc.snap.grid;
 
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -16,6 +18,7 @@ import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
 import com.kyc.snap.image.ImageUtils;
+import com.kyc.snap.image.ImageUtils.Blob;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.opencv.OpenCvManager.Clusters;
 import com.kyc.snap.opencv.OpenCvManager.Line;
@@ -62,6 +65,33 @@ public class GridParser {
             Utils.findInterpolatedSequence(lines.getVerticalLines()));
     }
 
+    public GridLines findImplicitGridLines(BufferedImage image) {
+        List<Blob> blobs = ImageUtils.findBlobs(image);
+        TreeSet<Integer> rows = Utils.findInterpolatedSequence(blobs.stream()
+            .map(blob -> blob.getY() + blob.getHeight() / 2)
+            .collect(Collectors.toList()));
+        TreeSet<Integer> cols = Utils.findInterpolatedSequence(blobs.stream()
+            .map(blob -> blob.getX() + blob.getWidth() / 2)
+            .collect(Collectors.toList()));
+
+        Function<TreeSet<Integer>, TreeSet<Integer>> findSurroundingMarksFunction = marks -> {
+            Preconditions.checkArgument(marks.size() >= 2,
+                "Expected at least two marks: %s", marks);
+            List<Integer> sortedMarks = new ArrayList<>(marks);
+            TreeSet<Integer> surroundingMarks = new TreeSet<>();
+            surroundingMarks.add(sortedMarks.get(0) - (sortedMarks.get(1) - sortedMarks.get(0)) / 2);
+            for (int i = 1; i < sortedMarks.size(); i++)
+                surroundingMarks.add((sortedMarks.get(i - 1) + sortedMarks.get(i)) / 2);
+            surroundingMarks.add(sortedMarks.get(sortedMarks.size() - 1)
+                    + (sortedMarks.get(sortedMarks.size() - 1) - sortedMarks.get(sortedMarks.size() - 2)) / 2);
+            return surroundingMarks;
+        };
+
+        return new GridLines(
+            findSurroundingMarksFunction.apply(rows),
+            findSurroundingMarksFunction.apply(cols));
+    }
+
     public GridPosition getGridPosition(GridLines lines) {
         List<Integer> horizontalLines = new ArrayList<>(lines.getHorizontalLines());
         List<Row> rows = new ArrayList<>();
@@ -87,19 +117,19 @@ public class GridParser {
     }
 
     public void setGridText(BufferedImage image, GridPosition pos, Grid grid) {
-        Map<GridLocation, BufferedImage> subimages = new HashMap<>();
-        for (Row row : pos.getRows())
-            for (Col col : pos.getCols()) {
+        Map<Point, BufferedImage> subimages = new HashMap<>();
+        for (int i = 0; i < pos.getNumRows(); i++)
+            for (int j = 0; j < pos.getNumCols(); j++) {
+                Row row = pos.getRows().get(i);
+                Col col = pos.getCols().get(j);
                 subimages.put(
-                    new GridLocation(row, col),
+                    new Point(j, i),
                     image.getSubimage(col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight()));
             }
         Map<BufferedImage, String> allText = googleApi.batchFindText(subimages.values());
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
-                Row row = pos.getRows().get(i);
-                Col col = pos.getCols().get(j);
-                String text = allText.get(subimages.get(new GridLocation(row, col)));
+                String text = allText.get(subimages.get(new Point(j, i)));
                 grid.square(i, j).setText(text);
             }
     }
@@ -176,12 +206,5 @@ public class GridParser {
                     border.setStyle(Style.values()[styleLevel]);
                 }
             }
-    }
-
-    @Data
-    private static class GridLocation {
-
-        private final Row row;
-        private final Col col;
     }
 }
