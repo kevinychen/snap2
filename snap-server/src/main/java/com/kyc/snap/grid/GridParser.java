@@ -6,21 +6,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.kyc.snap.google.GoogleAPIManager;
+import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.opencv.OpenCvManager;
+import com.kyc.snap.opencv.OpenCvManager.Clusters;
 import com.kyc.snap.opencv.OpenCvManager.Line;
+import com.kyc.snap.opencv.OpenCvManager.Tuple;
 import com.kyc.snap.util.Utils;
 
 import lombok.Data;
 
 @Data
 public class GridParser {
+
+    /**
+     * Minimum difference between widths of two borders in order for them to have different styles.
+     */
+    public static final double MIN_WIDTH_DIFF_BETWEEN_BORDER_STYLES = 1.5;
 
     private final OpenCvManager openCv;
     private final GoogleAPIManager googleApi;
@@ -102,19 +112,68 @@ public class GridParser {
                 Square square = grid.square(i, j);
                 if (j < pos.getNumCols() - 1) {
                     Border rightBorder = ImageUtils.findVerticalBorder(image.getSubimage(
-                        col.getStartX() + col.getWidth() * 3 / 4,
-                        row.getStartY() + row.getHeight() / 4,
-                        col.getWidth() / 4 + pos.getCols().get(j + 1).getWidth() / 4,
-                        row.getHeight() / 2));
+                        col.getStartX() + col.getWidth() * 7 / 8,
+                        row.getStartY() + row.getHeight() / 8,
+                        col.getWidth() / 8 + pos.getCols().get(j + 1).getWidth() / 8,
+                        row.getHeight() * 3 / 4));
                     square.setRightBorder(rightBorder);
                 }
                 if (i < pos.getNumRows() - 1) {
                     Border bottomBorder = ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
-                        col.getStartX() + col.getWidth() / 4,
-                        row.getStartY() + 3 * row.getHeight() / 4,
-                        col.getWidth() / 2,
-                        row.getHeight() / 4 + pos.getRows().get(i + 1).getHeight() / 4)));
+                        col.getStartX() + col.getWidth() / 8,
+                        row.getStartY() + 7 * row.getHeight() / 8,
+                        col.getWidth() * 3 / 4,
+                        row.getHeight() / 8 + pos.getRows().get(i + 1).getHeight() / 8)));
                     square.setBottomBorder(bottomBorder);
+                }
+            }
+    }
+
+    public void setGridBorderStyles(Grid grid) {
+        List<Tuple> borderWidths = new ArrayList<>();
+        for (int i = 0; i < grid.getNumRows(); i++)
+            for (int j = 0; j < grid.getNumCols(); j++) {
+                Square square = grid.square(i, j);
+                for (Border border : ImmutableList.of(square.getRightBorder(), square.getBottomBorder()))
+                    if (border.getWidth() > 0)
+                        borderWidths.add(new Tuple(border.getWidth()));
+            }
+
+        Clusters clusters = null;
+        List<Tuple> centers = null;
+        for (int numClusters = Style.values().length - 1; numClusters >= 1; numClusters--) {
+            clusters = openCv.findClusters(borderWidths, numClusters);
+            centers = clusters.getCenters();
+            double minDistance = Double.MAX_VALUE;
+            for (int i = 0; i < centers.size(); i++)
+                for (int j = i + 1; j < centers.size(); j++) {
+                    double dist = Math.abs(centers.get(i).get(0) - centers.get(j).get(0));
+                    if (dist < minDistance)
+                        minDistance = dist;
+                }
+            if (minDistance > MIN_WIDTH_DIFF_BETWEEN_BORDER_STYLES)
+                break;
+        }
+
+        List<Double> sortedCenters = centers.stream()
+                .map(tuple -> tuple.get(0))
+                .sorted()
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < grid.getNumRows(); i++)
+            for (int j = 0; j < grid.getNumCols(); j++) {
+                Square square = grid.square(i, j);
+                for (Border border : ImmutableList.of(square.getRightBorder(), square.getBottomBorder())) {
+                    int width = border.getWidth();
+                    int styleLevel;
+                    if (width == 0)
+                        styleLevel = 0;
+                    else {
+                        int label = clusters.getLabels().get(new Tuple(width));
+                        double center = centers.get(label).get(0);
+                        styleLevel = sortedCenters.indexOf(center) + 1;
+                    }
+                    border.setStyle(Style.values()[styleLevel]);
                 }
             }
     }
