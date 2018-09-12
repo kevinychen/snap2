@@ -28,19 +28,19 @@ public class SnapResource implements SnapService {
     private Map<String, ImageSession> sessions = new HashMap<>();
 
     @Override
-    public String createImageSession(InputStream imageStream) throws IOException {
+    public StringJson createImageSession(InputStream imageStream) throws IOException {
         String sessionId = UUID.randomUUID().toString();
         BufferedImage image = ImageIO.read(imageStream);
         ImageSession session = new ImageSession(sessionId, image);
         sessions.put(sessionId, session);
-        return sessionId;
+        return new StringJson(sessionId);
     }
 
     @Override
     public GridLines findGridLines(String sessionId) {
         ImageSession session = sessions.get(sessionId);
         GridLines lines = gridParser.findGridLines(session.getImage(), session.getApproxGridSize());
-        setLines(session, lines);
+        session.setLines(lines);
         return lines;
     }
 
@@ -48,7 +48,7 @@ public class SnapResource implements SnapService {
     public GridLines getInterpolatedGridLines(String sessionId) {
         ImageSession session = sessions.get(sessionId);
         GridLines lines = gridParser.getInterpolatedGridLines(session.getLines());
-        setLines(session, lines);
+        session.setLines(lines);
         return lines;
     }
 
@@ -56,8 +56,17 @@ public class SnapResource implements SnapService {
     public GridLines findImplicitGridLines(String sessionId) {
         ImageSession session = sessions.get(sessionId);
         GridLines lines = gridParser.findImplicitGridLines(session.getImage());
-        setLines(session, lines);
+        session.setLines(lines);
         return lines;
+    }
+
+    @Override
+    public GridPosition getGridPosition(String sessionId) {
+        ImageSession session = sessions.get(sessionId);
+        GridPosition pos = gridParser.getGridPosition(session.getLines());
+        session.setPos(pos);
+        session.setGrid(new Grid(pos.getNumRows(), pos.getNumCols()));
+        return pos;
     }
 
     @Override
@@ -86,18 +95,11 @@ public class SnapResource implements SnapService {
     }
 
     @Override
-    public String exportToSpreadsheet(String sessionId) {
+    public StringJson exportToSpreadsheet(String sessionId) {
         ImageSession session = sessions.get(sessionId);
         SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
         GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
         gridSpreadsheets.toSpreadsheet(session.getGrid());
-        return spreadsheets.getUrl();
-    }
-
-    private void setLines(ImageSession session, GridLines lines) {
-        session.setLines(lines);
-        GridPosition pos = gridParser.getGridPosition(lines);
-        session.setPos(pos);
-        session.setGrid(new Grid(pos.getNumRows(), pos.getNumCols()));
+        return new StringJson(spreadsheets.getUrl());
     }
 }

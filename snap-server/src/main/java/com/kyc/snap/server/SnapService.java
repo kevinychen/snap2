@@ -13,8 +13,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
+import com.kyc.snap.grid.GridPosition;
+
+import lombok.Data;
 
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -31,8 +35,7 @@ public interface SnapService {
     @POST
     @Path("session")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.TEXT_PLAIN)
-    String createImageSession(@FormDataParam("image") InputStream imageStream) throws IOException;
+    StringJson createImageSession(@FormDataParam("image") InputStream imageStream) throws IOException;
 
     @POST
     @Path("session/{sessionId}/lines")
@@ -45,6 +48,10 @@ public interface SnapService {
     @POST
     @Path("session/{sessionId}/lines/implicit")
     GridLines findImplicitGridLines(@PathParam("sessionId") String sessionId);
+
+    @POST
+    @Path("session/{sessionId}/position")
+    GridPosition getGridPosition(@PathParam("sessionId") String sessionId);
 
     @POST
     @Path("session/{sessionId}/grid/colors")
@@ -66,6 +73,12 @@ public interface SnapService {
      */
     @POST
     @Path("session/{sessionId}/spreadsheet")
-    @Produces(MediaType.TEXT_PLAIN)
-    String exportToSpreadsheet(@PathParam("sessionId") String sessionId);
+    StringJson exportToSpreadsheet(@PathParam("sessionId") String sessionId);
+
+    @Data
+    public static class StringJson {
+
+        @JsonValue
+        public final String value;
+    }
 }

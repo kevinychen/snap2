@@ -12,6 +12,7 @@
       <input id="operation-find-grid-lines" type="button" value="Find grid lines">
       <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
       <input id="operation-find-implicit-lines" type="button" value="Find implicit grid lines">
+      <input id="operation-grid-position" type="button" value="Find grid position">
       <input id="operation-find-grid-colors" type="button" value="Parse grid colors">
       <input id="operation-find-grid-text" type="button" value="Parse grid text">
       <input id="operation-find-grid-borders" type="button" value="Parse grid borders">
@@ -26,24 +27,33 @@
   </body>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script>
-    sessionId = undefined;
-    lines = undefined;
-    grid = undefined;
-    spreadsheetUrl = undefined;
+    session = {
+      sessionId: undefined,
+      lines: undefined,
+      pos: undefined,
+      grid: undefined,
+      spreadsheetUrl: undefined,
+    }
 
-    function maybePost(sessionPath, callback) {
-      if (sessionId) {
-        fetch('/api/session/' + sessionId + sessionPath, { method: 'POST' })
-          .then(response => { return response.json(); })
-          .then(callback);
+    function post(path, body, callback) {
+      fetch('/api' + path, { method: 'POST', body: body })
+        .then(response => { return response.json(); })
+        .then(callback);
+    }
+
+    function sessionPost(sessionPath, callback) {
+      if (session.sessionId) {
+        post('/session/' + session.sessionId + sessionPath, undefined, callback);
       }
     }
 
     function drawLines(lines) {
+      session.lines = lines;
       console.log(lines);
     }
 
     function drawGrid(grid) {
+      session.grid = grid;
       console.log(grid);
     }
 
@@ -52,31 +62,26 @@
 	    const image = e.target.files[0];
         const formData = new FormData();
         formData.append('image', image);
-        fetch('/api/session', { method: 'POST', body: formData }).then(response => {
-          return response.text();
-        }).then(data => {
-          sessionId = data;
+        post('/session', formData, sessionId => {
+          session.sessionId = sessionId;
           $('#image').attr('src', URL.createObjectURL(image));
         });
       });
 
-      $('#operation-find-grid-lines').click(e => maybePost('/lines', drawLines));
-      $('#operation-interpolate-grid-lines').click(e => maybePost('/lines/interpolate', drawLines));
-      $('#operation-find-implicit-grid-lines').click(e => maybePost('/lines/implicit', drawLines));
-      $('#operation-find-grid-colors').click(e => maybePost('/grid/colors', drawGrid));
-      $('#operation-find-grid-text').click(e => maybePost('/grid/text', drawGrid));
-      $('#operation-find-grid-borders').click(e => maybePost('/grid/borders', drawGrid));
-
-      $('#operation-export-to-spreadsheet').click(e => {
-        if (sessionId) {
-          fetch('/api/session/' + sessionId + '/spreadsheet', { method: 'POST' }).then(response => {
-            return response.text();
-          }).then(data => {
-            spreadsheetUrl = data;
-            $('#spreadsheet-url-link').attr('href', spreadsheetUrl).text(spreadsheetUrl);
-          });
-        }
-      });
+      $('#operation-find-grid-lines').click(e => sessionPost('/lines', drawLines));
+      $('#operation-interpolate-grid-lines').click(e => sessionPost('/lines/interpolate', drawLines));
+      $('#operation-find-implicit-grid-lines').click(e => sessionPost('/lines/implicit', drawLines));
+      $('#operation-grid-position').click(e => sessionPost('/position', pos => {
+        session.pos = pos;
+        console.log(pos);
+      }));
+      $('#operation-find-grid-colors').click(e => sessionPost('/grid/colors', drawGrid));
+      $('#operation-find-grid-text').click(e => sessionPost('/grid/text', drawGrid));
+      $('#operation-find-grid-borders').click(e => sessionPost('/grid/borders', drawGrid));
+      $('#operation-export-to-spreadsheet').click(e => sessionPost('/spreadsheet', spreadsheetUrl => {
+        session.spreadsheetUrl = spreadsheetUrl;
+        $('#spreadsheet-url-link').attr('href', spreadsheetUrl).text(spreadsheetUrl);
+      }));
     });
   </script>
   <style>
