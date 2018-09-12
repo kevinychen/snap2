@@ -15,10 +15,10 @@
     <div class="section-div">
       <div id="operation-group-lines" class="operation-group">
         <input id="operation-find-grid-lines" type="button" value="Find grid lines">
-        <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
         <input id="operation-find-implicit-lines" type="button" value="Find implicit grid lines">
       </div>
-      <div id="operation-group-position" class="operation-group">
+      <div id="operation-group-after-lines" class="operation-group">
+        <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
         <input id="operation-grid-position" type="button" value="Find grid position">
       </div>
       <div id="operation-group-grid" class="operation-group">
@@ -65,7 +65,7 @@
 
     function drawLines(lines) {
       session.lines = lines;
-      $('#operation-group-position').show();
+      $('#operation-group-after-lines').show();
 
       const image = $('#image')[0];
       const canvas = $('#lines-canvas')[0];
