@@ -43,6 +43,9 @@ import okhttp3.Response;
 @Data
 public class SpreadsheetManager {
 
+    public static final int ROW_OFFSET = 1;
+    public static final int COL_OFFSET = 1;
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final GoogleCredential credential;
@@ -55,6 +58,8 @@ public class SpreadsheetManager {
     }
 
     public String getRef(int row, int col) {
+        row += ROW_OFFSET;
+        col += COL_OFFSET;
         Preconditions.checkArgument(col < 26 + 26 * 26, "Column too large to compute ref");
         StringBuilder ref = new StringBuilder();
         if (col >= 26)
@@ -92,22 +97,14 @@ public class SpreadsheetManager {
                     .setProperties(new DimensionProperties()
                         .setPixelSize(width))
                     .setFields("pixelSize")
-                    .setRange(new DimensionRange()
-                        .setSheetId(sheetId)
-                        .setDimension("COLUMNS")
-                        .setStartIndex(startIndex)
-                        .setEndIndex(endIndex))));
+                    .setRange(getColumnRange(startIndex, endIndex))));
     }
 
     public void setAutomaticColumnWidths(int startIndex, int endIndex) {
         executeRequests(
             new Request()
                 .setAutoResizeDimensions(new AutoResizeDimensionsRequest()
-                    .setDimensions(new DimensionRange()
-                        .setSheetId(sheetId)
-                        .setDimension("COLUMNS")
-                        .setStartIndex(startIndex)
-                        .setEndIndex(endIndex))));
+                    .setDimensions(getColumnRange(startIndex, endIndex))));
     }
 
     public void setBackgroundColors(List<ColoredCell> cells) {
@@ -190,8 +187,8 @@ public class SpreadsheetManager {
                 "spreadsheetId", spreadsheet.getSpreadsheetId(),
                 "sheetName", getSheetName(),
                 "url", ImageUtils.toDataURL(image),
-                "row", row + 1,
-                "col", col + 1);
+                "row", row + 1 + ROW_OFFSET,
+                "col", col + 1 + COL_OFFSET);
             Response response = new OkHttpClient()
                 .newCall(new okhttp3.Request.Builder()
                     .url("https://script.google.com/macros/s/AKfycbwtDXpf8019jeigSig5AnEc4QW-rsU_K3NTpfz5vUE0c-ZwT1NV/exec")
@@ -234,13 +231,21 @@ public class SpreadsheetManager {
         return credential.getAccessToken();
     }
 
+    private DimensionRange getColumnRange(int startIndex, int endIndex) {
+        return new DimensionRange()
+            .setSheetId(sheetId)
+            .setDimension("COLUMNS")
+            .setStartIndex(startIndex + COL_OFFSET)
+            .setEndIndex(endIndex + COL_OFFSET);
+    }
+
     private GridRange getRange(int row, int col) {
         return new GridRange()
             .setSheetId(sheetId)
-            .setStartRowIndex(row)
-            .setEndRowIndex(row + 1)
-            .setStartColumnIndex(col)
-            .setEndColumnIndex(col + 1);
+            .setStartRowIndex(row + ROW_OFFSET)
+            .setEndRowIndex(row + 1 + ROW_OFFSET)
+            .setStartColumnIndex(col + COL_OFFSET)
+            .setEndColumnIndex(col + 1 + COL_OFFSET);
     }
 
     private static Color toColor(int rgb) {

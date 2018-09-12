@@ -9,12 +9,12 @@ import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
-import com.kyc.snap.crossword.CrosswordSpreadsheetManager;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridParser;
+import com.kyc.snap.grid.GridSpreadsheetWrapper;
 
 import lombok.Data;
 
@@ -87,8 +87,8 @@ public class SnapResource implements SnapService {
     public String toSpreadsheet(String sessionId) {
         ImageSession session = sessions.get(sessionId);
         SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
-        CrosswordSpreadsheetManager crosswordSpreadsheets = new CrosswordSpreadsheetManager(spreadsheets);
-        crosswordSpreadsheets.toSpreadsheet(session.getGrid());
+        GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
+        gridSpreadsheets.toSpreadsheet(session.getGrid());
         return spreadsheets.getUrl();
     }
 }
