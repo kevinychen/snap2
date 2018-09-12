@@ -38,9 +38,7 @@ import com.kyc.snap.image.ImageUtils;
 
 public class GoogleAPIManager {
 
-    public static final String DEFAULT_CREDENTIALS_FILE = "./google-api-credentials.json";
-    public static final String SAMPLE_SPREADSHEET_ID = "1n2XG8kgi-XZoD1n5jZoW4UbIFI99U2l0Uc_9SQPb8TA";
-    public static final int SAMPLE_SHEET_ID = 0;
+    public static final String CREDENTIALS_FILE = "./google-api-credentials.json";
 
     private static final String APPLICATION_NAME = "Snap";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -52,10 +50,10 @@ public class GoogleAPIManager {
     private final Sheets sheets;
     private final ImageAnnotatorSettings imageAnnotatorSettings;
 
-    public GoogleAPIManager(String credentialsFile) {
+    public GoogleAPIManager() {
         try {
             HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-            credential = GoogleCredential.fromStream(new FileInputStream(credentialsFile))
+            credential = GoogleCredential.fromStream(new FileInputStream(CREDENTIALS_FILE))
                 .createScoped(ImmutableSet.of(SheetsScopes.DRIVE));
             drive = new Drive.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
@@ -63,7 +61,7 @@ public class GoogleAPIManager {
             sheets = new Sheets.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-            GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(credentialsFile));
+            GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(CREDENTIALS_FILE));
             imageAnnotatorSettings = ImageAnnotatorSettings.newBuilder()
                     .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
                     .build();
