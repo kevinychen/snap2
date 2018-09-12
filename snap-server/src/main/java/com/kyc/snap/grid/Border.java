@@ -14,7 +14,7 @@ public class Border {
      * Styles are relative (e.g. thin/thick), so this field is null until it is filled by comparing
      * with other borders.
      */
-    private Style style;
+    private Style style = Style.NONE;
 
     public static enum Style {
         NONE,

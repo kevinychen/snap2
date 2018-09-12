@@ -106,7 +106,7 @@ public class GridParser {
         return new GridPosition(rows, cols);
     }
 
-    public void setGridColors(BufferedImage image, GridPosition pos, Grid grid) {
+    public void findGridColors(BufferedImage image, GridPosition pos, Grid grid) {
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
                 Row row = pos.getRows().get(i);
@@ -116,7 +116,7 @@ public class GridParser {
             }
     }
 
-    public void setGridText(BufferedImage image, GridPosition pos, Grid grid) {
+    public void findGridText(BufferedImage image, GridPosition pos, Grid grid) {
         Map<Point, BufferedImage> subimages = new HashMap<>();
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
@@ -134,7 +134,7 @@ public class GridParser {
             }
     }
 
-    public void setGridBorders(BufferedImage image, GridPosition pos, Grid grid) {
+    public void findGridBorders(BufferedImage image, GridPosition pos, Grid grid) {
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
                 Row row = pos.getRows().get(i);
@@ -159,7 +159,7 @@ public class GridParser {
             }
     }
 
-    public void setGridBorderStyles(Grid grid) {
+    public void findGridBorderStyles(Grid grid) {
         List<Tuple> borderWidths = new ArrayList<>();
         for (int i = 0; i < grid.getNumRows(); i++)
             for (int j = 0; j < grid.getNumCols(); j++) {

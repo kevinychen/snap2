@@ -31,7 +31,8 @@ public interface SnapService {
     @POST
     @Path("session")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    String createImageSession(@FormDataParam("image") InputStream fileInputStream) throws IOException;
+    @Produces(MediaType.TEXT_PLAIN)
+    String createImageSession(@FormDataParam("image") InputStream imageStream) throws IOException;
 
     @POST
     @Path("session/{sessionId}/lines")
@@ -47,15 +48,15 @@ public interface SnapService {
 
     @POST
     @Path("session/{sessionId}/grid/colors")
-    Grid setGridColors(@PathParam("sessionId") String sessionId);
+    Grid findGridColors(@PathParam("sessionId") String sessionId);
 
     @POST
     @Path("session/{sessionId}/grid/text")
-    Grid setGridText(@PathParam("sessionId") String sessionId);
+    Grid findGridText(@PathParam("sessionId") String sessionId);
 
     @POST
     @Path("session/{sessionId}/grid/borders")
-    Grid setGridBorders(@PathParam("sessionId") String sessionId);
+    Grid findGridBorders(@PathParam("sessionId") String sessionId);
 
     /**
      * Exports the current session data to a Google sheet.
@@ -65,5 +66,6 @@ public interface SnapService {
      */
     @POST
     @Path("session/{sessionId}/spreadsheet")
-    String toSpreadsheet(@PathParam("sessionId") String sessionId);
+    @Produces(MediaType.TEXT_PLAIN)
+    String exportToSpreadsheet(@PathParam("sessionId") String sessionId);
 }
