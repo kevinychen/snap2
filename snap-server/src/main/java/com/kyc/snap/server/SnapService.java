@@ -1,10 +1,12 @@
 
 package com.kyc.snap.server;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -54,6 +56,11 @@ public interface SnapService {
     @POST
     @Path("session/{sessionId}/position")
     GridPosition getGridPosition(@PathParam("sessionId") String sessionId);
+
+    @GET
+    @Path("session/{sessionId}/images/{row}/{col}.png")
+    @Produces("image/png")
+    BufferedImage getSubimage(@PathParam("sessionId") String sessionId, @PathParam("row") int row, @PathParam("col") int col);
 
     @POST
     @Path("session/{sessionId}/grid/colors")

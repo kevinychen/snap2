@@ -19,6 +19,8 @@ import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.grid.GridPosition;
+import com.kyc.snap.grid.GridPosition.Col;
+import com.kyc.snap.grid.GridPosition.Row;
 import com.kyc.snap.grid.GridSpreadsheetWrapper;
 
 import lombok.Data;
@@ -74,6 +76,15 @@ public class SnapResource implements SnapService {
         session.setPos(pos);
         session.setGrid(new Grid(pos.getNumRows(), pos.getNumCols()));
         return pos;
+    }
+
+    @Override
+    public BufferedImage getSubimage(String sessionId, int row, int col) {
+        ImageSession session = sessions.getIfPresent(sessionId);
+        GridPosition pos = session.getPos();
+        Row gridRow = pos.getRows().get(row);
+        Col gridCol = pos.getCols().get(col);
+        return session.getImage().getSubimage(gridCol.getStartX(), gridRow.getStartY(), gridCol.getWidth(), gridRow.getHeight());
     }
 
     @Override
