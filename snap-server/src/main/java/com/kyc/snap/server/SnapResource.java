@@ -3,12 +3,12 @@ package com.kyc.snap.server;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordParser;
@@ -30,7 +30,9 @@ public class SnapResource implements SnapService {
     private final GridParser gridParser;
     private final CrosswordParser crosswordParser;
 
-    private Map<String, ImageSession> sessions = new HashMap<>();
+    private Cache<String, ImageSession> sessions = CacheBuilder.newBuilder()
+            .maximumSize(64)
+            .<String, ImageSession>build();
 
     @Override
     public StringJson createImageSession(InputStream imageStream) throws IOException {
@@ -43,7 +45,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public GridLines findGridLines(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         GridLines lines = gridParser.findGridLines(session.getImage(), session.getApproxGridSize());
         session.setLines(lines);
         return lines;
@@ -51,7 +53,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public GridLines getInterpolatedGridLines(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         GridLines lines = gridParser.getInterpolatedGridLines(session.getLines());
         session.setLines(lines);
         return lines;
@@ -59,7 +61,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public GridLines findImplicitGridLines(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         GridLines lines = gridParser.findImplicitGridLines(session.getImage());
         session.setLines(lines);
         return lines;
@@ -67,7 +69,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public GridPosition getGridPosition(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         GridPosition pos = gridParser.getGridPosition(session.getLines());
         session.setPos(pos);
         session.setGrid(new Grid(pos.getNumRows(), pos.getNumCols()));
@@ -76,7 +78,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public Grid findGridColors(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         Grid grid = session.getGrid();
         gridParser.findGridColors(session.getImage(), session.getPos(), grid);
         return grid;
@@ -84,7 +86,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public Grid findGridText(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         Grid grid = session.getGrid();
         gridParser.findGridText(session.getImage(), session.getPos(), grid);
         return grid;
@@ -92,7 +94,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public Grid findGridBorders(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         Grid grid = session.getGrid();
         gridParser.findGridBorders(session.getImage(), session.getPos(), grid);
         gridParser.findGridBorderStyles(grid);
@@ -101,7 +103,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public Crossword parseCrossword(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         Crossword crossword = crosswordParser.parseCrossword(session.getGrid());
         session.setCrossword(crossword);
         return crossword;
@@ -109,7 +111,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public CrosswordClues parseCrosswordClues(String sessionId, ParseCrosswordCluesRequest request) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         CrosswordClues clues = crosswordParser.parseClues(request.getClues());
         session.setClues(clues);
         return clues;
@@ -117,7 +119,7 @@ public class SnapResource implements SnapService {
 
     @Override
     public StringJson exportToSpreadsheet(String sessionId) {
-        ImageSession session = sessions.get(sessionId);
+        ImageSession session = sessions.getIfPresent(sessionId);
         SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
         if (session.getCrossword() != null && session.getClues() != null) {
             CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
