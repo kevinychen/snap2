@@ -14,6 +14,8 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.kyc.snap.crossword.Crossword;
+import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
@@ -65,6 +67,20 @@ public interface SnapService {
     @Path("session/{sessionId}/grid/borders")
     Grid findGridBorders(@PathParam("sessionId") String sessionId);
 
+    @POST
+    @Path("session/{sessionId}/crossword")
+    Crossword parseCrossword(@PathParam("sessionId") String sessionId);
+
+    @POST
+    @Path("session/{sessionId}/crossword/clues")
+    CrosswordClues parseCrosswordClues(@PathParam("sessionId") String sessionId, ParseCrosswordCluesRequest request);
+
+    @Data
+    public static class ParseCrosswordCluesRequest {
+
+        private final String clues;
+    }
+
     /**
      * Exports the current session data to a Google sheet.
      *
@@ -79,6 +95,6 @@ public interface SnapService {
     public static class StringJson {
 
         @JsonValue
-        public final String value;
+        private final String value;
     }
 }

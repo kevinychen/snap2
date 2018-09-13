@@ -2,6 +2,7 @@ package com.kyc.snap.server;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.opencv.OpenCvManager;
@@ -28,10 +29,11 @@ public class SnapServer extends Application<Configuration> {
         GoogleAPIManager googleApi = new GoogleAPIManager();
         OpenCvManager openCv = new OpenCvManager();
         GridParser gridParser = new GridParser(openCv, googleApi);
+        CrosswordParser crosswordParser = new CrosswordParser();
 
         environment.jersey().setUrlPattern("/api/*");
 
         environment.jersey().register(new MultiPartFeature());
-        environment.jersey().register(new SnapResource(googleApi, gridParser));
+        environment.jersey().register(new SnapResource(googleApi, gridParser, crosswordParser));
     }
 }

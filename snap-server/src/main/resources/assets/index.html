@@ -13,30 +13,49 @@
       </div>
     </div>
     <div class="section-div">
-      <div id="operation-group-lines" class="operation-group">
-        <input id="operation-find-grid-lines" type="button" value="Find grid lines">
-        <input id="operation-find-implicit-lines" type="button" value="Find implicit grid lines">
+      <div class="group">
+        <span class="hide show-after-session">
+          <input id="operation-find-grid-lines" type="button" value="Find grid lines">
+          <input id="operation-find-implicit-lines" type="button" value="Find implicit grid lines">
+        </span>
+        <span class="hide show-after-lines">
+          <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
+          <input id="operation-grid-position" type="button" value="Find grid position">
+        </span>
       </div>
-      <div id="operation-group-after-lines" class="operation-group">
-        <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
-        <input id="operation-grid-position" type="button" value="Find grid position">
+      <div class="group">
+        <span class="hide show-after-position">
+          <input id="operation-find-grid-colors" type="button" value="Parse grid colors">
+          <input id="operation-find-grid-text" type="button" value="Parse grid text">
+          <input id="operation-find-grid-borders" type="button" value="Parse grid borders">
+        </span>
       </div>
-      <div id="operation-group-grid" class="operation-group">
-        <input id="operation-find-grid-colors" type="button" value="Parse grid colors">
-        <input id="operation-find-grid-text" type="button" value="Parse grid text">
-        <input id="operation-find-grid-borders" type="button" value="Parse grid borders">
+      <div>
+        <span class="hide show-after-grid">
+          <input id="operation-parse-crossword" class="hide show-after-grid" type="button" value="Parse crossword">
+        </span>
+        <span class="hide show-after-clues">
+          <input id="operation-parse-crossword-clues" type="button" value="Parse crossword clues">
+        </span>
       </div>
-      <div id="operation-group-spreadsheet" class="operation-group">
-        <input id="operation-export-to-spreadsheet" type="button" value="Export to Google sheet">
+      <div class="group">
+        <span class="hide show-after-grid">
+          <input id="operation-export-to-spreadsheet" type="button" value="Export to Google sheet">
+        </span>
       </div>
     </div>
     <div class="section-div">
-      <div id="spreadsheet-url">
-        <span>Spreadsheet URL:</span>
-        <a id="spreadsheet-url-link" href="#" target="_blank"></span>
+      <div id="spreadsheet-url" class="group hide show-after-grid">
+        <div>Spreadsheet URL:</div>
+        <a id="spreadsheet-url-link" href="#" target="_blank"></a>
+      </div>
+      <div id="crossword-clues" class="group hide show-after-session">
+        <div>Enter crossword clues:</div>
+        <textarea id="crossword-clues-textarea"></textarea>
       </div>
     </div>
   </body>
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script>
     session = {
@@ -44,18 +63,25 @@
       lines: undefined,
       pos: undefined,
       grid: undefined,
+      crossword: undefined,
+      clues: undefined,
       spreadsheetUrl: undefined,
     }
 
-    function post(path, body, callback) {
-      fetch('/api' + path, { method: 'POST', body: body })
+    function post(args, callback) {
+      fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
         .then(response => { return response.json(); })
         .then(callback);
     }
 
-    function sessionPost(sessionPath, callback) {
+    function sessionPost(args, callback) {
       if (session.sessionId) {
-        post('/session/' + session.sessionId + sessionPath, undefined, callback);
+        const newArgs = { path: '/session/' + session.sessionId + args.path };
+        if (args.body !== undefined) {
+          newArgs.headers = { 'content-type': 'application/json' };
+          newArgs.body = JSON.stringify(args.body);
+        }
+        post(newArgs, callback);
       }
     }
 
@@ -65,7 +91,7 @@
 
     function drawLines(lines) {
       session.lines = lines;
-      $('#operation-group-after-lines').show();
+      $('.show-after-lines').show();
 
       const image = $('#image')[0];
       const canvas = $('#lines-canvas')[0];
@@ -90,7 +116,7 @@
 
     function drawGrid(grid) {
       session.grid = grid;
-      $('#operation-group-spreadsheet').show();
+      $('.show-after-grid').show();
 
       const image = $('#image')[0];
       const canvas = $('#grid-canvas')[0];
@@ -143,29 +169,48 @@
         const image = e.target.files[0];
         const formData = new FormData();
         formData.append('image', image);
-        post('/session', formData, sessionId => {
+        post({ path: '/session', body: formData }, sessionId => {
           session.sessionId = sessionId;
-          $('#operation-group-lines').show();
+          $('.show-after-session').show();
           $('#image').attr('src', URL.createObjectURL(image));
         });
       });
 
-      $('#operation-find-grid-lines').click(e => sessionPost('/lines', drawLines));
-      $('#operation-interpolate-grid-lines').click(e => sessionPost('/lines/interpolate', drawLines));
-      $('#operation-find-implicit-lines').click(e => sessionPost('/lines/implicit', drawLines));
-      $('#operation-grid-position').click(e => sessionPost('/position', pos => {
+      $('#crossword-clues-textarea').on('input', e => {
+        $('.show-after-clues').show();
+      });
+
+      $('#operation-find-grid-lines').click(e => sessionPost({ path: '/lines' }, drawLines));
+      $('#operation-find-implicit-lines').click(e => sessionPost({ path: '/lines/implicit' }, drawLines));
+      $('#operation-parse-crossword-clues').click(e => {
+        const clues = $('#crossword-clues-textarea').val();
+        sessionPost({ path: '/crossword/clues', body: { clues: clues } }, parsedClues => {
+          console.log(parsedClues);
+          session.clues = parsedClues;
+        });
+      });
+
+      $('#operation-interpolate-grid-lines').click(e => sessionPost({ path: '/lines/interpolate' }, drawLines));
+      $('#operation-grid-position').click(e => sessionPost({ path: '/position' }, pos => {
         session.pos = pos;
-        $('#operation-group-grid').show();
+        $('.show-after-position').show();
       }));
-      $('#operation-find-grid-colors').click(e => sessionPost('/grid/colors', drawGrid));
-      $('#operation-find-grid-text').click(e => sessionPost('/grid/text', drawGrid));
-      $('#operation-find-grid-borders').click(e => sessionPost('/grid/borders', drawGrid));
-      $('#operation-export-to-spreadsheet').click(e => sessionPost('/spreadsheet', spreadsheetUrl => {
+
+      $('#operation-find-grid-colors').click(e => sessionPost({ path: '/grid/colors' }, drawGrid));
+      $('#operation-find-grid-text').click(e => sessionPost({ path: '/grid/text' }, drawGrid));
+      $('#operation-find-grid-borders').click(e => sessionPost({ path: '/grid/borders' }, drawGrid));
+
+      $('#operation-parse-crossword').click(e => sessionPost({ path: '/crossword' }, crossword => {
+        console.log(crossword);
+        session.crossword = crossword;
+      }));
+      $('#operation-export-to-spreadsheet').click(e => sessionPost({ path: '/spreadsheet' }, spreadsheetUrl => {
         session.spreadsheetUrl = spreadsheetUrl;
         $('#spreadsheet-url-link').attr('href', spreadsheetUrl).text(spreadsheetUrl);
       }));
     });
   </script>
+
   <style>
     .section-div {
       float: left;
@@ -194,9 +239,17 @@
       display: block;
     }
 
-    .operation-group {
-      display: none;
+    .group {
       margin-bottom: 10px;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    #crossword-clues-textarea {
+      width: 50%;
+      height: 80%;
     }
   </style>
 </html>

@@ -2,6 +2,8 @@ package com.kyc.snap.server;
 
 import java.awt.image.BufferedImage;
 
+import com.kyc.snap.crossword.Crossword;
+import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
@@ -17,6 +19,8 @@ public class ImageSession {
     private GridLines lines;
     private GridPosition pos;
     private Grid grid;
+    private Crossword crossword;
+    private CrosswordClues clues;
 
     private int approxGridSize = 32;
     private String spreadsheetId = "1n2XG8kgi-XZoD1n5jZoW4UbIFI99U2l0Uc_9SQPb8TA";

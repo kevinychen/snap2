@@ -9,6 +9,10 @@ import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
+import com.kyc.snap.crossword.Crossword;
+import com.kyc.snap.crossword.CrosswordClues;
+import com.kyc.snap.crossword.CrosswordParser;
+import com.kyc.snap.crossword.CrosswordSpreadsheetWrapper;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.grid.Grid;
@@ -24,6 +28,7 @@ public class SnapResource implements SnapService {
 
     private final GoogleAPIManager googleApi;
     private final GridParser gridParser;
+    private final CrosswordParser crosswordParser;
 
     private Map<String, ImageSession> sessions = new HashMap<>();
 
@@ -95,11 +100,32 @@ public class SnapResource implements SnapService {
     }
 
     @Override
+    public Crossword parseCrossword(String sessionId) {
+        ImageSession session = sessions.get(sessionId);
+        Crossword crossword = crosswordParser.parseCrossword(session.getGrid());
+        session.setCrossword(crossword);
+        return crossword;
+    }
+
+    @Override
+    public CrosswordClues parseCrosswordClues(String sessionId, ParseCrosswordCluesRequest request) {
+        ImageSession session = sessions.get(sessionId);
+        CrosswordClues clues = crosswordParser.parseClues(request.getClues());
+        session.setClues(clues);
+        return clues;
+    }
+
+    @Override
     public StringJson exportToSpreadsheet(String sessionId) {
         ImageSession session = sessions.get(sessionId);
         SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
-        GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
-        gridSpreadsheets.toSpreadsheet(session.getGrid());
+        if (session.getCrossword() != null && session.getClues() != null) {
+            CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
+            crosswordSpreadsheets.toSpreadsheet(session.getGrid(), session.getCrossword(), session.getClues());
+        } else {
+            GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
+            gridSpreadsheets.toSpreadsheet(session.getGrid());
+        }
         return new StringJson(spreadsheets.getUrl());
     }
 }
