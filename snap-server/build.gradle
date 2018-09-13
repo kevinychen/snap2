@@ -21,7 +21,7 @@ dependencies {
     compile "io.dropwizard:dropwizard-assets:1.2.1"
     compile "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
     compile "org.openpnp:opencv:3.2.0-1"
-    compile "org.projectlombok:lombok:1.16.12"
+    compile "org.projectlombok:lombok:1.18.2"
 
     testCompile "junit:junit:4.12"
 }
