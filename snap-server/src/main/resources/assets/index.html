@@ -10,6 +10,7 @@
         <img id="image" alt="" />
         <canvas id="lines-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
         <canvas id="grid-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
+        <canvas id="crossword-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
       </div>
     </div>
     <div class="section-div">
@@ -123,6 +124,7 @@
       const widthRatio = canvas.width / image.naturalWidth;
       const heightRatio = canvas.height / image.naturalHeight;
       const ctx = canvas.getContext('2d');
+      ctx.font = "18px Helvetica";
       for (var i = 0; i < grid.numRows; i++) {
         for (var j = 0; j < grid.numCols; j++) {
           const row = session.pos.rows[i];
@@ -164,6 +166,40 @@
       }
     }
 
+    function drawCrossword(crossword) {
+      session.crossword = crossword;
+
+      const image = $('#image')[0];
+      const canvas = $('#crossword-canvas')[0];
+      const widthRatio = canvas.width / image.naturalWidth;
+      const heightRatio = canvas.height / image.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "18px Helvetica";
+      ctx.strokeStyle = 'blue';
+      for (var entry of crossword.entries) {
+        const row = session.pos.rows[entry.startRow];
+        const col = session.pos.cols[entry.startCol];
+        ctx.strokeText(entry.clueNumber,
+            widthRatio * (col.startX + col.width / 3),
+            heightRatio * (row.startY + row.height * 2 / 3));
+      }
+    }
+
+    function writeClues(clues) {
+      session.clues = clues;
+
+      var cluesText = '';
+      for (var section of clues.sections) {
+        cluesText += section.direction + '\n';
+        for (var clue of section.clues) {
+          cluesText += clue.clue + '\n';
+        }
+      }
+      $('#crossword-clues-textarea').val(cluesText);
+      $('#crossword-clues-textarea').addClass('parsed');
+    }
+
     $(document).ready(function() {
       $('#image-input').change(e => {
         const image = e.target.files[0];
@@ -178,16 +214,14 @@
 
       $('#crossword-clues-textarea').on('input', e => {
         $('.show-after-clues').show();
+        $('#crossword-clues-textarea').removeClass('parsed');
       });
 
       $('#operation-find-grid-lines').click(e => sessionPost({ path: '/lines' }, drawLines));
       $('#operation-find-implicit-lines').click(e => sessionPost({ path: '/lines/implicit' }, drawLines));
       $('#operation-parse-crossword-clues').click(e => {
-        const clues = $('#crossword-clues-textarea').val();
-        sessionPost({ path: '/crossword/clues', body: { clues: clues } }, parsedClues => {
-          console.log(parsedClues);
-          session.clues = parsedClues;
-        });
+        const unparsedClues = $('#crossword-clues-textarea').val();
+        sessionPost({ path: '/crossword/clues', body: { clues: unparsedClues } }, writeClues);
       });
 
       $('#operation-interpolate-grid-lines').click(e => sessionPost({ path: '/lines/interpolate' }, drawLines));
@@ -200,10 +234,7 @@
       $('#operation-find-grid-text').click(e => sessionPost({ path: '/grid/text' }, drawGrid));
       $('#operation-find-grid-borders').click(e => sessionPost({ path: '/grid/borders' }, drawGrid));
 
-      $('#operation-parse-crossword').click(e => sessionPost({ path: '/crossword' }, crossword => {
-        console.log(crossword);
-        session.crossword = crossword;
-      }));
+      $('#operation-parse-crossword').click(e => sessionPost({ path: '/crossword' }, drawCrossword));
       $('#operation-export-to-spreadsheet').click(e => sessionPost({ path: '/spreadsheet' }, spreadsheetUrl => {
         session.spreadsheetUrl = spreadsheetUrl;
         $('#spreadsheet-url-link').attr('href', spreadsheetUrl).text(spreadsheetUrl);
@@ -248,8 +279,12 @@
     }
 
     #crossword-clues-textarea {
-      width: 50%;
-      height: 80%;
+      width: 80%;
+      height: 100%;
+    }
+
+    .parsed {
+      font-family: monospace;
     }
   </style>
 </html>

@@ -1,11 +1,16 @@
 package com.kyc.snap.crossword;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.kyc.snap.crossword.Crossword.Entry;
-import com.kyc.snap.crossword.CrosswordClues.Clue;
+import com.kyc.snap.crossword.CrosswordClues.ClueSection;
+import com.kyc.snap.crossword.CrosswordClues.NumberedClue;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.image.ImageUtils;
@@ -13,6 +18,8 @@ import com.kyc.snap.image.ImageUtils;
 import lombok.Data;
 
 public class CrosswordParser {
+
+    private static final ClueDirection[] DIRECTIONS = { ClueDirection.ACROSS, ClueDirection.DOWN };
 
     public Crossword parseCrossword(Grid grid) {
         Square[][] squares = grid.getSquares();
@@ -78,7 +85,17 @@ public class CrosswordParser {
             }
         }
         clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
-        return new CrosswordClues(clues);
+
+        Multimap<ClueDirection, Clue> cluesByDirection = Multimaps.index(clues, clue -> clue.getDirection());
+        List<ClueSection> sections = new ArrayList<>();
+        for (ClueDirection direction : DIRECTIONS) {
+            List<NumberedClue> sectionClues = cluesByDirection.get(direction).stream()
+                .sorted(Comparator.comparing(clue -> clue.clueNumber))
+                .map(clue -> new NumberedClue(clue.clueNumber, clue.clue))
+                .collect(Collectors.toList());
+            sections.add(new ClueSection(direction, sectionClues));
+        }
+        return new CrosswordClues(sections);
     }
 
     @Data
@@ -87,5 +104,13 @@ public class CrosswordParser {
         private final boolean isOpen;
         private final boolean canGoAcross;
         private final boolean canGoDown;
+    }
+
+    @Data
+    private static class Clue {
+
+        private final ClueDirection direction;
+        private final int clueNumber;
+        private final String clue;
     }
 }

@@ -7,12 +7,18 @@ import lombok.Data;
 @Data
 public class CrosswordClues {
 
-    private final List<Clue> clues;
+    private final List<ClueSection> sections;
 
     @Data
-    public static class Clue {
+    public static class ClueSection {
 
         private final ClueDirection direction;
+        private final List<NumberedClue> clues;
+    }
+
+    @Data
+    public static class NumberedClue {
+
         private final int clueNumber;
         private final String clue;
     }
