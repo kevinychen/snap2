@@ -30,3 +30,8 @@ configurations.all {
     exclude group: "com.google.guava", module: "guava-jdk5"
 }
 
+task run(type: JavaExec) {
+    classpath project.sourceSets.main.runtimeClasspath
+    main "com.kyc.snap.server.SnapServer"
+}
+
