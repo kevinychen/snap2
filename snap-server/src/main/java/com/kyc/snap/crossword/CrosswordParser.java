@@ -10,6 +10,7 @@ import com.google.common.collect.Multimaps;
 import com.kyc.snap.crossword.Crossword.Entry;
 import com.kyc.snap.crossword.CrosswordClues.ClueSection;
 import com.kyc.snap.crossword.CrosswordClues.NumberedClue;
+import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.image.ImageUtils;
@@ -26,8 +27,10 @@ public class CrosswordParser {
         for (int i = 0; i < grid.getNumRows(); i++)
             for (int j = 0; j < grid.getNumCols(); j++) {
                 boolean isOpen = ImageUtils.isLight(squares[i][j].getRgb());
-                boolean canGoAcross = isOpen && j < grid.getNumCols() - 1 && ImageUtils.isLight(squares[i][j + 1].getRgb());
-                boolean canGoDown = isOpen && i < grid.getNumRows() - 1 && ImageUtils.isLight(squares[i + 1][j].getRgb());
+                boolean canGoAcross = isOpen && j < grid.getNumCols() - 1 && ImageUtils.isLight(squares[i][j + 1].getRgb())
+                        && squares[i][j].getRightBorder().getStyle().compareTo(Style.THIN) <= 0;
+                boolean canGoDown = isOpen && i < grid.getNumRows() - 1 && ImageUtils.isLight(squares[i + 1][j].getRgb())
+                        && squares[i][j].getBottomBorder().getStyle().compareTo(Style.THIN) <= 0;
                 crosswordSquares[i][j] = new CrosswordSquare(isOpen, canGoAcross, canGoDown);
             }
 
@@ -79,7 +82,7 @@ public class CrosswordParser {
                 currentClueNumber = Integer.parseInt(normalizedLine.split("\\D+")[0]);
             }
             if (!isDirection)
-                currentClue += line;
+                currentClue += line + " ";
         }
         clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
 
@@ -89,7 +92,7 @@ public class CrosswordParser {
             List<NumberedClue> sectionClues = cluesByDirection.get(direction).stream()
                 .filter(clue -> !clue.clue.isEmpty())
                 .sorted(Comparator.comparing(clue -> clue.clueNumber))
-                .map(clue -> new NumberedClue(clue.clueNumber, clue.clue))
+                .map(clue -> new NumberedClue(clue.clueNumber, clue.clue.trim()))
                 .collect(Collectors.toList());
             sections.add(new ClueSection(direction, sectionClues));
         }
