@@ -24,8 +24,8 @@ import lombok.Data;
 @Data
 public class CrosswordSpreadsheetWrapper {
 
-    private static final int UNKNOWN_MARKER_ROW = 128;
-    private static final int UNKNOWN_MARKER_COL = 128;
+    private static final int BLANK_MARKER_ROW = 500;
+    private static final int UNKNOWN_MARKER_ROW = 501;
     private static final int[] DROW = { 0, 1 };
     private static final int[] DCOL = { 1, 0 };
 
@@ -41,7 +41,7 @@ public class CrosswordSpreadsheetWrapper {
         Multimap<Point, PointAndIndex> gridToAnswers = ArrayListMultimap.create();
 
         List<ValueCell> valueCells = new ArrayList<>();
-        valueCells.add(new ValueCell(UNKNOWN_MARKER_ROW, UNKNOWN_MARKER_COL, "."));
+        valueCells.add(new ValueCell(UNKNOWN_MARKER_ROW, 0, "."));
         List<ValueCell> formulaCells = new ArrayList<>();
         for (int i = 0; i < clues.getSections().size(); i++) {
             ClueSection section = clues.getSections().get(i);
@@ -56,9 +56,10 @@ public class CrosswordSpreadsheetWrapper {
                     int row = crosswordEntry.getStartRow() + k * DROW[i];
                     int col = crosswordEntry.getStartCol() + k * DCOL[i];
                     gridRefs.add(String.format(
-                        "IF(%1$s=\"\", %2$s, %1$s)",
+                        "IF(%1$s=%2$s, %3$s, %1$s)",
                         spreadsheets.getRef(row, col),
-                        spreadsheets.getRef(UNKNOWN_MARKER_ROW, UNKNOWN_MARKER_COL)));
+                        spreadsheets.getRef(BLANK_MARKER_ROW, 0),
+                        spreadsheets.getRef(UNKNOWN_MARKER_ROW, 0)));
                     gridToAnswers.put(new Point(col, row), new PointAndIndex(j, directionColumns.get(i) + 2, k));
                 }
                 formulaCells.add(new ValueCell(
