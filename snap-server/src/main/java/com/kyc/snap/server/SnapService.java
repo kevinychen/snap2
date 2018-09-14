@@ -58,6 +58,10 @@ public interface SnapService {
     @Path("session/{sessionId}/position")
     GridPosition getGridPosition(@PathParam("sessionId") String sessionId);
 
+    @POST
+    @Path("session/{sessionId}/spreadsheet/images")
+    StringJson exportImagesToSpreadsheet(@PathParam("sessionId") String sessionId);
+
     @GET
     @Path("session/{sessionId}/images/{row}/{col}.png")
     @Produces("image/png")
@@ -76,6 +80,10 @@ public interface SnapService {
     Grid findGridBorders(@PathParam("sessionId") String sessionId);
 
     @POST
+    @Path("session/{sessionId}/spreadsheet/grid")
+    StringJson exportGridToSpreadsheet(@PathParam("sessionId") String sessionId);
+
+    @POST
     @Path("session/{sessionId}/crossword")
     Crossword parseCrossword(@PathParam("sessionId") String sessionId);
 
@@ -83,15 +91,9 @@ public interface SnapService {
     @Path("session/{sessionId}/crossword/clues")
     CrosswordClues parseCrosswordClues(@PathParam("sessionId") String sessionId, @QueryParam("clues") String unparsedClues);
 
-    /**
-     * Exports the current session data to a Google sheet.
-     *
-     * @param sessionId
-     * @return the spreadsheet URL
-     */
     @POST
-    @Path("session/{sessionId}/spreadsheet")
-    StringJson exportToSpreadsheet(@PathParam("sessionId") String sessionId);
+    @Path("session/{sessionId}/spreadsheet/crossword")
+    StringJson exportCrosswordToSpreadsheet(@PathParam("sessionId") String sessionId);
 
     @Data
     public static class StringJson {

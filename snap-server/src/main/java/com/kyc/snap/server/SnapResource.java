@@ -21,7 +21,8 @@ import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
-import com.kyc.snap.grid.GridPositionSpreadsheetWrapper;
+import com.kyc.snap.grid.GridSpreadsheetWrapper;
+import com.kyc.snap.image.ImageSpreadsheetWrapper;
 
 import lombok.Data;
 
@@ -80,6 +81,15 @@ public class SnapResource implements SnapService {
     }
 
     @Override
+    public StringJson exportImagesToSpreadsheet(String sessionId) {
+        ImageSession session = sessions.getIfPresent(sessionId);
+        SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
+        ImageSpreadsheetWrapper imageSpreadsheets = new ImageSpreadsheetWrapper(configuration, spreadsheets);
+        imageSpreadsheets.toSpreadsheet(sessionId, session.getImage(), session.getPos());
+        return new StringJson(spreadsheets.getUrl());
+    }
+
+    @Override
     public BufferedImage getSubimage(String sessionId, int row, int col) {
         ImageSession session = sessions.getIfPresent(sessionId);
         GridPosition pos = session.getPos();
@@ -114,6 +124,15 @@ public class SnapResource implements SnapService {
     }
 
     @Override
+    public StringJson exportGridToSpreadsheet(String sessionId) {
+        ImageSession session = sessions.getIfPresent(sessionId);
+        SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
+        GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
+        gridSpreadsheets.toSpreadsheet(session.getGrid());
+        return new StringJson(spreadsheets.getUrl());
+    }
+
+    @Override
     public Crossword parseCrossword(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
         Crossword crossword = crosswordParser.parseCrossword(session.getGrid());
@@ -130,18 +149,11 @@ public class SnapResource implements SnapService {
     }
 
     @Override
-    public StringJson exportToSpreadsheet(String sessionId) {
+    public StringJson exportCrosswordToSpreadsheet(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
         SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
-
-        GridPositionSpreadsheetWrapper gridSpreadsheets = new GridPositionSpreadsheetWrapper(configuration, spreadsheets);
-        gridSpreadsheets.toSpreadsheet(sessionId, session.getImage(), session.getPos());
-
-        if (session.getCrossword() != null && session.getClues() != null) {
-            CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
-            crosswordSpreadsheets.toSpreadsheet(session.getGrid(), session.getCrossword(), session.getClues());
-        }
-
+        CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
+        crosswordSpreadsheets.toSpreadsheet(session.getGrid(), session.getCrossword(), session.getClues());
         return new StringJson(spreadsheets.getUrl());
     }
 }

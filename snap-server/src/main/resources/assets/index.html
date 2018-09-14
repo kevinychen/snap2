@@ -21,7 +21,14 @@
         </span>
         <span class="hide show-after-lines">
           <input id="operation-interpolate-grid-lines" type="button" value="Interpolate grid lines">
+        </span>
+      </div>
+      <div class="group">
+        <span class="hide show-after-lines">
           <input id="operation-grid-position" type="button" value="Find grid position">
+        </span>
+        <span class="hide show-after-position">
+          <input id="operation-export-images" type="button" value="Export images to Google sheet">
         </span>
       </div>
       <div class="group">
@@ -29,27 +36,26 @@
           <input id="operation-find-grid-colors" type="button" value="Parse grid colors">
           <input id="operation-find-grid-text" type="button" value="Parse grid text">
           <input id="operation-find-grid-borders" type="button" value="Parse grid borders">
+          <input id="operation-export-grid" type="button" value="Export grid to Google sheet">
         </span>
       </div>
-      <div>
+      <div class="group">
         <span class="hide show-after-grid">
           <input id="operation-parse-crossword" class="hide show-after-grid" type="button" value="Parse crossword">
         </span>
         <span class="hide show-after-clues">
           <input id="operation-parse-crossword-clues" type="button" value="Parse crossword clues">
         </span>
-      </div>
-      <div class="group">
-        <span class="hide show-after-position">
-          <input id="operation-export-to-spreadsheet" type="button" value="Export to Google sheet">
+        <span class="hide show-after-export">
+          <span class="hide show-after-crossword">
+            <span class="hide show-after-clues">
+              <input id="operation-export-crossword" type="button" value="Export crossword to Google sheet">
+            </span>
+          </span>
         </span>
       </div>
     </div>
     <div class="section-div">
-      <div id="spreadsheet-url" class="group hide show-after-export">
-        <div>Spreadsheet URL:</div>
-        <a id="spreadsheet-url-link" href="#" target="_blank"></a>
-      </div>
       <div id="crossword-clues" class="group hide show-after-session">
         <div>Enter crossword clues:</div>
         <textarea id="crossword-clues-textarea"></textarea>
@@ -167,6 +173,7 @@
 
     function drawCrossword(crossword) {
       session.crossword = crossword;
+      $('.show-after-crossword').show();
 
       const image = $('#image')[0];
       const canvas = $('#crossword-canvas')[0];
@@ -199,6 +206,12 @@
       $('#crossword-clues-textarea').addClass('parsed');
     }
 
+    function showSpreadsheetUrl(spreadsheetUrl) {
+      session.spreadsheetUrl = spreadsheetUrl;
+      $('.show-after-export').show();
+      alert('Spreadsheet URL: ' + spreadsheetUrl);
+    }
+
     $(document).ready(function() {
       $('#image-input').change(e => {
         const image = e.target.files[0];
@@ -218,27 +231,25 @@
 
       $('#operation-find-grid-lines').click(e => sessionPost({ path: '/lines' }, drawLines));
       $('#operation-find-implicit-lines').click(e => sessionPost({ path: '/lines/implicit' }, drawLines));
-      $('#operation-parse-crossword-clues').click(e => {
-        const unparsedClues = $('#crossword-clues-textarea').val();
-        sessionPost({ path: '/crossword/clues', queryParams: { clues: unparsedClues } }, writeClues);
-      });
-
       $('#operation-interpolate-grid-lines').click(e => sessionPost({ path: '/lines/interpolate' }, drawLines));
+
       $('#operation-grid-position').click(e => sessionPost({ path: '/position' }, pos => {
         session.pos = pos;
         $('.show-after-position').show();
       }));
+      $('#operation-export-images').click(e => sessionPost({ path: '/spreadsheet/images' }, showSpreadsheetUrl));
 
       $('#operation-find-grid-colors').click(e => sessionPost({ path: '/grid/colors' }, drawGrid));
       $('#operation-find-grid-text').click(e => sessionPost({ path: '/grid/text' }, drawGrid));
       $('#operation-find-grid-borders').click(e => sessionPost({ path: '/grid/borders' }, drawGrid));
+      $('#operation-export-grid').click(e => sessionPost({ path: '/spreadsheet/grid' }, showSpreadsheetUrl));
 
       $('#operation-parse-crossword').click(e => sessionPost({ path: '/crossword' }, drawCrossword));
-      $('#operation-export-to-spreadsheet').click(e => sessionPost({ path: '/spreadsheet' }, spreadsheetUrl => {
-        session.spreadsheetUrl = spreadsheetUrl;
-        $('#spreadsheet-url-link').attr('href', spreadsheetUrl).text(spreadsheetUrl);
-        $('.show-after-export').show();
-      }));
+      $('#operation-parse-crossword-clues').click(e => {
+        const unparsedClues = $('#crossword-clues-textarea').val();
+        sessionPost({ path: '/crossword/clues', queryParams: { clues: unparsedClues } }, writeClues);
+      });
+      $('#operation-export-crossword').click(e => sessionPost({ path: '/spreadsheet/crossword' }, showSpreadsheetUrl));
     });
   </script>
 

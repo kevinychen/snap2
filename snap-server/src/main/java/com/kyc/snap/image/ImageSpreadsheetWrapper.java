@@ -1,4 +1,4 @@
-package com.kyc.snap.grid;
+package com.kyc.snap.image;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -6,12 +6,13 @@ import java.util.List;
 
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
+import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.server.SnapConfiguration;
 
 import lombok.Data;
 
 @Data
-public class GridPositionSpreadsheetWrapper {
+public class ImageSpreadsheetWrapper {
 
     private final SnapConfiguration configuration;
     private final SpreadsheetManager spreadsheets;
