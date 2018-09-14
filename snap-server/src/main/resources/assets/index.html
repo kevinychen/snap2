@@ -40,13 +40,13 @@
         </span>
       </div>
       <div class="group">
-        <span class="hide show-after-grid">
+        <span class="hide show-after-position">
           <input id="operation-export-to-spreadsheet" type="button" value="Export to Google sheet">
         </span>
       </div>
     </div>
     <div class="section-div">
-      <div id="spreadsheet-url" class="group hide show-after-grid">
+      <div id="spreadsheet-url" class="group hide show-after-export">
         <div>Spreadsheet URL:</div>
         <a id="spreadsheet-url-link" href="#" target="_blank"></a>
       </div>
@@ -238,6 +238,7 @@
       $('#operation-export-to-spreadsheet').click(e => sessionPost({ path: '/spreadsheet' }, spreadsheetUrl => {
         session.spreadsheetUrl = spreadsheetUrl;
         $('#spreadsheet-url-link').attr('href', spreadsheetUrl).text(spreadsheetUrl);
+        $('.show-after-export').show();
       }));
     });
   </script>

@@ -21,13 +21,14 @@ import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
-import com.kyc.snap.grid.GridSpreadsheetWrapper;
+import com.kyc.snap.grid.GridPositionSpreadsheetWrapper;
 
 import lombok.Data;
 
 @Data
 public class SnapResource implements SnapService {
 
+    private final SnapConfiguration configuration;
     private final GoogleAPIManager googleApi;
     private final GridParser gridParser;
     private final CrosswordParser crosswordParser;
@@ -136,8 +137,8 @@ public class SnapResource implements SnapService {
             CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
             crosswordSpreadsheets.toSpreadsheet(session.getGrid(), session.getCrossword(), session.getClues());
         } else {
-            GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
-            gridSpreadsheets.toSpreadsheet(session.getGrid());
+            GridPositionSpreadsheetWrapper gridSpreadsheets = new GridPositionSpreadsheetWrapper(configuration, spreadsheets);
+            gridSpreadsheets.toSpreadsheet(sessionId, session.getImage(), session.getPos());
         }
         return new StringJson(spreadsheets.getUrl());
     }
