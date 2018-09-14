@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.kyc.snap.crossword.Crossword.Entry;
@@ -19,7 +18,7 @@ import lombok.Data;
 
 public class CrosswordParser {
 
-    private static final ClueDirection[] DIRECTIONS = { ClueDirection.ACROSS, ClueDirection.DOWN };
+    private static final ClueDirection[] DIRECTIONS = { ClueDirection.ACROSS, ClueDirection.DOWN, ClueDirection.UNKNOWN };
 
     public Crossword parseCrossword(Grid grid) {
         Square[][] squares = grid.getSquares();
@@ -60,29 +59,27 @@ public class CrosswordParser {
     }
 
     public CrosswordClues parseClues(String text) {
-        ClueDirection currentDirection = null;
+        ClueDirection currentDirection = ClueDirection.UNKNOWN;
         int currentClueNumber = -1;
         String currentClue = "";
         List<Clue> clues = new ArrayList<>();
         for (String line : text.split("\n")) {
             String normalizedLine = line.trim().toUpperCase();
-            if (!currentClue.isEmpty() && (normalizedLine.startsWith("ACROSS") || normalizedLine.startsWith("DOWN")
-                    || Character.isDigit(normalizedLine.charAt(0)))) {
-                Preconditions.checkArgument(currentDirection != null, "No clue direction set");
-                Preconditions.checkArgument(currentClueNumber != -1, "No clue number set");
+            boolean isDirection = false;
+            for (ClueDirection direction : DIRECTIONS)
+                if (normalizedLine.startsWith(direction.toString())) {
+                    clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
+                    currentDirection = direction;
+                    currentClue = "";
+                    isDirection = true;
+                }
+            if (!normalizedLine.isEmpty() && Character.isDigit(normalizedLine.charAt(0))) {
                 clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
                 currentClue = "";
+                currentClueNumber = Integer.parseInt(normalizedLine.split("\\D+")[0]);
             }
-
-            if (normalizedLine.equalsIgnoreCase("ACROSS"))
-                currentDirection = ClueDirection.ACROSS;
-            else if (normalizedLine.equalsIgnoreCase("DOWN"))
-                currentDirection = ClueDirection.DOWN;
-            else {
-                if (Character.isDigit(normalizedLine.charAt(0)))
-                    currentClueNumber = Integer.parseInt(normalizedLine.split("\\D+")[0]);
+            if (!isDirection)
                 currentClue += line;
-            }
         }
         clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
 
@@ -90,6 +87,7 @@ public class CrosswordParser {
         List<ClueSection> sections = new ArrayList<>();
         for (ClueDirection direction : DIRECTIONS) {
             List<NumberedClue> sectionClues = cluesByDirection.get(direction).stream()
+                .filter(clue -> !clue.clue.isEmpty())
                 .sorted(Comparator.comparing(clue -> clue.clueNumber))
                 .map(clue -> new NumberedClue(clue.clueNumber, clue.clue))
                 .collect(Collectors.toList());

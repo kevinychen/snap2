@@ -27,9 +27,6 @@
         <span class="hide show-after-lines">
           <input id="operation-grid-position" type="button" value="Find grid position">
         </span>
-        <span class="hide show-after-position">
-          <input id="operation-export-images" type="button" value="Export images to Google sheet">
-        </span>
       </div>
       <div class="group">
         <span class="hide show-after-position">
@@ -38,25 +35,26 @@
           <input id="operation-find-grid-borders" type="button" value="Parse grid borders">
           <input id="operation-export-grid" type="button" value="Export grid to Google sheet">
         </span>
+        <span class="hide show-after-export-grid">
+          <input id="operation-export-images" type="button" value="Export images to Google sheet">
+        </span>
       </div>
       <div class="group">
         <span class="hide show-after-grid">
           <input id="operation-parse-crossword" class="hide show-after-grid" type="button" value="Parse crossword">
         </span>
-        <span class="hide show-after-clues">
+        <span class="hide show-after-crossword">
           <input id="operation-parse-crossword-clues" type="button" value="Parse crossword clues">
         </span>
-        <span class="hide show-after-export">
-          <span class="hide show-after-crossword">
-            <span class="hide show-after-clues">
-              <input id="operation-export-crossword" type="button" value="Export crossword to Google sheet">
-            </span>
+        <span class="hide show-after-export-grid">
+          <span class="hide show-after-clues">
+            <input id="operation-export-crossword" type="button" value="Export crossword to Google sheet">
           </span>
         </span>
       </div>
     </div>
     <div class="section-div">
-      <div id="crossword-clues" class="group hide show-after-session">
+      <div id="crossword-clues" class="group hide show-after-crossword">
         <div>Enter crossword clues:</div>
         <textarea id="crossword-clues-textarea"></textarea>
       </div>
@@ -208,7 +206,6 @@
 
     function showSpreadsheetUrl(spreadsheetUrl) {
       session.spreadsheetUrl = spreadsheetUrl;
-      $('.show-after-export').show();
       alert('Spreadsheet URL: ' + spreadsheetUrl);
     }
 
@@ -237,12 +234,15 @@
         session.pos = pos;
         $('.show-after-position').show();
       }));
-      $('#operation-export-images').click(e => sessionPost({ path: '/spreadsheet/images' }, showSpreadsheetUrl));
 
       $('#operation-find-grid-colors').click(e => sessionPost({ path: '/grid/colors' }, drawGrid));
       $('#operation-find-grid-text').click(e => sessionPost({ path: '/grid/text' }, drawGrid));
       $('#operation-find-grid-borders').click(e => sessionPost({ path: '/grid/borders' }, drawGrid));
-      $('#operation-export-grid').click(e => sessionPost({ path: '/spreadsheet/grid' }, showSpreadsheetUrl));
+      $('#operation-export-grid').click(e => sessionPost({ path: '/spreadsheet/grid' }, spreadsheetUrl => {
+        showSpreadsheetUrl(spreadsheetUrl);
+        $('.show-after-export-grid').show();
+      }));
+      $('#operation-export-images').click(e => sessionPost({ path: '/spreadsheet/images' }, showSpreadsheetUrl));
 
       $('#operation-parse-crossword').click(e => sessionPost({ path: '/crossword' }, drawCrossword));
       $('#operation-parse-crossword-clues').click(e => {

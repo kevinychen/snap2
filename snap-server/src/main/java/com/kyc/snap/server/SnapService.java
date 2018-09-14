@@ -58,10 +58,6 @@ public interface SnapService {
     @Path("session/{sessionId}/position")
     GridPosition getGridPosition(@PathParam("sessionId") String sessionId);
 
-    @POST
-    @Path("session/{sessionId}/spreadsheet/images")
-    StringJson exportImagesToSpreadsheet(@PathParam("sessionId") String sessionId);
-
     @GET
     @Path("session/{sessionId}/images/{row}/{col}.png")
     @Produces("image/png")
@@ -82,6 +78,10 @@ public interface SnapService {
     @POST
     @Path("session/{sessionId}/spreadsheet/grid")
     StringJson exportGridToSpreadsheet(@PathParam("sessionId") String sessionId);
+
+    @POST
+    @Path("session/{sessionId}/spreadsheet/images")
+    StringJson exportImagesToSpreadsheet(@PathParam("sessionId") String sessionId);
 
     @POST
     @Path("session/{sessionId}/crossword")

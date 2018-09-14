@@ -81,15 +81,6 @@ public class SnapResource implements SnapService {
     }
 
     @Override
-    public StringJson exportImagesToSpreadsheet(String sessionId) {
-        ImageSession session = sessions.getIfPresent(sessionId);
-        SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
-        ImageSpreadsheetWrapper imageSpreadsheets = new ImageSpreadsheetWrapper(configuration, spreadsheets);
-        imageSpreadsheets.toSpreadsheet(sessionId, session.getImage(), session.getPos());
-        return new StringJson(spreadsheets.getUrl());
-    }
-
-    @Override
     public BufferedImage getSubimage(String sessionId, int row, int col) {
         ImageSession session = sessions.getIfPresent(sessionId);
         GridPosition pos = session.getPos();
@@ -129,6 +120,15 @@ public class SnapResource implements SnapService {
         SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
         GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
         gridSpreadsheets.toSpreadsheet(session.getGrid());
+        return new StringJson(spreadsheets.getUrl());
+    }
+
+    @Override
+    public StringJson exportImagesToSpreadsheet(String sessionId) {
+        ImageSession session = sessions.getIfPresent(sessionId);
+        SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
+        ImageSpreadsheetWrapper imageSpreadsheets = new ImageSpreadsheetWrapper(configuration, spreadsheets);
+        imageSpreadsheets.toSpreadsheet(sessionId, session.getImage(), session.getPos());
         return new StringJson(spreadsheets.getUrl());
     }
 

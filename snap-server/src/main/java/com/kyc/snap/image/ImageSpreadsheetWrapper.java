@@ -18,9 +18,6 @@ public class ImageSpreadsheetWrapper {
     private final SpreadsheetManager spreadsheets;
 
     public void toSpreadsheet(String sessionId, BufferedImage image, GridPosition pos) {
-        spreadsheets.clear();
-        spreadsheets.setAllColumnWidths(20);
-
         List<ValueCell> formulaCells = new ArrayList<>();
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
