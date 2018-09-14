@@ -133,13 +133,15 @@ public class SnapResource implements SnapService {
     public StringJson exportToSpreadsheet(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
         SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
+
+        GridPositionSpreadsheetWrapper gridSpreadsheets = new GridPositionSpreadsheetWrapper(configuration, spreadsheets);
+        gridSpreadsheets.toSpreadsheet(sessionId, session.getImage(), session.getPos());
+
         if (session.getCrossword() != null && session.getClues() != null) {
             CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
             crosswordSpreadsheets.toSpreadsheet(session.getGrid(), session.getCrossword(), session.getClues());
-        } else {
-            GridPositionSpreadsheetWrapper gridSpreadsheets = new GridPositionSpreadsheetWrapper(configuration, spreadsheets);
-            gridSpreadsheets.toSpreadsheet(sessionId, session.getImage(), session.getPos());
         }
+
         return new StringJson(spreadsheets.getUrl());
     }
 }

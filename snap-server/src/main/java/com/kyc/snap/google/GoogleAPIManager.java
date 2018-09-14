@@ -21,7 +21,6 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.Permission;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
-import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
 import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
@@ -71,12 +70,7 @@ public class GoogleAPIManager {
     }
 
     public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
-        try {
-            Spreadsheet spreadsheet = sheets.spreadsheets().get(spreadsheetId).execute();
-            return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheet, sheetId);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheetId, sheetId);
     }
 
     /**

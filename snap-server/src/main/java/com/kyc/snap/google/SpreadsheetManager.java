@@ -1,9 +1,13 @@
 
 package com.kyc.snap.google;
 
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,12 +21,16 @@ import com.google.api.services.sheets.v4.model.Border;
 import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.Color;
+import com.google.api.services.sheets.v4.model.DataFilter;
 import com.google.api.services.sheets.v4.model.DimensionProperties;
 import com.google.api.services.sheets.v4.model.DimensionRange;
 import com.google.api.services.sheets.v4.model.ExtendedValue;
+import com.google.api.services.sheets.v4.model.GetSpreadsheetByDataFilterRequest;
+import com.google.api.services.sheets.v4.model.GridData;
 import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.RowData;
+import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.UpdateBordersRequest;
 import com.google.api.services.sheets.v4.model.UpdateCellsRequest;
@@ -50,11 +58,11 @@ public class SpreadsheetManager {
 
     private final GoogleCredential credential;
     private final Spreadsheets spreadsheets;
-    private final Spreadsheet spreadsheet;
+    private final String spreadsheetId;
     private final int sheetId;
 
     public String getUrl() {
-        return spreadsheet.getSpreadsheetUrl();
+        return getSpreadsheet().getSpreadsheetUrl();
     }
 
     public String getRef(int row, int col) {
@@ -76,6 +84,45 @@ public class SpreadsheetManager {
                     .setFields("userEnteredFormat,userEnteredValue")
                     .setRange(new GridRange()
                         .setSheetId(sheetId))));
+    }
+
+    /**
+     * Returns references for each cell, which can be used in another formula.
+     */
+    public Map<Point, String> getReferences(Collection<Point> coordinates) {
+        try {
+            List<Point> orderedCoordinates = new ArrayList<>(coordinates);
+            Spreadsheet spreadsheet = spreadsheets.getByDataFilter(
+                spreadsheetId,
+                new GetSpreadsheetByDataFilterRequest()
+                    .setIncludeGridData(true)
+                    .setDataFilters(orderedCoordinates.stream()
+                        .map(coordinate -> new DataFilter().setGridRange(getRange(coordinate.y, coordinate.x)))
+                        .collect(Collectors.toList())))
+                .execute();
+            List<GridData> data = findSheet(spreadsheet, sheetId).getData();
+            Map<Point, String> values = new HashMap<>();
+            for (int i = 0; i < orderedCoordinates.size(); i++) {
+                Point coordinate = orderedCoordinates.get(i);
+                ExtendedValue value = data.get(i).getRowData().get(0).getValues().get(0).getUserEnteredValue();
+                String reference = "";
+                if (value != null) {
+                    if (value.getBoolValue() != null)
+                        reference = value.getBoolValue().toString().toUpperCase();
+                    else if (value.getFormulaValue() != null) {
+                        if (value.getFormulaValue().startsWith("="))
+                            reference = value.getFormulaValue().substring(1);
+                    } else if (value.getNumberValue() != null)
+                        reference = value.getNumberValue().toString();
+                    else if (value.getStringValue() != null)
+                        reference = String.format("\"%s\"", value.getStringValue());
+                }
+                values.put(coordinate, reference);
+            }
+            return values;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void setAllColumnWidths(int width) {
@@ -184,8 +231,8 @@ public class SpreadsheetManager {
     public void addImage(BufferedImage image, int row, int col) {
         try {
             Map<?, ?> body = ImmutableMap.of(
-                "spreadsheetId", spreadsheet.getSpreadsheetId(),
-                "sheetName", getSheetName(),
+                "spreadsheetId", spreadsheetId,
+                "sheetName", findSheet(getSpreadsheet(), sheetId).getProperties().getTitle(),
                 "url", ImageUtils.toDataURL(image),
                 "row", row + 1 + ROW_OFFSET,
                 "col", col + 1 + COL_OFFSET);
@@ -211,17 +258,19 @@ public class SpreadsheetManager {
     private void executeRequests(List<Request> requests) {
         try {
             spreadsheets
-                .batchUpdate(spreadsheet.getSpreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(requests))
+                .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(requests))
                 .execute();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String getSheetName() {
-        return Iterables.find(spreadsheet.getSheets(), sheet -> sheet.getProperties().getSheetId() == sheetId)
-            .getProperties()
-            .getTitle();
+    private Spreadsheet getSpreadsheet() {
+        try {
+            return spreadsheets.get(spreadsheetId).execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private synchronized String getAccessToken() throws IOException {
@@ -246,6 +295,10 @@ public class SpreadsheetManager {
             .setEndRowIndex(row + 1 + ROW_OFFSET)
             .setStartColumnIndex(col + COL_OFFSET)
             .setEndColumnIndex(col + 1 + COL_OFFSET);
+    }
+
+    private static Sheet findSheet(Spreadsheet spreadsheet, int sheetId) {
+        return Iterables.find(spreadsheet.getSheets(), sheet -> sheet.getProperties().getSheetId() == sheetId);
     }
 
     private static Color toColor(int rgb) {

@@ -5,6 +5,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
@@ -17,7 +18,6 @@ import com.kyc.snap.crossword.CrosswordClues.NumberedClue;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
 import com.kyc.snap.grid.Grid;
-import com.kyc.snap.grid.GridSpreadsheetWrapper;
 
 import lombok.Data;
 
@@ -32,8 +32,6 @@ public class CrosswordSpreadsheetWrapper {
     private final SpreadsheetManager spreadsheets;
 
     public void toSpreadsheet(Grid grid, Crossword crossword, CrosswordClues clues) {
-        new GridSpreadsheetWrapper(spreadsheets).toSpreadsheet(grid);
-
         List<Integer> directionColumns = new ArrayList<>();
         for (int i = 0; i < clues.getSections().size(); i++)
             directionColumns.add(grid.getNumCols() + 1 + 4 * i);
@@ -73,6 +71,7 @@ public class CrosswordSpreadsheetWrapper {
             }
         }
 
+        Map<Point, String> references = spreadsheets.getReferences(gridToAnswers.keySet());
         for (Point p : gridToAnswers.keySet()) {
             Collection<PointAndIndex> answers = gridToAnswers.get(p);
             String refArray = Joiner.on(";").join(answers.stream()
@@ -94,8 +93,9 @@ public class CrosswordSpreadsheetWrapper {
             formulaCells.add(new ValueCell(
                 p.y,
                 p.x,
-                String.format("=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),\"\")",
-                    allCharsExpression)));
+                String.format("=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),%2$s)",
+                    allCharsExpression,
+                    references.get(p))));
         }
 
         spreadsheets.setValues(valueCells);
