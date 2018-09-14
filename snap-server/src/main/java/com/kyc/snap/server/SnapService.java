@@ -11,6 +11,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -80,13 +81,7 @@ public interface SnapService {
 
     @POST
     @Path("session/{sessionId}/crossword/clues")
-    CrosswordClues parseCrosswordClues(@PathParam("sessionId") String sessionId, ParseCrosswordCluesRequest request);
-
-    @Data
-    public static class ParseCrosswordCluesRequest {
-
-        private final String clues;
-    }
+    CrosswordClues parseCrosswordClues(@PathParam("sessionId") String sessionId, @QueryParam("clues") String unparsedClues);
 
     /**
      * Exports the current session data to a Google sheet.

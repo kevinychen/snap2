@@ -122,9 +122,9 @@ public class SnapResource implements SnapService {
     }
 
     @Override
-    public CrosswordClues parseCrosswordClues(String sessionId, ParseCrosswordCluesRequest request) {
+    public CrosswordClues parseCrosswordClues(String sessionId, String unparsedClues) {
         ImageSession session = sessions.getIfPresent(sessionId);
-        CrosswordClues clues = crosswordParser.parseClues(request.getClues());
+        CrosswordClues clues = crosswordParser.parseClues(unparsedClues);
         session.setClues(clues);
         return clues;
     }

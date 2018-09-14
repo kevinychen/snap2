@@ -70,7 +70,7 @@
     }
 
     function post(args, callback) {
-      fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
+      fetch('/api' + args.path, { method: 'POST', body: args.body })
         .then(response => { return response.json(); })
         .then(callback);
     }
@@ -78,9 +78,8 @@
     function sessionPost(args, callback) {
       if (session.sessionId) {
         const newArgs = { path: '/session/' + session.sessionId + args.path };
-        if (args.body !== undefined) {
-          newArgs.headers = { 'content-type': 'application/json' };
-          newArgs.body = JSON.stringify(args.body);
+        if (args.queryParams !== undefined) {
+          newArgs.path += '?' + $.param(args.queryParams);
         }
         post(newArgs, callback);
       }
@@ -221,7 +220,7 @@
       $('#operation-find-implicit-lines').click(e => sessionPost({ path: '/lines/implicit' }, drawLines));
       $('#operation-parse-crossword-clues').click(e => {
         const unparsedClues = $('#crossword-clues-textarea').val();
-        sessionPost({ path: '/crossword/clues', body: { clues: unparsedClues } }, writeClues);
+        sessionPost({ path: '/crossword/clues', queryParams: { clues: unparsedClues } }, writeClues);
       });
 
       $('#operation-interpolate-grid-lines').click(e => sessionPost({ path: '/lines/interpolate' }, drawLines));
@@ -281,7 +280,7 @@
 
     #crossword-clues-textarea {
       width: 80%;
-      height: 100%;
+      height: 80%;
     }
 
     .parsed {
