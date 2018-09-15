@@ -26,6 +26,7 @@ dependencies {
     compile "com.squareup.okhttp3:okhttp:3.11.0"
     compile "io.dropwizard:dropwizard-assets:1.2.1"
     compile "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
+    compile "org.jsoup:jsoup:1.10.3"
     compile "org.openpnp:opencv:3.2.0-1"
     compile "org.projectlombok:lombok:1.18.2"
 

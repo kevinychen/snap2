@@ -8,6 +8,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
+
 import lombok.Data;
 
 @Consumes(MediaType.APPLICATION_JSON)
@@ -19,16 +21,63 @@ public interface WordsService {
     @Path("words/trigram")
     SolveTrigramPuzzleResponse solveTrigramPuzzle(SolveTrigramPuzzleRequest request);
 
-    @Data
     public static class SolveTrigramPuzzleRequest {
 
-        private final List<String> trigrams;
-        private final List<Integer> wordLengths;
+        private List<String> trigrams;
+        private List<Integer> wordLengths;
+
+        public List<String> getTrigrams() {
+            return trigrams;
+        }
+
+        public List<Integer> getWordLengths() {
+            return wordLengths;
+        }
+
+        public void setTrigrams(List<String> trigrams) {
+            this.trigrams = trigrams;
+        }
+
+        public void setWordLengths(List<Integer> wordLengths) {
+            this.wordLengths = wordLengths;
+        }
     }
 
     @Data
     public static class SolveTrigramPuzzleResponse {
 
         private final List<String> solution;
+    }
+
+    @POST
+    @Path("words/crossword")
+    FetchCrosswordClueSuggestionsResponse fetchCrosswordClueSuggestions(FetchCrosswordClueSuggestionsRequest request);
+
+    public static class FetchCrosswordClueSuggestionsRequest {
+
+        private String clue;
+        private int numLetters;
+
+        public String getClue() {
+            return clue;
+        }
+
+        public int getNumLetters() {
+            return numLetters;
+        }
+
+        public void setClue(String clue) {
+            this.clue = clue;
+        }
+
+        public void setNumLetters(int numLetters) {
+            this.numLetters = numLetters;
+        }
+    }
+
+    @Data
+    public static class FetchCrosswordClueSuggestionsResponse {
+
+        private final List<ClueSuggestion> suggestions;
     }
 }
