@@ -28,7 +28,7 @@ import lombok.Data;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/")
-public interface SnapService {
+public interface ImageService {
 
     /**
      * Creates a new session for the given image.

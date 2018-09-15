@@ -27,7 +27,7 @@ import com.kyc.snap.image.ImageSpreadsheetWrapper;
 import lombok.Data;
 
 @Data
-public class SnapResource implements SnapService {
+public class ImageResource implements ImageService {
 
     private final SnapConfiguration configuration;
     private final GoogleAPIManager googleApi;
