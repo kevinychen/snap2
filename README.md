@@ -26,3 +26,5 @@ Run the Snap server (requires JDK 8+):
 
 Visit the app at `http://localhost:8080`.
 
+Snap server endpoints can also be used through Google Sheet custom functions. In a Google Sheet, click "Tools" and "Script editor", and then copy the contents of the files under `snap-app-scripts`. The menu items and custom functions will be available in the Google Sheet after refreshing the page.
+
