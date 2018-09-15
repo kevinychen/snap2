@@ -15,6 +15,10 @@ Add a `google-api-credentials.json` file with Snap's [service account credential
 
 Update the `config.yml` configuration file with the socket address that the Snap server will run at.
 
+Download data files:
+
+    ./gradlew downloadFiles
+
 Run the Snap server (requires JDK 8+):
 
     cd snap-server

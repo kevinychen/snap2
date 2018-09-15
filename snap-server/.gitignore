@@ -4,5 +4,6 @@
 .settings
 /bin/
 /build/
+data
 google-api-credentials.json
 
