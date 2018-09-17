@@ -25,6 +25,7 @@ dependencies {
     compile "com.google.cloud:google-cloud-vision:1.12.0"
     compile "com.squareup.okhttp3:okhttp:3.11.0"
     compile "io.dropwizard:dropwizard-assets:1.2.1"
+    compile "org.apache.httpcomponents:httpmime:4.5.6"
     compile "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
     compile "org.jsoup:jsoup:1.10.3"
     compile "org.openpnp:opencv:3.2.0-1"
@@ -40,7 +41,8 @@ configurations.all {
 
 task downloadFiles(type: Download) {
     src([
-        "http://norvig.com/ngrams/count_1w.txt"
+        "http://norvig.com/ngrams/count_1w.txt",
+        "http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/sphinxdict/cmudict.0.7a_SPHINX_40"
     ])
     dest "data"
 }
