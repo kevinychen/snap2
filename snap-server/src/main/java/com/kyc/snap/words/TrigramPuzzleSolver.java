@@ -64,14 +64,15 @@ public class TrigramPuzzleSolver {
         return solution;
     }
 
-    private Map<String, double[]> nextLetterCountsForPrefixCache = new HashMap<>();
+    private Map<PrefixCacheKey, double[]> nextLetterCountsForPrefixCache = new HashMap<>();
 
     private double nextLetterProbability(String message, char nextLetter, List<WordTemplate> wordTemplates) {
         WordTemplate wordTemplate = wordTemplates.get(message.length());
         String prefix = message.substring(wordTemplate.start);
+        PrefixCacheKey key = new PrefixCacheKey(prefix, wordTemplate.length);
         double[] counts;
-        if (nextLetterCountsForPrefixCache.containsKey(prefix))
-            counts = nextLetterCountsForPrefixCache.get(prefix);
+        if (nextLetterCountsForPrefixCache.containsKey(key))
+            counts = nextLetterCountsForPrefixCache.get(key);
         else {
             counts = new double[NUM_LETTERS];
             dictionary.getFrequenciesForWordsWithPrefix(prefix).forEach((word, frequency) -> {
@@ -80,7 +81,7 @@ public class TrigramPuzzleSolver {
                     counts[word.charAt(prefix.length()) - 'A'] += Math.sqrt(frequency);
             });
             if (prefix.length() <= 2)
-                nextLetterCountsForPrefixCache.put(prefix, counts);
+                nextLetterCountsForPrefixCache.put(key, counts);
         }
         double totalCount = 0;
         for (double count : counts)
@@ -104,5 +105,12 @@ public class TrigramPuzzleSolver {
         private final String message;
         private final double probability;
         private final int usedBitset;
+    }
+
+    @Data
+    private static class PrefixCacheKey {
+
+        private final String prefix;
+        private final int length;
     }
 }
