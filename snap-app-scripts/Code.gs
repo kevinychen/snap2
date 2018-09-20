@@ -3,16 +3,39 @@ SERVER_SOCKET_ADDRESS = "167.99.173.63:8080";
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Puzzlehunt Tools')
-      .addItem('Get background RGBs', 'getBackgroundRGBs')
+      .addItem('Convert background colors to RGB values', 'getBackgroundRGBs')
+      .addItem('Set background colors from RGB values', 'setBackgroundRGBs')
+      .addItem('Make horizontal hexagonal grid', 'makeHorizontalHexagonalGrid')
+      .addItem('Make vertical hexagonal grid', 'makeVerticalHexagonalGrid')
       .addToUi();
 }
 
 function getBackgroundRGBs() {
   var range = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getActiveRange();
-  for (var i = 1; i <= range.getNumRows(); i++) {
-    for (var j = 1; j <= range.getNumColumns(); j++) {
-      var cell = range.getCell(i, j);
-      cell.setValue(cell.getBackground());
+  range.setValues(range.getBackgrounds());
+}
+
+function setBackgroundRGBs() {
+  var range = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getActiveRange();
+  range.setBackgrounds(range.getValues());
+}
+
+function makeHorizontalHexagonalGrid() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var range = sheet.getActiveRange();
+  for (var i = 0; i < range.getNumRows(); i++) {
+    for (var j = i % 2; j < range.getNumColumns() - 1; j += 2) {
+      sheet.getRange(range.getRow() + i, range.getColumn() + j, 1, 2).merge();
+    }
+  }
+}
+
+function makeVerticalHexagonalGrid() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var range = sheet.getActiveRange();
+  for (var j = 0; j < range.getNumColumns(); j++) {
+    for (var i = j % 2; i < range.getNumRows() - 1; i += 2) {
+      sheet.getRange(range.getRow() + i, range.getColumn() + j, 2, 1).merge();
     }
   }
 }
@@ -27,17 +50,7 @@ function getBackgroundRGBs() {
 function CAESAR(string) {
   var shifts = [];
   for (var i = 0; i < 26; i++) {
-    var shift = "";
-    for (var j = 0; j < string.length; j++) {
-      var code = string.charCodeAt(j);
-      if (code >= 65 && code <= 90) {
-        code = 65 + (code - 65 + i) % 26;
-      } else if (code >= 97 && code <= 122) {
-        code = 97 + (code - 97 + i) % 26;
-      }
-      shift += String.fromCharCode(code);
-    }
-    shifts.push(shift);
+    shifts.push(SHIFT(string, i))
   }
   return shifts;
 }
@@ -51,6 +64,11 @@ function CAESAR(string) {
  * @customfunction
  */
 function REMOVE(string, toRemove) {
+  if (string.map) {
+    return string.map(function(stringItem, i) {
+      return REMOVE(stringItem, toRemove[i]);
+    });
+  }
   for (var i = 0; i < toRemove.length; i++) {
     var c = toRemove.charAt(i);
     var index = string.indexOf(c);
@@ -75,50 +93,24 @@ function REVERSE(values) {
 }
 
 /**
- * Solves a trigram puzzle given a list of trigrams and a list of word lengths.
+ * Shifts the string by the given shift.
  *
- * @param {array} trigrams A row of cells, each consisting of one trigram in uppercase letters.
- * @param {string} wordLengths A string consisting of integers separated by non-digit characters.
- * @return The trigrams reordered into a single English string, with words separated by spaces.
+ * @param {string} string The starting string.
+ * @param {number} shift the positive integer value to shift by.
+ * @return the shifted string.
  * @customfunction
  */
-function SOLVE_TRIGRAM(trigrams, wordLengths) {
-  var parsedTrigrams = trigrams[0];
-  var parsedWordLengths = wordLengths.split(/[^0-9]/).filter(function(s) {
-    return s.length > 0;
-  }).map(function(s) {
-    return parseInt(s);
-  });
-  var response = UrlFetchApp.fetch("http://" + SERVER_SOCKET_ADDRESS + "/api/words/trigram", {
-    contentType: "application/json",
-    method: "post",
-    payload: JSON.stringify({
-      trigrams: parsedTrigrams,
-      wordLengths: parsedWordLengths,
-    }),
-  });
-  return JSON.parse(response.getContentText()).solution.join(" ");
-}
-
-/**
- * Fetches suggestions for the given crossword clue. Note fetching suggestions is limited to roughly once every 9 seconds.
- *
- * @param {string} clue A crossword clue.
- * @param {number} numLetters An integer representing the number of letters in the solution.
- * @return A list of rows, each consisting of two columns: the crossword suggestion, and the confidence level (out of 5).
- * @customfunction
- */
-function WORDPLAYS(clue, numLetters) {
-  var response = UrlFetchApp.fetch("http://" + SERVER_SOCKET_ADDRESS + "/api/words/crossword", {
-    contentType: "application/json",
-    method: "post",
-    payload: JSON.stringify({
-      clue: clue,
-      numLetters: numLetters,
-    }),
-  });
-  return JSON.parse(response.getContentText()).suggestions.map(function(suggestion) {
-    return [suggestion.suggestion, suggestion.confidence + " / 5"];
-  });
+function SHIFT(string, shift) {
+  var shifted = "";
+  for (var i = 0; i < string.length; i++) {
+    var code = string.charCodeAt(i);
+    if (code >= 65 && code <= 90) {
+      code = 65 + (code - 65 + shift) % 26;
+    } else if (code >= 97 && code <= 122) {
+      code = 97 + (code - 97 + shift) % 26;
+    }
+    shifted += String.fromCharCode(code);
+  }
+  return shifted;
 }
 
