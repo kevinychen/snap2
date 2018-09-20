@@ -22,7 +22,13 @@ public class ImageSession {
     private Crossword crossword;
     private CrosswordClues clues;
 
-    private int approxGridSize = 32;
-    private String spreadsheetId = "1n2XG8kgi-XZoD1n5jZoW4UbIFI99U2l0Uc_9SQPb8TA";
-    private int sheetId = 0;
+    private Parameters parameters = new Parameters();
+
+    @Data
+    public static class Parameters {
+
+        private int approxGridSize = 32;
+        private String spreadsheetId = "1n2XG8kgi-XZoD1n5jZoW4UbIFI99U2l0Uc_9SQPb8TA";
+        private int sheetId = 0;
+    }
 }

@@ -54,6 +54,9 @@
       </div>
     </div>
     <div class="section-div">
+      <div id="parameters" class="group hide show-after-session">
+        Approximate grid size: <input id="input-approx-grid-size" type="number" size="8"><br>
+      </div>
       <div id="crossword-clues" class="group hide show-after-crossword">
         <div>Enter crossword clues:</div>
         <textarea id="crossword-clues-textarea"></textarea>
@@ -220,6 +223,10 @@
           $('.show-after-session').show();
           $('#image').attr('src', URL.createObjectURL(image));
         });
+      });
+
+      $('#input-approx-grid-size').on('blur', e => {
+        sessionPost({ path: '/parameters', queryParams: { approxGridSize: e.target.value } });
       });
 
       $('#crossword-clues-textarea').on('input', e => {

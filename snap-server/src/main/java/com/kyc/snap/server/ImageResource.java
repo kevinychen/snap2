@@ -23,6 +23,7 @@ import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
 import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageSpreadsheetWrapper;
+import com.kyc.snap.server.ImageSession.Parameters;
 
 import lombok.Data;
 
@@ -48,9 +49,18 @@ public class ImageResource implements ImageService {
     }
 
     @Override
+    public Parameters setParameters(String sessionId, Integer approxGridSize) {
+        ImageSession session = sessions.getIfPresent(sessionId);
+        Parameters parameters = session.getParameters();
+        if (approxGridSize != null)
+            parameters.setApproxGridSize(approxGridSize);
+        return parameters;
+    }
+
+    @Override
     public GridLines findGridLines(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
-        GridLines lines = gridParser.findGridLines(session.getImage(), session.getApproxGridSize());
+        GridLines lines = gridParser.findGridLines(session.getImage(), session.getParameters().getApproxGridSize());
         session.setLines(lines);
         return lines;
     }

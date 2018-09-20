@@ -22,6 +22,7 @@ import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
+import com.kyc.snap.server.ImageSession.Parameters;
 
 import lombok.Data;
 
@@ -41,6 +42,10 @@ public interface ImageService {
     @Path("session")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     StringJson createImageSession(@FormDataParam("image") InputStream imageStream) throws IOException;
+
+    @POST
+    @Path("session/{sessionId}/parameters")
+    Parameters setParameters(@PathParam("sessionId") String sessionId, @QueryParam("approxGridSize") Integer approxGridSize);
 
     @POST
     @Path("session/{sessionId}/lines")
