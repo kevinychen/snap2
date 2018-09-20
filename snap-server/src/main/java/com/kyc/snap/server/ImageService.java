@@ -45,7 +45,11 @@ public interface ImageService {
 
     @POST
     @Path("session/{sessionId}/parameters")
-    Parameters setParameters(@PathParam("sessionId") String sessionId, @QueryParam("approxGridSize") Integer approxGridSize);
+    Parameters setParameters(
+            @PathParam("sessionId") String sessionId,
+            @QueryParam("approxGridSize") Integer approxGridSize,
+            @QueryParam("spreadsheetId") String spreadsheetId,
+            @QueryParam("sheetId") Integer sheetId);
 
     @POST
     @Path("session/{sessionId}/lines")

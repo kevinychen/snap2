@@ -78,7 +78,13 @@
 
     function post(args, callback) {
       fetch('/api' + args.path, { method: 'POST', body: args.body })
-        .then(response => { return response.json(); })
+        .then(response => {
+          if (!response.ok) {
+            alert('Error: ' + response.statusText);
+            return;
+          }
+          return response.json();
+        })
         .then(callback);
     }
 
@@ -222,6 +228,14 @@
           session.sessionId = sessionId;
           $('.show-after-session').show();
           $('#image').attr('src', URL.createObjectURL(image));
+
+          var urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.has('spreadsheetId')) {
+            sessionPost({ path: '/parameters', queryParams: {
+              spreadsheetId: urlParams.get('spreadsheetId'),
+              sheetId: urlParams.get('sheetId'),
+            } });
+          }
         });
       });
 

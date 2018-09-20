@@ -49,11 +49,15 @@ public class ImageResource implements ImageService {
     }
 
     @Override
-    public Parameters setParameters(String sessionId, Integer approxGridSize) {
+    public Parameters setParameters(String sessionId, Integer approxGridSize, String spreadsheetId, Integer sheetId) {
         ImageSession session = sessions.getIfPresent(sessionId);
         Parameters parameters = session.getParameters();
         if (approxGridSize != null)
             parameters.setApproxGridSize(approxGridSize);
+        if (spreadsheetId != null && !spreadsheetId.isEmpty())
+            parameters.setSpreadsheetId(spreadsheetId);
+        if (sheetId != null)
+            parameters.setSheetId(sheetId);
         return parameters;
     }
 
@@ -127,7 +131,8 @@ public class ImageResource implements ImageService {
     @Override
     public StringJson exportGridToSpreadsheet(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
-        SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
+        Parameters parameters = session.getParameters();
+        SpreadsheetManager spreadsheets = googleApi.getSheet(parameters.getSpreadsheetId(), parameters.getSheetId());
         GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
         gridSpreadsheets.toSpreadsheet(session.getPos(), session.getGrid());
         return new StringJson(spreadsheets.getUrl());
@@ -136,7 +141,8 @@ public class ImageResource implements ImageService {
     @Override
     public StringJson exportImagesToSpreadsheet(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
-        SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
+        Parameters parameters = session.getParameters();
+        SpreadsheetManager spreadsheets = googleApi.getSheet(parameters.getSpreadsheetId(), parameters.getSheetId());
         ImageSpreadsheetWrapper imageSpreadsheets = new ImageSpreadsheetWrapper(configuration, spreadsheets);
         imageSpreadsheets.toSpreadsheet(sessionId, session.getImage(), session.getPos());
         return new StringJson(spreadsheets.getUrl());
@@ -161,7 +167,8 @@ public class ImageResource implements ImageService {
     @Override
     public StringJson exportCrosswordToSpreadsheet(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
-        SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
+        Parameters parameters = session.getParameters();
+        SpreadsheetManager spreadsheets = googleApi.getSheet(parameters.getSpreadsheetId(), parameters.getSheetId());
         CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
         crosswordSpreadsheets.toSpreadsheet(session.getGrid(), session.getCrossword(), session.getClues());
         return new StringJson(spreadsheets.getUrl());
