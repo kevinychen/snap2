@@ -119,7 +119,7 @@ public class ImageResource implements ImageService {
         ImageSession session = sessions.getIfPresent(sessionId);
         SpreadsheetManager spreadsheets = googleApi.getSheet(session.getSpreadsheetId(), session.getSheetId());
         GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
-        gridSpreadsheets.toSpreadsheet(session.getGrid());
+        gridSpreadsheets.toSpreadsheet(session.getPos(), session.getGrid());
         return new StringJson(spreadsheets.getUrl());
     }
 

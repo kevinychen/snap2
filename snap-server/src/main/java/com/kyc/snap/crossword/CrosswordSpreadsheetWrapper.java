@@ -10,12 +10,15 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.kyc.snap.crossword.CrosswordClues.ClueSection;
 import com.kyc.snap.crossword.CrosswordClues.NumberedClue;
 import com.kyc.snap.google.SpreadsheetManager;
+import com.kyc.snap.google.SpreadsheetManager.Dimension;
+import com.kyc.snap.google.SpreadsheetManager.SizedRowOrColumn;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
 import com.kyc.snap.grid.Grid;
 
@@ -103,8 +106,10 @@ public class CrosswordSpreadsheetWrapper {
         spreadsheets.setFormulas(formulaCells);
 
         for (int directionColumn : directionColumns) {
-            spreadsheets.setAutomaticColumnWidths(directionColumn, directionColumn + 1);
-            spreadsheets.setColumnWidths(100, directionColumn + 1, directionColumn + 3);
+            spreadsheets.setAutomaticRowOrColumnSizes(Dimension.COLUMNS, ImmutableList.of(directionColumn));
+            spreadsheets.setRowOrColumnSizes(Dimension.COLUMNS, ImmutableList.of(
+                new SizedRowOrColumn(directionColumn + 1, 100),
+                new SizedRowOrColumn(directionColumn + 2, 100)));
         }
     }
 

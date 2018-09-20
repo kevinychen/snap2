@@ -125,33 +125,35 @@ public class SpreadsheetManager {
         }
     }
 
-    public void setAllColumnWidths(int width) {
+    public void setAllRowOrColumnSizes(Dimension dimension, int size) {
         executeRequests(
             new Request()
                 .setUpdateDimensionProperties(new UpdateDimensionPropertiesRequest()
                     .setProperties(new DimensionProperties()
-                        .setPixelSize(width))
+                        .setPixelSize(size))
                     .setFields("pixelSize")
                     .setRange(new DimensionRange()
                         .setSheetId(sheetId)
-                        .setDimension("COLUMNS"))));
+                        .setDimension(dimension.name()))));
     }
 
-    public void setColumnWidths(int width, int startIndex, int endIndex) {
-        executeRequests(
-            new Request()
+    public void setRowOrColumnSizes(Dimension dimension, List<SizedRowOrColumn> rowOrColumns) {
+        executeRequests(rowOrColumns.stream()
+            .map(rowOrColumn -> new Request()
                 .setUpdateDimensionProperties(new UpdateDimensionPropertiesRequest()
                     .setProperties(new DimensionProperties()
-                        .setPixelSize(width))
+                        .setPixelSize(rowOrColumn.size))
                     .setFields("pixelSize")
-                    .setRange(getColumnRange(startIndex, endIndex))));
+                    .setRange(getRange(dimension, rowOrColumn.index, rowOrColumn.index + 1))))
+                    .collect(Collectors.toList()));
     }
 
-    public void setAutomaticColumnWidths(int startIndex, int endIndex) {
-        executeRequests(
-            new Request()
+    public void setAutomaticRowOrColumnSizes(Dimension dimension, List<Integer> rowOrColumns) {
+        executeRequests(rowOrColumns.stream()
+            .map(rowOrColumn -> new Request()
                 .setAutoResizeDimensions(new AutoResizeDimensionsRequest()
-                    .setDimensions(getColumnRange(startIndex, endIndex))));
+                    .setDimensions(getRange(dimension, rowOrColumn, rowOrColumn + 1))))
+            .collect(Collectors.toList()));
     }
 
     public void setBackgroundColors(List<ColoredCell> cells) {
@@ -280,12 +282,12 @@ public class SpreadsheetManager {
         return credential.getAccessToken();
     }
 
-    private DimensionRange getColumnRange(int startIndex, int endIndex) {
+    private DimensionRange getRange(Dimension dimension, int startIndex, int endIndex) {
         return new DimensionRange()
             .setSheetId(sheetId)
-            .setDimension("COLUMNS")
-            .setStartIndex(startIndex + COL_OFFSET)
-            .setEndIndex(endIndex + COL_OFFSET);
+            .setDimension(dimension.name())
+            .setStartIndex(startIndex + (dimension == Dimension.ROWS ? ROW_OFFSET : COL_OFFSET))
+            .setEndIndex(endIndex + (dimension == Dimension.ROWS ? ROW_OFFSET : COL_OFFSET));
     }
 
     private GridRange getRange(int row, int col) {
@@ -322,6 +324,19 @@ public class SpreadsheetManager {
             default:
                 throw new RuntimeException("Invalid style: " + style);
         }
+    }
+
+    public static enum Dimension {
+
+        ROWS,
+        COLUMNS,
+    }
+
+    @Data
+    public static class SizedRowOrColumn {
+
+        private final int index;
+        private final int size;
     }
 
     @Data

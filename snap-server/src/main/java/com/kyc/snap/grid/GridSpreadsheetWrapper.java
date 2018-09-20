@@ -6,6 +6,8 @@ import java.util.List;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.BorderedCell;
 import com.kyc.snap.google.SpreadsheetManager.ColoredCell;
+import com.kyc.snap.google.SpreadsheetManager.Dimension;
+import com.kyc.snap.google.SpreadsheetManager.SizedRowOrColumn;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
 import com.kyc.snap.grid.Grid.Square;
 
@@ -14,11 +16,25 @@ import lombok.Data;
 @Data
 public class GridSpreadsheetWrapper {
 
+    public static final int DEFAULT_CELL_LENGTH = 21;
+    public static final double DEFAULT_SCALE = 0.75;
+
     private final SpreadsheetManager spreadsheets;
 
-    public void toSpreadsheet(Grid grid) {
+    public void toSpreadsheet(GridPosition pos, Grid grid) {
         spreadsheets.clear();
-        spreadsheets.setAllColumnWidths(20);
+        spreadsheets.setAllRowOrColumnSizes(Dimension.ROWS, DEFAULT_CELL_LENGTH);
+        spreadsheets.setAllRowOrColumnSizes(Dimension.COLUMNS, DEFAULT_CELL_LENGTH);
+
+        List<SizedRowOrColumn> rows = new ArrayList<>();
+        for (int i = 0; i < pos.getNumRows(); i++)
+            rows.add(new SizedRowOrColumn(i, (int) (pos.getRows().get(i).getHeight() * DEFAULT_SCALE)));
+        spreadsheets.setRowOrColumnSizes(Dimension.ROWS, rows);
+
+        List<SizedRowOrColumn> cols = new ArrayList<>();
+        for (int j = 0; j < pos.getNumCols(); j++)
+            cols.add(new SizedRowOrColumn(j, (int) (pos.getCols().get(j).getWidth() * DEFAULT_SCALE)));
+        spreadsheets.setRowOrColumnSizes(Dimension.COLUMNS, cols);
 
         List<ColoredCell> coloredCells = new ArrayList<>();
         List<ValueCell> valueCells = new ArrayList<>();

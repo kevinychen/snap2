@@ -21,7 +21,7 @@ public class ImageSpreadsheetWrapper {
         List<ValueCell> formulaCells = new ArrayList<>();
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
-                formulaCells.add(new ValueCell(i, j, String.format("=IMAGE(\"http://%s/api/session/%s/images/%d/%d.png\")",
+                formulaCells.add(new ValueCell(i, j, String.format("=IMAGE(\"http://%s/api/session/%s/images/%d/%d.png\", 2)",
                     configuration.getSocketAddress(),
                     sessionId,
                     i,
