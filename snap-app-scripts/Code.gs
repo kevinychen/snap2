@@ -1,4 +1,5 @@
 SERVER_SOCKET_ADDRESS = "167.99.173.63:8080";
+SERVICE_USER = "sheets-creator@snap-187301.iam.gserviceaccount.com";
 
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
@@ -7,6 +8,7 @@ function onOpen() {
       .addItem('Set background colors from RGB values', 'setBackgroundRGBs')
       .addItem('Make horizontal hexagonal grid', 'makeHorizontalHexagonalGrid')
       .addItem('Make vertical hexagonal grid', 'makeVerticalHexagonalGrid')
+      .addItem('Configure puzzle bot', 'configureBot')
       .addToUi();
 }
 
@@ -38,6 +40,16 @@ function makeVerticalHexagonalGrid() {
       sheet.getRange(range.getRow() + i, range.getColumn() + j, 2, 1).merge();
     }
   }
+}
+
+function configureBot() {
+  var spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
+  DriveApp.getFileById(spreadsheetId).addEditor(SERVICE_USER);
+
+  var html = '<html><body><div>This sheet has been shared with the Snap bot. Click the links below for more resources.</div>' +
+    '<div><li><a href="http://' + SERVER_SOCKET_ADDRESS + '/index.html?spreadsheetId=' +
+    spreadsheetId + '" target="blank" onclick="google.script.host.close()">Open grid parser</a></li></div></body></html>';
+  SpreadsheetApp.getUi().showModelessDialog(HtmlService.createHtmlOutput(html), "Shared with Snap bot");
 }
 
 /**
