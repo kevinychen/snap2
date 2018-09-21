@@ -11,6 +11,7 @@
         <canvas id="lines-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
         <canvas id="grid-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
         <canvas id="crossword-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
+        <canvas id="listener-canvas" class="overlay-canvas" width="1024" height="1024"></canvas>
       </div>
     </div>
     <div class="section-div">
@@ -74,6 +75,7 @@
       crossword: undefined,
       clues: undefined,
       spreadsheetUrl: undefined,
+      mousedownLoc: undefined,
     }
 
     function post(args, callback) {
@@ -100,6 +102,12 @@
 
     function rgbToStyle(rgb) {
       return 'rgb(' + ((rgb >> 16) & 0xff) + ',' + ((rgb >> 8) & 0xff) + ',' + ((rgb >> 0) & 0xff) + ')';
+    }
+
+    function closest(values, target) {
+      return values.reduce(function(closest, value) {
+        return Math.abs(value - target) < Math.abs(closest - target) ? value : closest;
+      });
     }
 
     function drawLines(lines) {
@@ -237,6 +245,46 @@
             } });
           }
         });
+      });
+
+      $('#listener-canvas').mousedown(e => session.mousedownLoc = { x: e.offsetX, y: e.offsetY });
+      $('#listener-canvas').mouseup(e => {
+        const startLoc = session.mousedownLoc;
+        if (session.lines && startLoc) {
+          const dx = Math.abs(startLoc.x - e.offsetX);
+          const dy = Math.abs(startLoc.y - e.offsetY);
+          const horizontalLines = session.lines.horizontalLines;
+          const verticalLines = session.lines.verticalLines;
+          const image = $('#image')[0];
+          const canvas = $('#listener-canvas')[0];
+          const widthRatio = canvas.scrollWidth / image.naturalWidth;
+          const heightRatio = canvas.scrollHeight / image.naturalHeight;
+          const imageX = Math.floor(startLoc.x / widthRatio);
+          const imageY = Math.floor(startLoc.y / heightRatio);
+          if (dx >= 2 && dx >= dy) {
+            horizontalLines.push(imageY);
+          } else if (dy >= 2 && dy > dx) {
+            verticalLines.push(imageX);
+          } else {
+            const closestHorizontal = horizontalLines ? closest(horizontalLines, imageY) : NaN;
+            const closestVertical = verticalLines ? closest(verticalLines, imageX) : NaN;
+            const closestHorizontalDist = Math.abs(closestHorizontal - imageY);
+            const closestVerticalDist = Math.abs(closestVertical - imageX);
+            if (closestHorizontalDist < 10) {
+              horizontalLines.splice(horizontalLines.indexOf(closestHorizontal), 1);
+            } else if (closestVerticalDist < 10) {
+              verticalLines.splice(verticalLines.indexOf(closestVertical), 1);
+            } else if (closestHorizontalDist > closestVerticalDist) {
+              horizontalLines.push(imageY);
+            } else {
+              verticalLines.push(imageX);
+            }
+          }
+          sessionPost({ path: '/lines/manual', queryParams: {
+            horizontalLines: horizontalLines.join(','),
+            verticalLines: verticalLines.join(',')
+          } }, drawLines);
+        }
       });
 
       $('#input-approx-grid-size').on('blur', e => {

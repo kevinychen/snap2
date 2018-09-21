@@ -3,6 +3,7 @@ package com.kyc.snap.server;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
@@ -81,6 +82,14 @@ public class ImageResource implements ImageService {
     public GridLines findImplicitGridLines(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
         GridLines lines = gridParser.findImplicitGridLines(session.getImage());
+        session.setLines(lines);
+        return lines;
+    }
+
+    @Override
+    public GridLines setManualGridLines(String sessionId, String horizontalLines, String verticalLines) {
+        ImageSession session = sessions.getIfPresent(sessionId);
+        GridLines lines = new GridLines(integerSetFromCSV(horizontalLines), integerSetFromCSV(verticalLines));
         session.setLines(lines);
         return lines;
     }
@@ -172,5 +181,12 @@ public class ImageResource implements ImageService {
         CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
         crosswordSpreadsheets.toSpreadsheet(session.getGrid(), session.getCrossword(), session.getClues());
         return new StringJson(spreadsheets.getUrl());
+    }
+
+    private TreeSet<Integer> integerSetFromCSV(String values) {
+        TreeSet<Integer> set = new TreeSet<Integer>();
+        for (String value : values.split(","))
+            set.add(Integer.parseInt(value));
+        return set;
     }
 }

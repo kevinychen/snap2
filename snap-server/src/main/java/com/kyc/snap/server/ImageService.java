@@ -64,6 +64,13 @@ public interface ImageService {
     GridLines findImplicitGridLines(@PathParam("sessionId") String sessionId);
 
     @POST
+    @Path("session/{sessionId}/lines/manual")
+    GridLines setManualGridLines(
+            @PathParam("sessionId") String sessionId,
+            @QueryParam("horizontalLines") String horizontalLines,
+            @QueryParam("verticalLines") String verticalLines);
+
+    @POST
     @Path("session/{sessionId}/position")
     GridPosition getGridPosition(@PathParam("sessionId") String sessionId);
 

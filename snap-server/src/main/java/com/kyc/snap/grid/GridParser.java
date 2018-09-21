@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -74,22 +74,22 @@ public class GridParser {
             .map(blob -> blob.getX() + blob.getWidth() / 2)
             .collect(Collectors.toList()));
 
-        Function<TreeSet<Integer>, TreeSet<Integer>> findSurroundingMarksFunction = marks -> {
+        BiFunction<TreeSet<Integer>, Integer, TreeSet<Integer>> findSurroundingMarksFunction = (marks, limit) -> {
             Preconditions.checkArgument(marks.size() >= 2,
                 "Expected at least two marks: %s", marks);
             List<Integer> sortedMarks = new ArrayList<>(marks);
             TreeSet<Integer> surroundingMarks = new TreeSet<>();
-            surroundingMarks.add(sortedMarks.get(0) - (sortedMarks.get(1) - sortedMarks.get(0)) / 2);
+            surroundingMarks.add(Math.max(0, sortedMarks.get(0) - (sortedMarks.get(1) - sortedMarks.get(0)) / 2));
             for (int i = 1; i < sortedMarks.size(); i++)
                 surroundingMarks.add((sortedMarks.get(i - 1) + sortedMarks.get(i)) / 2);
-            surroundingMarks.add(sortedMarks.get(sortedMarks.size() - 1)
-                    + (sortedMarks.get(sortedMarks.size() - 1) - sortedMarks.get(sortedMarks.size() - 2)) / 2);
+            surroundingMarks.add(Math.min(limit, sortedMarks.get(sortedMarks.size() - 1)
+                    + (sortedMarks.get(sortedMarks.size() - 1) - sortedMarks.get(sortedMarks.size() - 2)) / 2));
             return surroundingMarks;
         };
 
         return new GridLines(
-            findSurroundingMarksFunction.apply(rows),
-            findSurroundingMarksFunction.apply(cols));
+            findSurroundingMarksFunction.apply(rows, image.getHeight()),
+            findSurroundingMarksFunction.apply(cols, image.getWidth()));
     }
 
     public GridPosition getGridPosition(GridLines lines) {
