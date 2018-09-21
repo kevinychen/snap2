@@ -14,6 +14,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.kyc.snap.image.ImageUtils;
 
 import lombok.Data;
@@ -50,6 +52,9 @@ public class OpenCvManager {
     }
 
     public Clusters findClusters(List<Tuple> tuples, int numClusters) {
+        if (tuples.isEmpty())
+            return new Clusters(0, ImmutableMap.of(), ImmutableList.of());
+
         int numDimensions = tuples.get(0).size();
 
         Mat data = new Mat(tuples.size(), numDimensions, CvType.CV_32FC1);

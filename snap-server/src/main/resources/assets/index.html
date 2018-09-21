@@ -146,6 +146,7 @@
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.font = "18px Helvetica";
+      ctx.globalAlpha = 0.5;
       for (var i = 0; i < grid.numRows; i++) {
         for (var j = 0; j < grid.numCols; j++) {
           const row = session.pos.rows[i];
