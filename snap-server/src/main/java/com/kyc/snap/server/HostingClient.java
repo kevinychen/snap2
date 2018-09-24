@@ -12,12 +12,15 @@ public class HostingClient {
 
     private final String serverSocketAddress;
 
+    /**
+     * Hosts a resource on the configured public server, and returns the URL to access the resource.
+     */
     public String hostResource(String contentType, byte[] data) {
         String hostingBaseUrl = getHostingBaseUrl();
         HostingClientService hosting = Feign.builder()
             .decoder(new JacksonDecoder())
             .target(HostingClientService.class, hostingBaseUrl);
-        String resourceId = hosting.hostResource(contentType, data).getValue();
+        String resourceId = hosting.hostResource(contentType, data);
         return String.format("%s/%s", hostingBaseUrl, resourceId);
     }
 
@@ -25,7 +28,7 @@ public class HostingClient {
 
         @RequestLine("POST /")
         @Headers("Content-type: {contentType}")
-        StringJson hostResource(@Param("contentType") String contentType, byte[] data);
+        String hostResource(@Param("contentType") String contentType, byte[] data);
     }
 
     private String getHostingBaseUrl() {
