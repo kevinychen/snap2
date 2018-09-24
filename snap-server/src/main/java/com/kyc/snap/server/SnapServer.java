@@ -39,5 +39,6 @@ public class SnapServer extends Application<SnapConfiguration> {
         environment.jersey().register(new MultiPartFeature());
         environment.jersey().register(new ImageResource(configuration, googleApi, gridParser, crosswordParser));
         environment.jersey().register(new WordsResource(trigramPuzzleSolver));
+        environment.jersey().register(new HostingResource());
     }
 }

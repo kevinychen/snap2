@@ -16,15 +16,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.server.ImageSession.Parameters;
-
-import lombok.Data;
 
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -110,11 +107,4 @@ public interface ImageService {
     @POST
     @Path("session/{sessionId}/spreadsheet/crossword")
     StringJson exportCrosswordToSpreadsheet(@PathParam("sessionId") String sessionId);
-
-    @Data
-    public static class StringJson {
-
-        @JsonValue
-        private final String value;
-    }
 }
