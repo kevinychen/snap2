@@ -1,12 +1,6 @@
 
 package com.kyc.snap.crossword;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -18,8 +12,12 @@ import org.jsoup.nodes.Element;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
-import com.google.common.io.CharStreams;
 
+import feign.Feign;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
+import feign.form.FormEncoder;
 import lombok.Data;
 
 public class WordplaysUtil {
@@ -72,18 +70,11 @@ public class WordplaysUtil {
             if (currentTime < nextQueryTime)
                 Thread.sleep(nextQueryTime - currentTime);
 
-            URL url = new URL("https://www.wordplays.com/crossword-solver");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("content-type", "application/x-www-form-urlencoded");
-            try (PrintWriter writer = new PrintWriter(connection.getOutputStream())) {
-                writer.print(String.format(
-                    "clue=%1$s&pattern=%2$s",
-                    URLEncoder.encode(clue, "UTF-8"),
-                    Joiner.on("").join(Collections.nCopies(numLetters, "?"))));
-            }
-            Element html = Jsoup.parse(CharStreams.toString(new InputStreamReader(connection.getInputStream(), "UTF-8")));
+            WordplaysService wordplays = Feign.builder()
+                .encoder(new FormEncoder())
+                .target(WordplaysService.class, "https://www.wordplays.com");
+            String page = wordplays.fetchCrosswordClueSuggestionsPage(clue, Joiner.on("").join(Collections.nCopies(numLetters, "?")));
+            Element html = Jsoup.parse(page);
             Element wordList = html.getElementById("wordlists");
             return Streams.concat(wordList.getElementsByClass("even").stream(), wordList.getElementsByClass("odd").stream())
                 .map(row -> {
@@ -93,11 +84,18 @@ public class WordplaysUtil {
                 })
                 .sorted(Comparator.comparing(solvedClue -> -solvedClue.confidence))
                 .collect(Collectors.toList());
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
             nextQueryTime = System.currentTimeMillis() + MIN_QUERY_WAIT_TIME_MILLIS;
         }
+    }
+
+    interface WordplaysService {
+
+        @RequestLine("POST /crossword-solver")
+        @Headers("Content-type: application/x-www-form-urlencoded")
+        String fetchCrosswordClueSuggestionsPage(@Param("clue") String clue, @Param("pattern") String pattern);
     }
 
     @Data

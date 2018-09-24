@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.ForbiddenException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets;
@@ -40,24 +39,23 @@ import com.google.api.services.sheets.v4.model.UpdateCellsRequest;
 import com.google.api.services.sheets.v4.model.UpdateDimensionPropertiesRequest;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.image.ImageUtils;
 
+import feign.Feign;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
+import feign.jackson.JacksonEncoder;
+import lombok.Builder;
 import lombok.Data;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 @Data
 public class SpreadsheetManager {
 
     public static final int ROW_OFFSET = 1;
     public static final int COL_OFFSET = 1;
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final GoogleCredential credential;
     private final Spreadsheets spreadsheets;
@@ -234,26 +232,42 @@ public class SpreadsheetManager {
      * google-sheets-api
      */
     public void addImage(BufferedImage image, int row, int col) {
+        AddImageScriptService addImageScript = Feign.builder()
+                .encoder(new JacksonEncoder())
+                .target(
+                    AddImageScriptService.class,
+                    "https://script.google.com/macros/s/AKfycbwtDXpf8019jeigSig5AnEc4QW-rsU_K3NTpfz5vUE0c-ZwT1NV");
         try {
-            Map<?, ?> body = ImmutableMap.of(
-                "spreadsheetId", spreadsheetId,
-                "sheetName", findSheet(getSpreadsheet(), sheetId).getProperties().getTitle(),
-                "url", ImageUtils.toDataURL(image),
-                "row", row + 1 + ROW_OFFSET,
-                "col", col + 1 + COL_OFFSET);
-            Response response = new OkHttpClient()
-                .newCall(new okhttp3.Request.Builder()
-                    .url("https://script.google.com/macros/s/AKfycbwtDXpf8019jeigSig5AnEc4QW-rsU_K3NTpfz5vUE0c-ZwT1NV/exec")
-                    .addHeader("Authorization", "Bearer " + getAccessToken())
-                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), MAPPER.writeValueAsBytes(body)))
-                    .build())
-                .execute();
-            String responseMessage = response.body().string();
-            if (!responseMessage.contains("The script completed"))
-                throw new RuntimeException(responseMessage);
+            String response = addImageScript.addImage(getAccessToken(), AddImageRequest.builder()
+                .spreadsheetId(spreadsheetId)
+                .sheetName(findSheet(getSpreadsheet(), sheetId).getProperties().getTitle())
+                .url(ImageUtils.toDataURL(image))
+                .row(row + 1 + ROW_OFFSET)
+                .col(col + 1 + COL_OFFSET)
+                .build());
+            if (!response.contains("The script completed"))
+                throw new RuntimeException(response);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    interface AddImageScriptService {
+
+        @RequestLine("POST /exec")
+        @Headers("Authorization: Bearer {token}")
+        String addImage(@Param("token") String token, AddImageRequest request);
+    }
+
+    @Data
+    @Builder
+    public static class AddImageRequest {
+
+        final String spreadsheetId;
+        final String sheetName;
+        final String url;
+        final int row;
+        final int col;
     }
 
     private void executeRequests(Request... requests) {
