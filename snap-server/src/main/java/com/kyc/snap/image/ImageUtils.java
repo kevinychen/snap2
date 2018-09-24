@@ -10,6 +10,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.imageio.ImageIO;
 
@@ -101,22 +102,23 @@ public class ImageUtils {
         return border;
     }
 
-    public static List<Blob> findBlobs(BufferedImage image) {
+    public static List<Blob> findBlobs(BufferedImage image, Predicate<Integer> isBlob) {
         boolean[][] visited = new boolean[image.getHeight()][image.getWidth()];
         List<Blob> blobs = new ArrayList<>();
         for (int x = 0; x < image.getWidth(); x++)
             for (int y = 0; y < image.getHeight(); y++)
-                if (!visited[y][x] && !isLight(image.getRGB(x, y))) {
+                if (!visited[y][x] && isBlob.test(image.getRGB(x, y))) {
                     int minX = Integer.MAX_VALUE;
                     int minY = Integer.MAX_VALUE;
                     int maxX = Integer.MIN_VALUE;
                     int maxY = Integer.MIN_VALUE;
                     Deque<Point> floodfill = new ArrayDeque<>();
                     floodfill.add(new Point(x, y));
+                    List<Point> points = new ArrayList<>();
                     while (!floodfill.isEmpty()) {
                         Point p = floodfill.removeFirst();
                         if (p.x >= 0 && p.x < image.getWidth() && p.y >= 0 && p.y < image.getHeight() && !visited[p.y][p.x]
-                                && !isLight(image.getRGB(p.x, p.y))) {
+                                && isBlob.test(image.getRGB(p.x, p.y))) {
                             visited[p.y][p.x] = true;
                             if (p.x < minX)
                                 minX = p.x;
@@ -126,15 +128,23 @@ public class ImageUtils {
                                 maxX = p.x;
                             if (p.y > maxY)
                                 maxY = p.y;
+                            points.add(p);
                             floodfill.addLast(new Point(p.x - 1, p.y));
                             floodfill.addLast(new Point(p.x + 1, p.y));
                             floodfill.addLast(new Point(p.x, p.y - 1));
                             floodfill.addLast(new Point(p.x, p.y + 1));
                         }
                     }
-                    blobs.add(new Blob(minX, minY, maxX - minX, maxY - minY));
+                    blobs.add(new Blob(minX, minY, maxX - minX + 1, maxY - minY + 1, points));
                 }
         return blobs;
+    }
+
+    public static BufferedImage getBlobImage(BufferedImage image, Blob blob) {
+        BufferedImage blobImage = new BufferedImage(blob.getWidth(), blob.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+        for (Point p : blob.getPoints())
+            blobImage.setRGB(p.x - blob.getX(), p.y - blob.getY(), image.getRGB(p.x, p.y));
+        return blobImage;
     }
 
     public static boolean isLight(int rgb) {
@@ -155,6 +165,7 @@ public class ImageUtils {
         private final int y;
         private final int width;
         private final int height;
+        private final List<Point> points;
     }
 
     private ImageUtils() {}

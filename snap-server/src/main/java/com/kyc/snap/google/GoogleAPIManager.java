@@ -21,6 +21,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.Permission;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.slides.v1.Slides;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
 import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
@@ -47,6 +48,7 @@ public class GoogleAPIManager {
     private final GoogleCredential credential;
     private final Drive drive;
     private final Sheets sheets;
+    private final Slides slides;
     private final ImageAnnotatorSettings imageAnnotatorSettings;
 
     public GoogleAPIManager() {
@@ -60,6 +62,9 @@ public class GoogleAPIManager {
             sheets = new Sheets.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
+            slides = new Slides.Builder(httpTransport, JSON_FACTORY, credential)
+                .setApplicationName(APPLICATION_NAME)
+                .build();
             GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(CREDENTIALS_FILE));
             imageAnnotatorSettings = ImageAnnotatorSettings.newBuilder()
                     .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
@@ -67,10 +72,6 @@ public class GoogleAPIManager {
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
-        return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheetId, sheetId);
     }
 
     /**
@@ -82,6 +83,14 @@ public class GoogleAPIManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
+        return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheetId, sheetId);
+    }
+
+    public PresentationManager getPresentation(String presentationId, String slideId) {
+        return new PresentationManager(slides.presentations(), presentationId, slideId);
     }
 
     public Map<BufferedImage, String> batchFindText(Collection<BufferedImage> images) {
