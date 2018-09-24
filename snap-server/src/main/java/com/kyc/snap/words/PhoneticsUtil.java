@@ -1,8 +1,6 @@
 package com.kyc.snap.words;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -11,15 +9,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-
 import com.google.api.client.util.Joiner;
 import com.google.common.collect.ImmutableMap;
+
+import feign.Feign;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
+import feign.form.FormEncoder;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class PhoneticsUtil {
 
@@ -107,39 +107,34 @@ public class PhoneticsUtil {
      * "K", "AH", "N"]}.
      */
     public static Map<String, List<String>> guessPhones(Set<String> words) {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        LextoolService lextool = Feign.builder()
+            .encoder(new FormEncoder())
+            .target(LextoolService.class, "http://www.speech.cs.cmu.edu/cgi-bin/tools/logios");
+        String html = lextool.guessPhones(Joiner.on('\n').join(words).getBytes());
 
-        HttpPost request = new HttpPost("http://www.speech.cs.cmu.edu/cgi-bin/tools/logios/lextool.pl");
-        request.setEntity(MultipartEntityBuilder.create()
-            .addBinaryBody(
-                "wordfile", /* name of file input element on webpage */
-                Joiner.on('\n').join(words).getBytes(StandardCharsets.UTF_8),
-                ContentType.APPLICATION_OCTET_STREAM,
-                "snap.txt" /* unused */)
-            .build());
-        ByteArrayOutputStream response = new ByteArrayOutputStream();
-        try {
-            httpClient.execute(request).getEntity().writeTo(response);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        Matcher matcher = Pattern.compile("DICT (\\S+)").matcher(response.toString());
+        Matcher matcher = Pattern.compile("DICT (\\S+)").matcher(html);
         matcher.find();
         String dictionaryUrl = matcher.group(1);
-        HttpGet request2 = new HttpGet(dictionaryUrl);
-        ByteArrayOutputStream response2 = new ByteArrayOutputStream();
         try {
-            httpClient.execute(request2).getEntity().writeTo(response2);
+            Response response = new OkHttpClient()
+                .newCall(new Request.Builder().url(dictionaryUrl).get().build())
+                .execute();
+            return Arrays.stream(response.body().string().split("\n"))
+                .filter(line -> !line.isEmpty())
+                .map(line -> line.split("\t"))
+                .collect(Collectors.<String[], String, List<String>> toMap(
+                    parts -> parts[0],
+                    parts -> Arrays.asList(parts[1].split("\\s+"))));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return Arrays.stream(response2.toString().split("\n"))
-            .filter(line -> !line.isEmpty())
-            .map(line -> line.split("\t"))
-            .collect(Collectors.<String[], String, List<String>> toMap(
-                parts -> parts[0],
-                parts -> Arrays.asList(parts[1].split("\\s+"))));
+    }
+
+    interface LextoolService {
+
+        @RequestLine("POST /lextool.pl")
+        @Headers("Content-type: multipart/form-data")
+        String guessPhones(@Param("wordfile") byte[] words);
     }
 
     private PhoneticsUtil() {}
