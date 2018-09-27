@@ -7,6 +7,40 @@ import org.junit.Test;
 public class StringUtilTest {
 
     @Test
+    public void testCaesar() {
+        assertThat(StringUtil.caesar("Pnrfne Fuvsg!", 13)).isEqualTo("Caesar Shift!");
+    }
+
+    @Test
+    public void testAtbash() {
+        assertThat(StringUtil.atbash("Zgyzhs Xrksvi!")).isEqualTo("Atbash Cipher!");
+    }
+
+    @Test
+    public void testIsSubsequence() {
+        assertThat(StringUtil.isSubsequence("", "")).isTrue();
+        assertThat(StringUtil.isSubsequence("a", "")).isTrue();
+        assertThat(StringUtil.isSubsequence("abc", "abc")).isTrue();
+        assertThat(StringUtil.isSubsequence("snake", "sake")).isTrue();
+        assertThat(StringUtil.isSubsequence("abracadabra", "aaaaa")).isTrue();
+
+        assertThat(StringUtil.isSubsequence("", "a")).isFalse();
+        assertThat(StringUtil.isSubsequence("a", "aa")).isFalse();
+        assertThat(StringUtil.isSubsequence("abcabc", "cba")).isFalse();
+        assertThat(StringUtil.isSubsequence("double", "oo")).isFalse();
+    }
+
+    @Test
+    public void testSorted() {
+        assertThat(StringUtil.sorted("")).isEqualTo("");
+        assertThat(StringUtil.sorted("a")).isEqualTo("a");
+        assertThat(StringUtil.sorted("abc")).isEqualTo("abc");
+        assertThat(StringUtil.sorted("cdba")).isEqualTo("abcd");
+        assertThat(StringUtil.sorted("abcba")).isEqualTo("aabbc");
+        assertThat(StringUtil.sorted("aB")).isEqualTo("Ba");
+    }
+
+    @Test
     public void testRemove() {
         assertThat(StringUtil.remove("abc", 'a')).isEqualTo("bc");
         assertThat(StringUtil.remove("abc", 'b')).isEqualTo("ac");
