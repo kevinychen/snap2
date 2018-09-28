@@ -29,6 +29,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -112,6 +114,8 @@ public class Wikinet {
         .put("/>", " />")
         .build();
 
+    private static final Logger log = LoggerFactory.getLogger(Wikinet.class);
+
     private final File downloadDir;
     private final File partitionsDir;
 
@@ -125,8 +129,14 @@ public class Wikinet {
      * {@link #getArticlesLinks()}.
      */
     public void download(String articlesLink) throws IOException {
+        File downloadFile = new File(downloadDir, articlesLink);
+        File decompressedFile = new File(downloadDir, articlesLink.replace(".bz2", ""));
+        if (downloadFile.exists() || decompressedFile.exists())
+            return;
+
+        log.info("Downloading {}...", downloadFile.getName());
         downloadDir.mkdirs();
-        FileUtils.copyURLToFile(new URL(WIKIDUMP_URL + articlesLink), new File(downloadDir, articlesLink));
+        FileUtils.copyURLToFile(new URL(WIKIDUMP_URL + articlesLink), downloadFile);
     }
 
     /**
@@ -134,7 +144,13 @@ public class Wikinet {
      * must have already been called for this argument. This function removes the original bz2 file.
      */
     public void decompress(String articlesLink) throws InterruptedException, IOException {
-        String[] cmdarray = { "bunzip2", new File(downloadDir, articlesLink).getAbsolutePath() };
+        File downloadFile = new File(downloadDir, articlesLink);
+        File decompressedFile = new File(downloadDir, articlesLink.replace(".bz2", ""));
+        if (decompressedFile.exists())
+            return;
+
+        log.info("Decompressing {}...", downloadFile.getName());
+        String[] cmdarray = { "bunzip2", downloadFile.getAbsolutePath() };
         Runtime.getRuntime().exec(cmdarray).waitFor();
     }
 
@@ -145,12 +161,17 @@ public class Wikinet {
      * use the {@link #resetNet()} method to remove them.
      */
     public void createNet(String articlesLink) throws IOException, XMLStreamException {
-        String decompressedName = articlesLink.replace(".bz2", "");
+        File decompressedFile = new File(downloadDir, articlesLink.replace(".bz2", ""));
+        File completionFile = new File(downloadDir, decompressedFile.getName() + ".done");
+        if (completionFile.exists())
+            return;
 
+        log.info("Processing Wikitext file {}...", decompressedFile.getName());
         Multimap<Integer, Article> articles = ArrayListMultimap.create();
-        parseArticles(new FileInputStream(new File(downloadDir, decompressedName)),
+        parseArticles(new FileInputStream(decompressedFile),
             article -> articles.put(Math.abs(article.title.toUpperCase().hashCode()) % NUM_PARTITIONS, article));
 
+        log.info("Writing to partition files...");
         partitionsDir.mkdirs();
         for (int i = 0; i < NUM_PARTITIONS; i++) {
             File file = new File(partitionsDir, String.format("%04x", i));
@@ -161,12 +182,17 @@ public class Wikinet {
                     out.println(article.toTsv());
             }
         }
+        completionFile.createNewFile();
+        log.info("Wikinet created and marker file {} written.", completionFile.getName());
     }
 
     /**
      * Removes all partition files.
      */
     public void resetNet() throws IOException {
+        log.info("Deleting Wikinet");
+        for (File completionFile : downloadDir.listFiles((file, name) -> name.endsWith(".done")))
+            completionFile.delete();
         FileUtils.deleteDirectory(partitionsDir);
     }
 
@@ -204,6 +230,7 @@ public class Wikinet {
      * Returns a list of links to all bz2 files.
      */
     public static List<String> getArticlesLinks() throws IOException {
+        log.info("Fetching articles links...");
         Document doc = Jsoup.parse(new URL(WIKIDUMP_URL), 5000);
         return doc.getElementsByTag("a").stream()
                 .map(el -> el.attr("href"))
