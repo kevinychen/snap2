@@ -9,8 +9,10 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -169,14 +171,33 @@ public class Wikinet {
     }
 
     /**
-     * Returns a list of all articles with the given name (not case sensitive).
+     * Returns a set of all articles with the given name (not case sensitive).
      */
-    public List<Article> find(String title) throws IOException {
+    public Set<Article> find(String title) throws IOException {
+        Set<Article> articles = new HashSet<>();
+        for (Article article : directFind(title, false))
+            if (article.redirect != null)
+                articles.addAll(directFind(article.redirect, true));
+            else
+                articles.add(article);
+        return articles;
+    }
+
+    /**
+     * Returns a set of all articles with the given name, where redirects are not resolved (i.e.
+     * redirect articles have summary = null).
+     *
+     * @param exact
+     *            if true, only articles with the exact case are returned; otherwise a case
+     *            insensitive search is performed
+     */
+    public Set<Article> directFind(String title, boolean exact) throws IOException {
         int hash = Math.abs(title.toUpperCase().hashCode()) % NUM_PARTITIONS;
+        String prefix = title + "\t";
         return Files.lines(new File(partitionsDir, String.format("%04x", hash)).toPath())
-                .filter(line -> startsWithIgnoreCase(line, title + "\t"))
+                .filter(line -> exact ? line.startsWith(prefix) : startsWithIgnoreCase(line, prefix))
                 .map(Article::fromTsv)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -339,7 +360,7 @@ public class Wikinet {
 
         private String title;
         private String redirect;
-        private String summary = "";
+        private String summary;
 
         /**
          * A more human-friendly way of serializing the Article object in Wikinet's index files.
