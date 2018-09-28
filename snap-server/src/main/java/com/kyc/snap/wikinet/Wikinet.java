@@ -1,27 +1,44 @@
 package com.kyc.snap.wikinet;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.net.URL;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 
 import lombok.Builder;
 import lombok.Data;
 
-public class WikinetGenerator {
+public class Wikinet {
 
+    private static final String WIKIDUMP_URL = "https://dumps.wikimedia.org/enwiki/latest/";
+    private static final int NUM_PARTITIONS = 256;
     private static final Map<String, String> WIKITEXT_PREPROCESSOR_SUBSTITUTIONS = ImmutableMap.<String, String> builder()
         .put("{{", "<wtemplate>")
         .put("}}", "</wtemplate>")
@@ -32,15 +49,73 @@ public class WikinetGenerator {
         .put("/>", " />")
         .build();
 
-    public void parseArticles(InputStream articles, PrintStream out) {
+    private final File downloadDir;
+    private final File indexDir;
+
+    public Wikinet(File baseDir) {
+        downloadDir = new File(baseDir, "download");
+        indexDir = new File(baseDir, "index");
+    }
+
+    public void download(String articleLink) throws IOException {
+        downloadDir.mkdirs();
+        FileUtils.copyURLToFile(new URL(WIKIDUMP_URL + articleLink), new File(downloadDir, articleLink));
+    }
+
+    public void decompress(String articleLink) throws InterruptedException, IOException {
+        String[] cmdarray = { "bunzip2", new File(downloadDir, articleLink).getAbsolutePath() };
+        Runtime.getRuntime().exec(cmdarray).waitFor();
+    }
+
+    public void createNet(String articleLink) throws IOException {
+        String decompressedName = articleLink.replace(".bz2", "");
+
+        Multimap<Integer, Article> articles = ArrayListMultimap.create();
+        parseArticles(new FileInputStream(new File(downloadDir, decompressedName)),
+            article -> articles.put(Math.abs(article.title.hashCode()) % NUM_PARTITIONS, article));
+
+        indexDir.mkdirs();
+        for (int i = 0; i < NUM_PARTITIONS; i++) {
+            File file = new File(indexDir, String.format("%04x", i));
+            try (FileWriter fileWriter = new FileWriter(file, true);
+                    BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+                    PrintWriter out = new PrintWriter(bufferedWriter)) {
+                for (Article article : articles.get(i))
+                    out.println(article.toTsv());
+            }
+        }
+    }
+
+    public List<Article> find(String title) throws IOException {
+        int hash = Math.abs(title.hashCode()) % NUM_PARTITIONS;
+        return Files.lines(new File(indexDir, String.format("%04x", hash)).toPath())
+                .filter(line -> line.startsWith(title + "\t"))
+                .map(Article::fromTsv)
+                .collect(Collectors.toList());
+    }
+
+    public static List<String> getArticleLinks() throws IOException {
+        Document doc = Jsoup.parse(new URL(WIKIDUMP_URL), 5000);
+        return doc.getElementsByTag("a").stream()
+                .map(el -> el.attr("href"))
+                .filter(href -> href.matches("enwiki-latest-pages-articles\\d.*bz2"))
+                .collect(Collectors.toList());
+    }
+
+    public static void parseArticles(InputStream articles, Consumer<Article> processor) {
         try {
             Article.ArticleBuilder builder = Article.builder();
             for (XMLStreamReader input = XMLInputFactory.newInstance().createXMLStreamReader(articles); input.hasNext(); input.next()) {
                 if (input.isStartElement()) {
                     String name = input.getLocalName();
-                    if (name.equals("title"))
-                        builder.title(input.getElementText());
-                    else if (name.equals("text")) {
+                    if (name.equals("title")) {
+                        String text = input.getElementText();
+                        int disambiguationStart = text.indexOf(" (");
+                        if (disambiguationStart != -1)
+                            builder.title = text.substring(0, disambiguationStart);
+                        else
+                            builder.title = text;
+                    } else if (name.equals("text")) {
                         String text = input.getElementText();
                         if (isRedirect(text)) {
                             int redirectStart = text.indexOf("[[");
@@ -65,7 +140,7 @@ public class WikinetGenerator {
                     }
                 } else if (input.isEndElement()) {
                     if (input.getLocalName().equals("page")) {
-                        out.println(builder.build().toTsv());
+                        processor.accept(builder.build());
                         builder = Article.builder();
                     }
                 }
@@ -115,17 +190,41 @@ public class WikinetGenerator {
 
     @Data
     @Builder
-    private static class Article {
+    public static class Article {
 
         private String title;
         private String redirect;
         private String summary;
 
-        String toTsv() {
+        public String toTsv() {
             if (redirect != null)
                 return title + "\tREDIRECT\t" + redirect;
             else
                 return title + "\tSUMMARY\t" + summary;
         }
+
+        public static Article fromTsv(String tsv) {
+            StringTokenizer tokenizer = new StringTokenizer(tsv, "\t");
+            ArticleBuilder builder = Article.builder();
+            builder.title = tokenizer.nextToken();
+            if (tokenizer.nextToken().equals("REDIRECT"))
+                builder.redirect = tokenizer.nextToken();
+            else
+                builder.summary = tokenizer.nextToken();
+            return builder.build();
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        long time = System.currentTimeMillis();
+        Wikinet wikinet = new Wikinet(new File("data/wikinet"));
+        for (String articleLink : Wikinet.getArticleLinks()) {
+            wikinet.download(articleLink);
+            wikinet.decompress(articleLink);
+            wikinet.createNet(articleLink);
+        }
+        for (Article article : wikinet.find("Anarchism"))
+            System.out.println(article.toTsv());
+        System.out.println(System.currentTimeMillis() - time);
     }
 }
