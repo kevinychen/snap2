@@ -28,6 +28,7 @@ dependencies {
     compile "io.dropwizard:dropwizard-assets:1.2.1"
     compile "io.github.openfeign:feign-jackson:10.0.1"
     compile "io.github.openfeign.form:feign-form:3.3.0"
+    compile "org.apache.commons:commons-text:1.4"
     compile "org.apache.httpcomponents:httpmime:4.5.6"
     compile "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
     compile "org.jsoup:jsoup:1.10.3"
