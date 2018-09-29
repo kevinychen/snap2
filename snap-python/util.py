@@ -29,9 +29,16 @@ def words():
         for row in tsv:
             yield row[0]
 
+def wiki():
+    """ Returns a generator of all Wikipedia article titles in lowercase (non-alpha characters stripped).
+    """
+    with open(data_file('wikinet/index/titles-abc')) as fh:
+        for line in fh:
+            yield line.rstrip('\n')
+
 # STRING MANIPULATION
 
-def anagram(s):
+def anagram(s, dict=words):
     """ Returns a list of all English anagrams of the given string.
 
     >>> anagram('aaagmnr')
@@ -39,7 +46,7 @@ def anagram(s):
     """
     s = s.lower()
     matches = []
-    for word in words():
+    for word in dict():
         if len(word) == len(s) and sorted(word) == sorted(s):
             matches.append(word)
     return matches
@@ -56,7 +63,7 @@ def caesar(s):
                 shift += c
         print shift
 
-def match(pattern):
+def match(pattern, dict=words):
     """ Returns a list of all English words that match the given pattern.
 
     >>> match('m*t*h')
@@ -73,7 +80,7 @@ def match(pattern):
                 return False
         return True
     matches = list()
-    for word in words():
+    for word in dict():
         if len(word) == len(pattern) and fit(word.lower()):
             matches.append(word)
     return matches

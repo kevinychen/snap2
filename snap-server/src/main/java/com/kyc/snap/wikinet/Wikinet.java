@@ -18,6 +18,7 @@ import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -76,7 +77,7 @@ public class Wikinet {
      *     ...
      *   index
      *     titles-cleaned (contain titles with only [a-z0-9] tokens separated by spaces)
-     *     titles-abc (contain titles with only [a-z] characters without spaces)
+     *     titles-letters-only (contain titles with only [a-z] characters without spaces)
      *   partitions
      *     0000 (TSV formatted partition file containing all articles with |hash value| ≡ 0 (mod {@link #NUM_PARTITIONS})
      *     0001
@@ -132,10 +133,16 @@ public class Wikinet {
     private final File indexDir;
     private final File partitionsDir;
 
+    private final File cleanedTitles;
+    private final File letterOnlyTitles;
+
     public Wikinet() {
         downloadDir = new File(WIKINET_BASE_DIR, "download");
         indexDir = new File(WIKINET_BASE_DIR, "index");
         partitionsDir = new File(WIKINET_BASE_DIR, "partitions");
+
+        cleanedTitles = new File(indexDir, "titles-cleaned");
+        letterOnlyTitles = new File(indexDir, "titles-letters-only");
     }
 
     public void downloadTitles() throws InterruptedException, IOException {
@@ -178,13 +185,11 @@ public class Wikinet {
      * {@link #downloadTitles()} has already been called.
      * <p>
      * For example, for the title "Korea_K-Pop_Hot_100", the cleaned title is "korea k pop hot 100"
-     * and the title with only letters retained is "koreakpophot".
+     * and the letter-only title is "koreakpophot".
      */
     public void processTitles() throws IOException {
         File decompressedFile = new File(downloadDir, TITLES_LINK.replace(".gz", ""));
-        File cleanedTitles = new File(indexDir, "titles-cleaned");
-        File abcTitles = new File(indexDir, "titles-abc");
-        if (abcTitles.exists())
+        if (letterOnlyTitles.exists())
             return;
 
         log.info("Writing cleaned article titles to {}...", cleanedTitles.getName());
@@ -197,8 +202,8 @@ public class Wikinet {
                 return StringUtils.stripAccents(title).toLowerCase().replaceAll("[^a-z0-9]+", " ").trim();
             })
             .collect(Collectors.toList())), StandardCharsets.UTF_8);
-        log.info("Writing article titles with only letters retained to {}...", abcTitles.getName());
-        Files.write(abcTitles.toPath(), new TreeSet<>(Files.lines(cleanedTitles.toPath())
+        log.info("Writing article titles with only letters retained to {}...", letterOnlyTitles.getName());
+        Files.write(letterOnlyTitles.toPath(), new TreeSet<>(Files.lines(cleanedTitles.toPath())
             .map(title -> title.replaceAll("[^a-z]", ""))
             .collect(Collectors.toList())), StandardCharsets.UTF_8);
     }
@@ -243,6 +248,30 @@ public class Wikinet {
         for (File completionFile : downloadDir.listFiles((file, name) -> name.endsWith(".done")))
             completionFile.delete();
         FileUtils.deleteDirectory(partitionsDir);
+    }
+
+    /**
+     * Returns a stream of all Wikipedia titles, with only lowercase letters and digits in words
+     * separated by spaces.
+     */
+    public Stream<String> getCleanedTitles() {
+        try {
+            return Files.lines(cleanedTitles.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Returns a stream of all Wikipedia titles, with only lowercase letters (not separated by
+     * spaces).
+     */
+    public Stream<String> getLetterOnlyTitles() {
+        try {
+            return Files.lines(letterOnlyTitles.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
