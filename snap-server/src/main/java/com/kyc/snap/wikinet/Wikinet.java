@@ -227,8 +227,11 @@ public class Wikinet {
 
         log.info("Processing Wikitext file {}...", decompressedFile.getName());
         Multimap<Integer, Article> articles = ArrayListMultimap.create();
-        parseArticles(new FileInputStream(decompressedFile),
-            article -> articles.put(Math.abs(article.title.toUpperCase().hashCode()) % NUM_PARTITIONS, article));
+        parseArticles(new FileInputStream(decompressedFile), article -> {
+            String normalizedTitle = normalize(article.title);
+            if (!normalizedTitle.isEmpty())
+                articles.put(Math.abs(normalizedTitle.hashCode()) % NUM_PARTITIONS, article);
+        });
 
         log.info("Writing to partition files...");
         partitionsDir.mkdirs();
@@ -301,11 +304,13 @@ public class Wikinet {
      *            insensitive search is performed
      */
     public Set<Article> directFind(String title, boolean exact) throws IOException {
-        int hash = Math.abs(title.toUpperCase().hashCode()) % NUM_PARTITIONS;
-        String prefix = title + "\t";
+        String normalizedTitle = normalize(title);
+        int hash = Math.abs(normalizedTitle.hashCode()) % NUM_PARTITIONS;
+        String prefix = normalizedTitle + "\t";
         return Files.lines(new File(partitionsDir, String.format("%04x", hash)).toPath())
-                .filter(line -> exact ? line.startsWith(prefix) : startsWithIgnoreCase(line, prefix))
+                .filter(line -> line.startsWith(prefix))
                 .map(Article::fromTsv)
+                .filter(article -> !exact || article.title.equals(title))
                 .collect(Collectors.toSet());
     }
 
@@ -348,12 +353,7 @@ public class Wikinet {
             if (input.isStartElement()) {
                 String name = input.getLocalName();
                 if (name.equals("title")) {
-                    String text = input.getElementText();
-                    // ignore disambiguating references in titles, e.g. "Animalia (book)" -> "Animalia"
-                    int disambiguationStart = text.indexOf(" (");
-                    if (disambiguationStart != -1)
-                        text = text.substring(0, disambiguationStart);
-                    builder.title = text;
+                    builder.title = input.getElementText();
                 } else if (name.equals("ns")) {
                     namespace = input.getElementText();
                 } else if (name.equals("text")) {
@@ -404,6 +404,13 @@ public class Wikinet {
 
     private static boolean startsWithIgnoreCase(String str, String prefix) {
         return str.length() >= prefix.length() && str.substring(0, prefix.length()).equalsIgnoreCase(prefix);
+    }
+
+    private static String normalize(String title) {
+        int disambiguationStart = title.indexOf(" (");
+        if (disambiguationStart != -1)
+            title = title.substring(0, disambiguationStart);
+        return StringUtils.stripAccents(title).toLowerCase().replaceAll("[^a-z]", "");
     }
 
     /**
@@ -485,13 +492,14 @@ public class Wikinet {
          */
         public String toTsv() {
             if (redirect != null)
-                return title + "\tREDIRECT\t" + redirect;
+                return normalize(title) + "\t" + title + "\tREDIRECT\t" + redirect;
             else
-                return title + "\tSUMMARY\t" + summary;
+                return normalize(title) + "\t" + title + "\tSUMMARY\t" + summary;
         }
 
         public static Article fromTsv(String tsv) {
             StringTokenizer tokenizer = new StringTokenizer(tsv, "\t");
+            tokenizer.nextToken();
             ArticleBuilder builder = Article.builder();
             builder.title = tokenizer.nextToken();
             if (tokenizer.nextToken().equals("REDIRECT"))
