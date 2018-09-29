@@ -2,12 +2,12 @@
 Python convenience script with the same implementations of "find" and "directFind" in Wikinet.java.
 """
 
-from collections import namedtuple
-from os import path
+import collections
+import util
 
 NUM_PARTITIONS = 65536
 
-Article = namedtuple('Article', 'title redirect summary')
+Article = collections.namedtuple('Article', 'title redirect summary')
 
 def java_string_hashcode(s):
     h = 0
@@ -35,12 +35,18 @@ def direct_find(title, exact):
     hash = abs(java_string_hashcode(title.upper())) % NUM_PARTITIONS
     prefix = title + '\t'
     articles = set()
-    for line in open(path.join(path.dirname(__file__), '../snap-server/data/wikinet/partitions/%04x' % hash)):
-        if (line.startswith(prefix) if exact else startswith_ignore_case(line, prefix)):
-            articles.add(from_tsv(line))
+    with open(util.data_file('wikinet/partitions/%04x' % hash)) as fh:
+        for line in fh:
+            if (line.startswith(prefix) if exact else startswith_ignore_case(line, prefix)):
+                articles.add(from_tsv(line))
     return articles
 
 def find(title):
+    """ Returns a set of all articles with the given title.
+
+    >>> find('wikipedia')
+    set([Article(title='Wikipedia', summary='Wikipedia is a free, collaborative, multilingual Internet encyclopedia.\n')])
+    """
     articles = set()
     for article in direct_find(title, False):
         if article.redirect != None:

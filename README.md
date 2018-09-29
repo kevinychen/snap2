@@ -37,19 +37,26 @@ The Wikinet generator stores summaries for all Wikipedia articles and indexes th
     cd snap-server
     ./gradlew generateWikinet
 
-Generating the Wikinet involves downloading about 50 files with a total of about 20GB of data from the internet, so may take many hours.
+Generating the Wikinet involves downloading about 50 files with a total of about 20GB of data (~150GB uncompressed) from the internet, so may take many hours.
 
 Python
 ------
 
-To use the Python library, add the following to your `.bashrc`:
+To use the Snap's Python functions, add the following to your `.bashrc`:
 
     export PYTHONPATH=/path/to/snap2/snap-python
+    alias snap='PYTHONSTARTUP=/path/to/snap2/snap-python/bootstrap.py python'
 
-You can then access Snap Python functions anywhere:
+You can then access the functions anywhere:
 
     $ python
     >>> from wikinet import find
     >>> wikinet.find('Ajaigarh')
+    set([Article(title='Ajaigarh', redirect=None, summary='Ajaigarh or Adjygurh is a town and a nagar panchayat in the Panna District of Madhya Pradesh state in central India.\n')])
+
+Or, start a Python console with the functions already boostrapped:
+
+    $ snap
+    >>> find('Ajaigarh')
     set([Article(title='Ajaigarh', redirect=None, summary='Ajaigarh or Adjygurh is a town and a nagar panchayat in the Panna District of Madhya Pradesh state in central India.\n')])
 

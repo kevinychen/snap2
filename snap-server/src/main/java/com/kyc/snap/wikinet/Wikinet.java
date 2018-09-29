@@ -278,8 +278,10 @@ public class Wikinet {
                      */
                     if (startsWithIgnoreCase(text, "#REDIRECT")) {
                         int redirectStart = text.indexOf("[[");
-                        if (redirectStart != -1)
-                            builder.redirect = text.substring(redirectStart + "[[".length(), text.indexOf("]]", redirectStart));
+                        int redirectEnd = text.indexOf("]]", redirectStart);
+                        // check for corrupted redirect texts, e.g. "#redirect [[Wikipedia:Cleanup"
+                        if (redirectStart != -1 && redirectEnd != -1)
+                            builder.redirect = text.substring(redirectStart + "[[".length(), redirectEnd);
                     } else {
                         /*
                          * unescapeHtml4 is slow, and we usually need to parse only the beginning of the article to find the summary text.
@@ -414,7 +416,6 @@ public class Wikinet {
     public static void main(String[] args) throws Exception {
         long time = System.currentTimeMillis();
         Wikinet wikinet = new Wikinet();
-        wikinet.resetNet();
         for (String articleLink : Wikinet.getArticlesLinks()) {
             wikinet.download(articleLink);
             wikinet.decompress(articleLink);
