@@ -280,7 +280,7 @@ public class Wikinet {
     /**
      * Returns a set of all articles with the given name (not case sensitive).
      */
-    public Set<Article> find(String title) throws IOException {
+    public Set<Article> find(String title) {
         Set<Article> articles = new HashSet<>();
         for (Article article : directFind(title, false))
             if (article.redirect != null)
@@ -299,15 +299,19 @@ public class Wikinet {
      *            if true, only articles with the exact case are returned; otherwise a case
      *            insensitive search is performed
      */
-    public Set<Article> directFind(String title, boolean exact) throws IOException {
+    public Set<Article> directFind(String title, boolean exact) {
         String normalizedTitle = normalize(title);
         int hash = Math.abs(normalizedTitle.hashCode()) % NUM_PARTITIONS;
         String prefix = normalizedTitle + "\t";
-        return Files.lines(new File(partitionsDir, String.format("%04x", hash)).toPath())
-                .filter(line -> line.startsWith(prefix))
-                .map(Article::fromTsv)
-                .filter(article -> !exact || article.title.equals(title))
-                .collect(Collectors.toSet());
+        try {
+            return Files.lines(new File(partitionsDir, String.format("%04x", hash)).toPath())
+                    .filter(line -> line.startsWith(prefix))
+                    .map(Article::fromTsv)
+                    .filter(article -> !exact || article.title.equals(title))
+                    .collect(Collectors.toSet());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -315,11 +319,13 @@ public class Wikinet {
      */
     public static List<String> getArticlesLinks() throws IOException {
         log.info("Fetching articles links...");
-        Document doc = Jsoup.parse(new URL(WIKIDUMP_URL), 5000);
+        Document doc = Jsoup.connect(WIKIDUMP_URL)
+            .validateTLSCertificates(false)
+            .get();
         return doc.getElementsByTag("a").stream()
-                .map(el -> el.attr("href"))
-                .filter(href -> href.matches("enwiki-latest-pages-articles\\d.*bz2"))
-                .collect(Collectors.toList());
+            .map(el -> el.attr("href"))
+            .filter(href -> href.matches("enwiki-latest-pages-articles\\d.*bz2"))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -354,14 +360,14 @@ public class Wikinet {
                     namespace = input.getElementText();
                 } else if (name.equals("text")) {
                     String text = input.getElementText();
-                    if (!namespace.equals("0")) {
+                    if (!namespace.equals("0"))
                         continue;
                     /*
                      * Text for redirect pages start with "#REDIRECT" and are case insensitive
                      * (https://en.wikipedia.org/wiki/Wikipedia:Redirect). Take the redirect title that follows in square brackets, e.g.
                      * "#REDIRECT [[Amoeba]]" -> "Amoeba".
                      */
-                    } else if (startsWithIgnoreCase(text, "#REDIRECT")) {
+                    else if (startsWithIgnoreCase(text, "#REDIRECT")) {
                         int redirectStart = text.indexOf("[[");
                         int redirectEnd = text.indexOf("]]", redirectStart);
                         // check for corrupted redirect texts, e.g. "#redirect [[Wikipedia:Cleanup"
@@ -391,7 +397,8 @@ public class Wikinet {
                 }
             } else if (input.isEndElement()) {
                 if (input.getLocalName().equals("page")) {
-                    processor.accept(builder.build());
+                    if (namespace.equals("0"))
+                        processor.accept(builder.build());
                     builder = Article.builder();
                 }
             }
@@ -433,11 +440,16 @@ public class Wikinet {
                      */
                     else if (wholeText.startsWith("\n*", index - 1))
                         return true;
+                    // ignore indented lines (starting with a colon): https://en.wikibooks.org/wiki/Editing_Wikitext/Indents_and_Lists
+                    else if (wholeText.startsWith("\n:", index - 1)) {
+                        index = wholeText.indexOf("\n", index);
+                        if (index == -1)
+                            break;
                     /*
                      * Italic and bold formatting is denoted by two or more single quotes (https://www.mediawiki.org/wiki/Help:Formatting)
                      * but should be treated identically to normal text by Wikinet.
                      */
-                    else if (wholeText.startsWith("''", index))
+                    } else if (wholeText.startsWith("''", index))
                         while (wholeText.startsWith("'", index + 1))
                             index++;
                     /*
@@ -469,6 +481,13 @@ public class Wikinet {
                              * https://en.wikipedia.org/wiki/Help:Wikitext#Free_links).
                              */
                             summary.append(link.substring(link.lastIndexOf("|") + 1));
+                        break;
+                    case "big":
+                    case "center":
+                    case "i":
+                    case "small":
+                        if (processNode(el, summary))
+                            return true;
                         break;
                     default:
                         // templates, tables, and other HTML tags are ignored by Wikinet

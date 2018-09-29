@@ -29,10 +29,17 @@ def words():
         for row in tsv:
             yield row[0]
 
+def full_wiki():
+    """ Returns a generator of all Wikipedia article titles with lowercase letters and digits separated by spaces.
+    """
+    with open(data_file('wikinet/index/titles-cleaned')) as fh:
+        for line in fh:
+            yield line.rstrip('\n')
+
 def wiki():
     """ Returns a generator of all Wikipedia article titles in lowercase (non-alpha characters stripped).
     """
-    with open(data_file('wikinet/index/titles-abc')) as fh:
+    with open(data_file('wikinet/index/titles-letters-only')) as fh:
         for line in fh:
             yield line.rstrip('\n')
 
