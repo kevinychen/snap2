@@ -200,12 +200,7 @@ public class Wikinet {
         log.info("Writing cleaned article titles to {}...", cleanedTitles.getName());
         indexDir.mkdirs();
         Files.write(cleanedTitles.toPath(), new TreeSet<>(Files.lines(decompressedFile.toPath())
-            .map(title -> {
-                int disambiguationStart = title.indexOf("_(");
-                if (disambiguationStart != -1)
-                    title = title.substring(0, disambiguationStart);
-                return StringUtils.stripAccents(title).toLowerCase().replaceAll("[^a-z0-9]+", " ").trim();
-            })
+            .map(title -> StringUtils.stripAccents(stripFrom(title, "_(")).toLowerCase().replaceAll("[^a-z0-9]+", " ").trim())
             .collect(Collectors.toList())), StandardCharsets.UTF_8);
         log.info("Writing article titles with only letters retained to {}...", letterOnlyTitles.getName());
         Files.write(letterOnlyTitles.toPath(), new TreeSet<>(Files.lines(cleanedTitles.toPath())
@@ -289,7 +284,8 @@ public class Wikinet {
         Set<Article> articles = new HashSet<>();
         for (Article article : directFind(title, false))
             if (article.redirect != null)
-                articles.addAll(directFind(article.redirect, true));
+                // follow redirect ignoring anchors, e.g. (Title: FOLD) #REDIRECT [[Betting in poker#Fold]] -> "Betting in power"
+                articles.addAll(directFind(stripFrom(article.redirect, "#"), true));
             else
                 articles.add(article);
         return articles;
@@ -407,10 +403,14 @@ public class Wikinet {
     }
 
     private static String normalize(String title) {
-        int disambiguationStart = title.indexOf(" (");
-        if (disambiguationStart != -1)
-            title = title.substring(0, disambiguationStart);
-        return StringUtils.stripAccents(title).toLowerCase().replaceAll("[^a-z]", "");
+        return StringUtils.stripAccents(stripFrom(title, " (")).toLowerCase().replaceAll("[^a-z]", "");
+    }
+
+    private static String stripFrom(String str, String mark) {
+        int index = str.indexOf(mark);
+        if (index != -1)
+            str = str.substring(0, index);
+        return str;
     }
 
     /**
@@ -488,7 +488,9 @@ public class Wikinet {
         private String summary;
 
         /**
-         * A more human-friendly way of serializing the Article object in Wikinet's index files.
+         * A more human-friendly way of serializing the Article object in Wikinet's index files. The
+         * normalized title (only lowercase characters) is prepended at the beginning for quick
+         * filtering by title with a startsWith check without having to deserialize the article.
          */
         public String toTsv() {
             if (redirect != null)

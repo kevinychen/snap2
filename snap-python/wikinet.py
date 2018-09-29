@@ -9,11 +9,14 @@ NUM_PARTITIONS = 65536
 
 Article = collections.namedtuple('Article', 'title redirect summary')
 
+def strip_from(s, mark):
+    index = s.find(mark)
+    if index != -1:
+        s = s[:index]
+    return s
+
 def normalize(title):
-    disambiguation_start = title.find(' (')
-    if disambiguation_start != -1:
-        title = title[:disambiguation_start]
-    return filter(lambda c: c.isalpha(), title.lower())
+    return filter(lambda c: c.isalpha(), strip_from(title.lower(), ' ('))
 
 def java_string_hashcode(s):
     h = 0
@@ -56,7 +59,7 @@ def find(title):
     articles = set()
     for article in direct_find(title):
         if article.redirect != None:
-            articles.update(direct_find(article.redirect, True))
+            articles.update(direct_find(strip_from(article.redirect, '#'), True))
         else:
             articles.add(article)
     return articles
