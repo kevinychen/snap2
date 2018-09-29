@@ -145,6 +145,11 @@ public class Wikinet {
         letterOnlyTitles = new File(indexDir, "titles-letters-only");
     }
 
+    /**
+     * Downloads and decompresses a gz file of all normal Wikipedia article titles. The link
+     * contains only articles in namespace 0, which does not include other article types such as
+     * templates and files.
+     */
     public void downloadTitles() throws InterruptedException, IOException {
         File downloadFile = new File(downloadDir, TITLES_LINK);
         File decompressedFile = new File(downloadDir, TITLES_LINK.replace(".gz", ""));
@@ -161,8 +166,8 @@ public class Wikinet {
     }
 
     /**
-     * Downloads a bz2 file to {@link #downloadDir}. The argument must be a link returned by
-     * {@link #getArticlesLinks()}.
+     * Downloads and decompresses a bz2 file to {@link #downloadDir}. The argument must be a link
+     * returned by {@link #getArticlesLinks()}.
      */
     public void download(String articlesLink) throws InterruptedException, IOException {
         File downloadFile = new File(downloadDir, articlesLink);
@@ -325,6 +330,7 @@ public class Wikinet {
      * <pre>
      * &lt;page&gt;
      *     &lt;title&gt;Anarchism&lt;/title&gt;
+     *     &lt;ns&gt;0&lt;/ns&gt;
      *     &lt;revision&gt;
      *         &lt;text xml:space="preserve"&gt;content&lt;/text&gt;
      *     &lt;/revision&gt;
@@ -337,6 +343,7 @@ public class Wikinet {
      */
     public static void parseArticles(InputStream articles, Consumer<Article> processor) throws XMLStreamException {
         Article.ArticleBuilder builder = Article.builder();
+        String namespace = "0";
         for (XMLStreamReader input = XMLInputFactory.newInstance().createXMLStreamReader(articles); input.hasNext(); input.next()) {
             if (input.isStartElement()) {
                 String name = input.getLocalName();
@@ -347,14 +354,18 @@ public class Wikinet {
                     if (disambiguationStart != -1)
                         text = text.substring(0, disambiguationStart);
                     builder.title = text;
+                } else if (name.equals("ns")) {
+                    namespace = input.getElementText();
                 } else if (name.equals("text")) {
                     String text = input.getElementText();
+                    if (!namespace.equals("0")) {
+                        continue;
                     /*
                      * Text for redirect pages start with "#REDIRECT" and are case insensitive
                      * (https://en.wikipedia.org/wiki/Wikipedia:Redirect). Take the redirect title that follows in square brackets, e.g.
                      * "#REDIRECT [[Amoeba]]" -> "Amoeba".
                      */
-                    if (startsWithIgnoreCase(text, "#REDIRECT")) {
+                    } else if (startsWithIgnoreCase(text, "#REDIRECT")) {
                         int redirectStart = text.indexOf("[[");
                         int redirectEnd = text.indexOf("]]", redirectStart);
                         // check for corrupted redirect texts, e.g. "#redirect [[Wikipedia:Cleanup"
