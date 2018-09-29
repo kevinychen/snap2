@@ -256,6 +256,18 @@ public class Wikinet {
     }
 
     /**
+     * Returns a stream of all Wikipedia titles as is.
+     */
+    public Stream<String> getTitles() {
+        File decompressedFile = new File(downloadDir, TITLES_LINK.replace(".gz", ""));
+        try {
+            return Files.lines(decompressedFile.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Returns a stream of all Wikipedia titles, with only lowercase letters and digits in words
      * separated by spaces.
      */
@@ -282,14 +294,19 @@ public class Wikinet {
     /**
      * Returns a set of all articles with the given name (not case sensitive).
      */
-    public Set<Article> find(String title) {
+    public Set<Article> find(String title, boolean exact) {
         Set<Article> articles = new HashSet<>();
-        for (Article article : directFind(title, false))
-            if (article.redirect != null)
+        for (Article article : directFind(title, exact)) {
+            if (article.redirect != null) {
                 // follow redirect ignoring anchors, e.g. (Title: FOLD) #REDIRECT [[Betting in poker#Fold]] -> "Betting in power"
-                articles.addAll(directFind(stripFrom(article.redirect, "#"), true));
-            else
+                Set<Article> redirectArticles = directFind(stripFrom(article.redirect, "#"), true);
+                if (redirectArticles.isEmpty())
+                    break;
+                article = redirectArticles.iterator().next();
+            }
+            if (article.summary != null)
                 articles.add(article);
+        }
         return articles;
     }
 

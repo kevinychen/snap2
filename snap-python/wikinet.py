@@ -41,26 +41,29 @@ def direct_find(title, exact=False):
     normalized_title = normalize(title)
     hash = abs(java_string_hashcode(normalized_title)) % NUM_PARTITIONS
     prefix = normalized_title + '\t'
-    articles = set()
+    articles = []
     with open(util.data_file('wikinet/partitions/%04x' % hash)) as fh:
         for line in fh:
             if line.startswith(prefix):
                 article = from_tsv(line)
                 if not exact or article.title == title:
-                    articles.add(article)
+                    articles.append(article)
     return articles
 
-def find(title):
+def find(title, exact=False):
     """ Returns a set of all articles with the given title (case insensitive).
 
     >>> find('wikipedia')
     set([Article(title='Wikipedia', summary='Wikipedia is a free, collaborative, multilingual Internet encyclopedia.\n')])
     """
-    articles = set()
-    for article in direct_find(title):
+    articles = []
+    for article in direct_find(title, exact=exact):
         if article.redirect != None:
-            articles.update(direct_find(strip_from(article.redirect, '#'), True))
-        else:
-            articles.add(article)
+            redirect_articles = direct_find(strip_from(article.redirect, '#'), True)
+            if len(redirect_articles) == 0:
+                break
+            article = redirect_articles[0]
+        if article.summary != None:
+            articles.append(article)
     return articles
 
