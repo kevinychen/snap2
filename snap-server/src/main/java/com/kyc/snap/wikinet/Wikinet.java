@@ -1,8 +1,10 @@
 package com.kyc.snap.wikinet;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -302,13 +304,21 @@ public class Wikinet {
     public Set<Article> directFind(String title, boolean exact) {
         String normalizedTitle = normalize(title);
         int hash = Math.abs(normalizedTitle.hashCode()) % NUM_PARTITIONS;
-        String prefix = normalizedTitle + "\t";
-        try {
-            return Files.lines(new File(partitionsDir, String.format("%04x", hash)).toPath())
-                    .filter(line -> line.startsWith(prefix))
-                    .map(Article::fromTsv)
-                    .filter(article -> !exact || article.title.equals(title))
-                    .collect(Collectors.toSet());
+        try (FileReader fileReader = new FileReader(new File(partitionsDir, String.format("%04x", hash)));
+                BufferedReader in = new BufferedReader(fileReader)) {
+            String prefix = normalizedTitle + "\t";
+            Set<Article> articles = new HashSet<>();
+            while (true) {
+                String line = in.readLine();
+                if (line == null)
+                    break;
+                else if (line.startsWith(prefix)) {
+                    Article article = Article.fromTsv(line);
+                    if (!exact || article.title.equals(title))
+                        articles.add(article);
+                }
+            }
+            return articles;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -523,10 +533,12 @@ public class Wikinet {
             tokenizer.nextToken();
             ArticleBuilder builder = Article.builder();
             builder.title = tokenizer.nextToken();
-            if (tokenizer.nextToken().equals("REDIRECT"))
-                builder.redirect = tokenizer.nextToken();
+            boolean isRedirect = tokenizer.nextToken().equals("REDIRECT");
+            String msg = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : "";
+            if (isRedirect)
+                builder.redirect = msg;
             else
-                builder.summary = tokenizer.nextToken();
+                builder.summary = msg;
             return builder.build();
         }
     }
