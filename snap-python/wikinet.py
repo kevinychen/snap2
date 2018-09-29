@@ -19,7 +19,7 @@ def startswith_ignore_case(str, prefix):
     return str.upper().startswith(prefix.upper())
 
 def from_tsv(tsv):
-    (title, label, msg) = tsv.split('\t')
+    (title, label, msg) = tsv.rstrip('\n').split('\t')
     if label == 'REDIRECT':
         return Article(title=title, redirect=msg, summary=None)
     else:
@@ -31,7 +31,7 @@ def to_tsv(article):
     else:
         return '%s\t%s\t%s' % (article.title, 'SUMMARY', article.summary)
 
-def direct_find(title, exact):
+def direct_find(title, exact=False):
     hash = abs(java_string_hashcode(title.upper())) % NUM_PARTITIONS
     prefix = title + '\t'
     articles = set()
@@ -42,13 +42,13 @@ def direct_find(title, exact):
     return articles
 
 def find(title):
-    """ Returns a set of all articles with the given title.
+    """ Returns a set of all articles with the given title (case insensitive).
 
     >>> find('wikipedia')
     set([Article(title='Wikipedia', summary='Wikipedia is a free, collaborative, multilingual Internet encyclopedia.\n')])
     """
     articles = set()
-    for article in direct_find(title, False):
+    for article in direct_find(title):
         if article.redirect != None:
             articles.update(direct_find(article.redirect, True))
         else:

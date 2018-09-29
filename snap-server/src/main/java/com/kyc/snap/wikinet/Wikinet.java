@@ -8,12 +8,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -68,8 +70,13 @@ public class Wikinet {
      * <pre>
      * {@link #WIKINET_BASE_DIR}
      *   download
-     *     enwiki-latest-pages-articles1.xml-p10p30302.bz2 (before decompressing)
+     *     enwiki-latest-all-titles-in-ns0 (after decompressing)
      *     enwiki-latest-pages-articles1.xml-p10p30302 (after decompressing)
+     *     enwiki-latest-pages-articles1.xml-p10p30302.done (signals that the corresponding file has been processed)
+     *     ...
+     *   index
+     *     titles-cleaned (contain titles with only [a-z0-9] tokens separated by spaces)
+     *     titles-abc (contain titles with only [a-z] characters without spaces)
      *   partitions
      *     0000 (TSV formatted partition file containing all articles with |hash value| ≡ 0 (mod {@link #NUM_PARTITIONS})
      *     0001
@@ -83,6 +90,11 @@ public class Wikinet {
      * The page containing links to all Wikipedia articles in raw Wikitext format.
      */
     public static final String WIKIDUMP_URL = "https://dumps.wikimedia.org/enwiki/latest/";
+
+    /**
+     * The link pointing to a gzipped file of all Wikipedia article titles.
+     */
+    public static final String TITLES_LINK = "enwiki-latest-all-titles-in-ns0.gz";
 
     /**
      * The number of partitions of all articles. This number is large enough such that the average
@@ -117,46 +129,83 @@ public class Wikinet {
     private static final Logger log = LoggerFactory.getLogger(Wikinet.class);
 
     private final File downloadDir;
+    private final File indexDir;
     private final File partitionsDir;
 
     public Wikinet() {
         downloadDir = new File(WIKINET_BASE_DIR, "download");
+        indexDir = new File(WIKINET_BASE_DIR, "index");
         partitionsDir = new File(WIKINET_BASE_DIR, "partitions");
+    }
+
+    public void downloadTitles() throws InterruptedException, IOException {
+        File downloadFile = new File(downloadDir, TITLES_LINK);
+        File decompressedFile = new File(downloadDir, TITLES_LINK.replace(".gz", ""));
+        if (decompressedFile.exists())
+            return;
+
+        log.info("Downloading {}...", TITLES_LINK);
+        downloadDir.mkdirs();
+        FileUtils.copyURLToFile(new URL(WIKIDUMP_URL + TITLES_LINK), downloadFile);
+
+        log.info("Decompressing {}...", TITLES_LINK);
+        String[] cmdarray = { "gunzip", downloadFile.getAbsolutePath() };
+        Runtime.getRuntime().exec(cmdarray).waitFor();
     }
 
     /**
      * Downloads a bz2 file to {@link #downloadDir}. The argument must be a link returned by
      * {@link #getArticlesLinks()}.
      */
-    public void download(String articlesLink) throws IOException {
-        File downloadFile = new File(downloadDir, articlesLink);
-        File decompressedFile = new File(downloadDir, articlesLink.replace(".bz2", ""));
-        if (downloadFile.exists() || decompressedFile.exists())
-            return;
-
-        log.info("Downloading {}...", downloadFile.getName());
-        downloadDir.mkdirs();
-        FileUtils.copyURLToFile(new URL(WIKIDUMP_URL + articlesLink), downloadFile);
-    }
-
-    /**
-     * Decompresses a downloaded bz2 file into a Wikitext file. The {@link #download(String)} method
-     * must have already been called for this argument. This function removes the original bz2 file.
-     */
-    public void decompress(String articlesLink) throws InterruptedException, IOException {
+    public void download(String articlesLink) throws InterruptedException, IOException {
         File downloadFile = new File(downloadDir, articlesLink);
         File decompressedFile = new File(downloadDir, articlesLink.replace(".bz2", ""));
         if (decompressedFile.exists())
             return;
 
-        log.info("Decompressing {}...", downloadFile.getName());
+        log.info("Downloading {}...", articlesLink);
+        downloadDir.mkdirs();
+        FileUtils.copyURLToFile(new URL(WIKIDUMP_URL + articlesLink), downloadFile);
+
+        log.info("Decompressing {}...", articlesLink);
         String[] cmdarray = { "bunzip2", downloadFile.getAbsolutePath() };
         Runtime.getRuntime().exec(cmdarray).waitFor();
     }
 
     /**
+     * Parses the file containing a list of Wikipedia article titles and outputs two files; one with
+     * each title split into words and one with only letters retained. This method requires that
+     * {@link #downloadTitles()} has already been called.
+     * <p>
+     * For example, for the title "Korea_K-Pop_Hot_100", the cleaned title is "korea k pop hot 100"
+     * and the title with only letters retained is "koreakpophot".
+     */
+    public void processTitles() throws IOException {
+        File decompressedFile = new File(downloadDir, TITLES_LINK.replace(".gz", ""));
+        File cleanedTitles = new File(indexDir, "titles-cleaned");
+        File abcTitles = new File(indexDir, "titles-abc");
+        if (abcTitles.exists())
+            return;
+
+        log.info("Writing cleaned article titles to {}...", cleanedTitles.getName());
+        indexDir.mkdirs();
+        Files.write(cleanedTitles.toPath(), new TreeSet<>(Files.lines(decompressedFile.toPath())
+            .map(title -> {
+                int disambiguationStart = title.indexOf("_(");
+                if (disambiguationStart != -1)
+                    title = title.substring(0, disambiguationStart);
+                return StringUtils.stripAccents(title).toLowerCase().replaceAll("[^a-z0-9]+", " ").trim();
+            })
+            .collect(Collectors.toList())), StandardCharsets.UTF_8);
+        log.info("Writing article titles with only letters retained to {}...", abcTitles.getName());
+        Files.write(abcTitles.toPath(), new TreeSet<>(Files.lines(cleanedTitles.toPath())
+            .map(title -> title.replaceAll("[^a-z]", ""))
+            .collect(Collectors.toList())), StandardCharsets.UTF_8);
+    }
+
+    /**
      * Parses the Wikitext file into a list of articles, and indexes them into different partition
-     * files. The {@link #decompress(String)} method must already have been called for this
+     * files. The {@link #download(String)} method must already have been called for this
      * argument. Multiple calls to this method make only additive changes to the partition files;
      * use the {@link #resetNet()} method to remove them.
      */
@@ -414,15 +463,12 @@ public class Wikinet {
     }
 
     public static void main(String[] args) throws Exception {
-        long time = System.currentTimeMillis();
         Wikinet wikinet = new Wikinet();
+        wikinet.downloadTitles();
+        wikinet.processTitles();
         for (String articleLink : Wikinet.getArticlesLinks()) {
             wikinet.download(articleLink);
-            wikinet.decompress(articleLink);
             wikinet.createNet(articleLink);
         }
-        for (Article article : wikinet.find("Anarchism"))
-            System.out.println(article.toTsv());
-        System.out.println(System.currentTimeMillis() - time);
     }
 }
