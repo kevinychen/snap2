@@ -1,11 +1,9 @@
 """
 Python convenience script with the same implementations of "find" and "directFind" in Wikinet.java.
-
-To run the Python console with the functions in this file preloaded:
-$ PYTHONSTARTUP=wikinet.py python
 """
 
 from collections import namedtuple
+from os import path
 
 NUM_PARTITIONS = 65536
 
@@ -37,7 +35,7 @@ def direct_find(title, exact):
     hash = abs(java_string_hashcode(title.upper())) % NUM_PARTITIONS
     prefix = title + '\t'
     articles = set()
-    for line in open('./data/wikinet/partitions/%04x' % hash):
+    for line in open(path.join(path.dirname(__file__), '../snap-server/data/wikinet/partitions/%04x' % hash)):
         if (line.startswith(prefix) if exact else startswith_ignore_case(line, prefix)):
             articles.add(from_tsv(line))
     return articles

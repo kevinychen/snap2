@@ -17,6 +17,7 @@ Update the `config.yml` configuration file with the socket address that the Snap
 
 Download data files:
 
+    cd snap-server
     ./gradlew downloadFiles
 
 Run the Snap server (requires JDK 8+):
@@ -27,4 +28,28 @@ Run the Snap server (requires JDK 8+):
 Visit the app at `http://localhost:8080`.
 
 Snap server endpoints can also be used through Google Sheet custom functions. In a Google Sheet, click "Tools" and "Script editor", and then copy the contents of the files under `snap-app-scripts`. The menu items and custom functions will be available in the Google Sheet after refreshing the page.
+
+Wikinet
+-------
+
+The Wikinet generator stores summaries for all Wikipedia articles and indexes them for quick lookup. To generate the Wikinet:
+
+    cd snap-server
+    ./gradlew generateWikinet
+
+Generating the Wikinet involves downloading about 50 files with a total of about 20GB of data from the internet, so may take many hours.
+
+Python
+------
+
+To use the Python library, add the following to your `.bashrc`:
+
+    export PYTHONPATH=/path/to/snap2/snap-python
+
+You can then access Snap Python functions anywhere:
+
+    $ python
+    >>> from wikinet import find
+    >>> wikinet.find('Ajaigarh')
+    set([Article(title='Ajaigarh', redirect=None, summary='Ajaigarh or Adjygurh is a town and a nagar panchayat in the Panna District of Madhya Pradesh state in central India.\n')])
 

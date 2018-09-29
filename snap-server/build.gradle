@@ -57,7 +57,7 @@ task run(type: JavaExec) {
     main "com.kyc.snap.server.SnapServer"
 }
 
-task runWikinet(type: JavaExec) {
+task generateWikinet(type: JavaExec) {
     classpath project.sourceSets.main.runtimeClasspath
     main "com.kyc.snap.wikinet.Wikinet"
 }
