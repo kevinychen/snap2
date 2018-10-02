@@ -31,6 +31,7 @@ dependencies {
     compile "io.github.openfeign.form:feign-form:3.3.0"
     compile "org.apache.commons:commons-text:1.4"
     compile "org.apache.httpcomponents:httpmime:4.5.6"
+    compile "org.apache.pdfbox:pdfbox:2.0.11"
     compile "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
     compile "org.jsoup:jsoup:1.10.3"
     compile "org.openpnp:opencv:3.2.0-1"
