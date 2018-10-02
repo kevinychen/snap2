@@ -6,6 +6,7 @@ import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.opencv.OpenCvManager;
+import com.kyc.snap.store.FileStore;
 import com.kyc.snap.words.DictionaryManager;
 import com.kyc.snap.words.TrigramPuzzleSolver;
 
@@ -33,12 +34,14 @@ public class SnapServer extends Application<SnapConfiguration> {
         CrosswordParser crosswordParser = new CrosswordParser();
         DictionaryManager dictionary = new DictionaryManager();
         TrigramPuzzleSolver trigramPuzzleSolver = new TrigramPuzzleSolver(dictionary);
+        FileStore store = new FileStore();
 
         environment.jersey().setUrlPattern("/api/*");
 
         environment.jersey().register(new MultiPartFeature());
         environment.jersey().register(new ImageResource(configuration, googleApi, gridParser, crosswordParser));
         environment.jersey().register(new WordsResource(trigramPuzzleSolver));
-        environment.jersey().register(new HostingResource());
+        environment.jersey().register(new FileResource(store));
+        environment.jersey().register(new DocumentResource(store));
     }
 }

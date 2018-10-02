@@ -1,16 +1,19 @@
-package com.kyc.snap.pdf;
+package com.kyc.snap.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
+import com.kyc.snap.document.Document.DocumentText;
+import com.kyc.snap.document.Pdf;
 import com.kyc.snap.google.GoogleAPIManager;
-import com.kyc.snap.pdf.Pdf.TextWithBounds;
 
 public class PdfTest {
 
@@ -18,11 +21,11 @@ public class PdfTest {
     String expectedText = "Dummy PDF file";
 
     @Test
-    public void test() {
-        Pdf pdf = new Pdf(pdfFile);
+    public void test() throws IOException {
+        Pdf pdf = new Pdf(Files.toByteArray(pdfFile));
         assertThat(pdf.getNumPages()).isEqualTo(1);
 
-        List<TextWithBounds> texts = pdf.getTexts(0);
+        List<DocumentText> texts = pdf.getTexts(0);
         assertThat(texts.stream().map(text -> text.getText()).reduce("", String::concat)).isEqualTo(expectedText);
 
         BufferedImage image = pdf.toImage(0);

@@ -13,25 +13,25 @@ public class HostingClient {
     private final String serverSocketAddress;
 
     /**
-     * Hosts a resource on the configured public server, and returns the URL to access the resource.
+     * Hosts a file on the configured public server, and returns the URL to access the file.
      */
-    public String hostResource(String contentType, byte[] data) {
+    public String hostFile(String contentType, byte[] data) {
         String hostingBaseUrl = getHostingBaseUrl();
         HostingClientService hosting = Feign.builder()
             .decoder(new JacksonDecoder())
             .target(HostingClientService.class, hostingBaseUrl);
-        String resourceId = hosting.hostResource(contentType, data);
-        return String.format("%s/%s", hostingBaseUrl, resourceId);
+        String fileId = hosting.uploadFile(contentType, data);
+        return String.format("%s/%s", hostingBaseUrl, fileId);
     }
 
     interface HostingClientService {
 
         @RequestLine("POST /")
         @Headers("Content-type: {contentType}")
-        String hostResource(@Param("contentType") String contentType, byte[] data);
+        String uploadFile(@Param("contentType") String contentType, byte[] data);
     }
 
     private String getHostingBaseUrl() {
-        return String.format("http://%s/api/hosting", serverSocketAddress);
+        return String.format("http://%s/api/files", serverSocketAddress);
     }
 }

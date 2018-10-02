@@ -1,8 +1,6 @@
-package com.kyc.snap.pdf;
+package com.kyc.snap.document;
 
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +11,8 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
-import lombok.Data;
+import com.kyc.snap.document.Document.DocumentText;
+import com.kyc.snap.document.Document.Rectangle;
 
 public class Pdf {
 
@@ -26,9 +25,9 @@ public class Pdf {
     private final PDDocument doc;
     private final PDFRenderer renderer;
 
-    public Pdf(File pdfFile) {
+    public Pdf(byte[] pdf) {
         try {
-            doc = PDDocument.load(pdfFile);
+            doc = PDDocument.load(pdf);
             renderer = new PDFRenderer(doc);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -47,7 +46,7 @@ public class Pdf {
         }
     }
 
-    public List<TextWithBounds> getTexts(int page) {
+    public List<DocumentText> getTexts(int page) {
         try {
             MyPDFTextStripper textStripper = new MyPDFTextStripper(page + 1);
             textStripper.getText(doc);
@@ -57,18 +56,11 @@ public class Pdf {
         }
     }
 
-    @Data
-    public static class TextWithBounds {
-
-        private final String text;
-        private final Rectangle2D bounds;
-    }
-
     private static class MyPDFTextStripper extends PDFTextStripper {
 
         private final int pageNo;
         private PDPage page;
-        private List<TextWithBounds> allText;
+        private List<DocumentText> allText;
 
         public MyPDFTextStripper(int pageNo) throws IOException {
             this.pageNo = pageNo;
@@ -86,7 +78,7 @@ public class Pdf {
         @Override
         protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
             for (TextPosition position : textPositions)
-                allText.add(new TextWithBounds(position.getUnicode(), new Rectangle2D.Double(
+                allText.add(new DocumentText(position.getUnicode(), new Rectangle(
                     position.getX() * RENDER_SCALE,
                     (page.getMediaBox().getHeight() - position.getY()) * RENDER_SCALE,
                     position.getWidth() * RENDER_SCALE,

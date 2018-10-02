@@ -1,0 +1,38 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <form id="pdf-form" method="post" enctype="multipart/form-data">
+      <input id="pdf-input" type="file" name="pdf">
+    </form>
+  </body>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+    function post(args, callback) {
+      fetch('/api' + args.path, { method: 'POST', body: args.body })
+        .then(response => {
+          if (!response.ok) {
+            alert('Error: ' + response.statusText);
+            return;
+          }
+          return response.json();
+        })
+        .then(callback);
+    }
+
+    $(document).ready(function() {
+      $('#pdf-input').change(e => {
+        const pdf = e.target.files[0];
+        const formData = new FormData();
+        formData.append('pdf', pdf);
+        post({ path: '/documents/pdf', body: formData }, document => {
+          console.log(document);
+        });
+      });
+    });
+  </script>
+
+  <style>
+  </style>
+</html>

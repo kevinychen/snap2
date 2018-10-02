@@ -26,7 +26,7 @@ public class PresentationManager {
     public void addImages(List<PositionedImage> images, HostingClient hosting) {
         List<HostedImage> hostedImages = new ArrayList<>();
         for (PositionedImage image : images) {
-            String url = hosting.hostResource("image/png", ImageUtils.toBytes(image.image));
+            String url = hosting.hostFile("image/png", ImageUtils.toBytes(image.image));
             hostedImages.add(new HostedImage(image, url));
         }
         try {

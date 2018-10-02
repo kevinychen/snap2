@@ -8,18 +8,17 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
-@Path("/hosting")
-public interface HostingService {
+@Path("/files")
+public interface FileService {
 
     @POST
     @Path("/")
     @Consumes(MediaType.WILDCARD)
-    StringJson hostResource(byte[] data);
+    @Produces(MediaType.APPLICATION_JSON)
+    StringJson uploadFile(byte[] data);
 
     @GET
-    @Path("/{resourceId}")
+    @Path("/{fileId}")
     @Produces(MediaType.WILDCARD)
-    byte[] getResource(@PathParam("resourceId") String resourceId);
+    byte[] getFile(@PathParam("fileId") String fileId);
 }
