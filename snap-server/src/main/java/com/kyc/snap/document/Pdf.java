@@ -1,6 +1,7 @@
 package com.kyc.snap.document;
 
 import java.awt.image.BufferedImage;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +15,7 @@ import org.apache.pdfbox.text.TextPosition;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Document.Rectangle;
 
-public class Pdf {
+public class Pdf implements Closeable {
 
     /**
      * The scale to expand the PDF by when rendering as PNG. This number is greater than 1 to avoid
@@ -54,6 +55,11 @@ public class Pdf {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        doc.close();
     }
 
     private static class MyPDFTextStripper extends PDFTextStripper {

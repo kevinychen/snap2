@@ -24,15 +24,15 @@ public class DocumentResource implements DocumentService {
 
     @Override
     public Document createDocumentFromPdf(InputStream pdfStream) throws IOException {
-        byte[] blob = IOUtils.toByteArray(pdfStream);
-        Pdf pdf = new Pdf(blob);
-        List<DocumentPage> pages = new ArrayList<>();
-        for (int page = 0; page < pdf.getNumPages(); page++) {
-            String imageId = store.storeBlob(ImageUtils.toBytes(pdf.toImage(page)));
-            List<DocumentText> texts = pdf.getTexts(page);
-            pages.add(new DocumentPage(imageId, texts));
-        }
         String id = UUID.randomUUID().toString();
+        List<DocumentPage> pages = new ArrayList<>();
+        try (Pdf pdf = new Pdf(IOUtils.toByteArray(pdfStream))) {
+            for (int page = 0; page < pdf.getNumPages(); page++) {
+                String imageId = store.storeBlob(ImageUtils.toBytes(pdf.toImage(page)));
+                List<DocumentText> texts = pdf.getTexts(page);
+                pages.add(new DocumentPage(imageId, texts));
+            }
+        }
         Document doc = new Document(id, pages);
         store.updateObject(id, doc);
         return doc;

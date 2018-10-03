@@ -2,13 +2,40 @@
   <head>
   </head>
   <body>
-    <form id="pdf-form" method="post" enctype="multipart/form-data">
-      <input id="pdf-input" type="file" name="pdf">
-    </form>
+    <div class="half">
+      <form id="pdf-form" method="post" enctype="multipart/form-data">
+        <input id="pdf-input" type="file" name="pdf">
+      </form>
+      <div id="image-container">
+        <img id="image" alt="" />
+      </div>
+    </div>
+    <div class="half">
+      TODO
+    </div>
   </body>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script>
+    session = {
+      document: undefined,
+      page: 0,
+    };
+
+    function getImageAsDataURL(id, callback) {
+      fetch('/api/files/' + id, { method: 'GET' })
+        .then(response => {
+          return response.blob();
+        })
+        .then(blob => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            callback(reader.result);
+          };
+          reader.readAsDataURL(blob);
+        });
+    }
+
     function post(args, callback) {
       fetch('/api' + args.path, { method: 'POST', body: args.body })
         .then(response => {
@@ -27,12 +54,34 @@
         const formData = new FormData();
         formData.append('pdf', pdf);
         post({ path: '/documents/pdf', body: formData }, document => {
-          console.log(document);
+          session.document = document;
+          if (session.page >= document.pages.length) {
+            session.page = 0;
+          }
+          const page = document.pages[session.page];
+          getImageAsDataURL(page.imageId, dataURL => {
+            $('#image').attr('src', dataURL);
+          });
         });
       });
     });
   </script>
 
   <style>
+    #image-container {
+      position: relative;
+    }
+
+    #image {
+      max-height: 100%;
+      max-width: 100%;
+      border: 1px black solid;
+    }
+
+    .half {
+      height: 100%;
+      width: 50%;
+      float: left;
+    }
   </style>
 </html>
