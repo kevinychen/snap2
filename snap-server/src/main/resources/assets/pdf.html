@@ -11,7 +11,9 @@
       </div>
     </div>
     <div class="half">
-      TODO
+      <div id="options">
+      </div>
+      <iframe id="sheet" src="https://docs.google.com/spreadsheets/d/1k9O-5t-gIpcvwWna4NVfD2BqjjeBQLAED35tLm_L_Vk/preview"></iframe>
     </div>
   </body>
 
@@ -78,10 +80,22 @@
       border: 1px black solid;
     }
 
+    #options {
+      height: 28%;
+    }
+
+    #sheet {
+      height: 175%;
+      width: 250%;
+      -webkit-transform: scale(0.4);
+      -webkit-transform-origin: 0 0;
+    }
+
     .half {
       height: 100%;
-      width: 50%;
+      width: 48%;
       float: left;
+      margin: 1%;
     }
   </style>
 </html>
