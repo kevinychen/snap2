@@ -18,9 +18,11 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.slides.v1.Slides;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
@@ -31,6 +33,7 @@ import com.google.cloud.vision.v1.Feature.Type;
 import com.google.cloud.vision.v1.Image;
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
 import com.google.cloud.vision.v1.ImageAnnotatorSettings;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
@@ -44,6 +47,7 @@ public class GoogleAPIManager {
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final Feature TEXT_DETECTION_FEATURE = Feature.newBuilder().setType(Type.TEXT_DETECTION).build();
     private static final int TEXT_DETECTION_IMAGE_LIMIT = 16; // https://cloud.google.com/vision/quotas
+    private static final int DEFAULT_SHEET_ID = 0;
 
     private final GoogleCredential credential;
     private final Drive drive;
@@ -80,6 +84,21 @@ public class GoogleAPIManager {
     public void grantLinkPermissions(String fileId, String role) {
         try {
             drive.permissions().update(fileId, "anyoneWithLink", new Permission().setRole(role)).execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public SpreadsheetManager createSheet(String folderId) {
+        try {
+            Spreadsheet spreadsheet = sheets.spreadsheets().create(new Spreadsheet()).execute();
+            File file = drive.files().get(spreadsheet.getSpreadsheetId()).setFields("parents").execute();
+            drive.files().update(spreadsheet.getSpreadsheetId(), null)
+                .setAddParents(folderId)
+                .setRemoveParents(Joiner.on(", ").join(file.getParents()))
+                .setFields("id, parents")
+                .execute();
+            return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheet.getSpreadsheetId(), DEFAULT_SHEET_ID);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
