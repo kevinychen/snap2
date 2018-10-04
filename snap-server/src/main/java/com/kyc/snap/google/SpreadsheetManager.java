@@ -88,6 +88,44 @@ public class SpreadsheetManager {
     }
 
     /**
+     * Returns all content in the sheet as string values.
+     */
+    public List<List<String>> getContent() {
+        try {
+            Spreadsheet spreadsheet = spreadsheets.getByDataFilter(
+                spreadsheetId,
+                new GetSpreadsheetByDataFilterRequest()
+                    .setIncludeGridData(true))
+                .execute();
+            List<RowData> rowData = findSheet(spreadsheet, sheetId).getData().get(0).getRowData();
+            List<List<String>> content = new ArrayList<>();
+            if (rowData != null)
+                for (int i = ROW_OFFSET; i < rowData.size(); i++) {
+                    List<CellData> cellData = rowData.get(i).getValues();
+                    List<String> contentRow = new ArrayList<>();
+                    if (cellData != null)
+                        for (int j = COL_OFFSET; j < cellData.size(); j++) {
+                            ExtendedValue value = cellData.get(j).getEffectiveValue();
+                            String contentCell = "";
+                            if (value != null) {
+                                if (value.getBoolValue() != null)
+                                    contentCell = value.getBoolValue().toString();
+                                else if (value.getNumberValue() != null)
+                                    contentCell = value.getNumberValue().toString();
+                                else if (value.getStringValue() != null)
+                                    contentCell = value.getStringValue();
+                            }
+                            contentRow.add(contentCell);
+                        }
+                    content.add(contentRow);
+                }
+            return content;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Returns references for each cell, which can be used in another formula.
      */
     public Map<Point, String> getReferences(Collection<Point> coordinates) {
