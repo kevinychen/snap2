@@ -13,7 +13,12 @@
     <div class="half">
       <div id="options">
       </div>
-      <iframe id="sheet" src="https://docs.google.com/spreadsheets/d/1k9O-5t-gIpcvwWna4NVfD2BqjjeBQLAED35tLm_L_Vk/preview"></iframe>
+      <div id="sheet">
+        Sheet URL: <input id="sheet-url" size=80">
+        <input id="sheet-new" type="button" value="Create new sheet">
+        <br>
+        <iframe id="sheet-frame" src=""></iframe>
+      </div>
     </div>
   </body>
 
@@ -22,10 +27,12 @@
     session = {
       document: undefined,
       page: 0,
+      spreadsheetId: undefined,
+      sheetId: undefined,
     };
 
     function getImageAsDataURL(id, callback) {
-      fetch('/api/files/' + id, { method: 'GET' })
+      fetch(`/api/files/${id}`, { method: 'GET' })
         .then(response => {
           return response.blob();
         })
@@ -36,6 +43,16 @@
           };
           reader.readAsDataURL(blob);
         });
+    }
+
+    function showSheet() {
+      if (session.spreadsheetId === undefined) {
+        $('#sheet-url').val('Invalid Google Sheet URL');
+        return;
+      }
+      const url = `https://docs.google.com/spreadsheets/d/${session.spreadsheetId}/preview#gid=${session.sheetId}`
+      $('#sheet-url').val(url);
+      $('#sheet-frame').attr('src', url);
     }
 
     function post(args, callback) {
@@ -66,6 +83,19 @@
           });
         });
       });
+
+      $('#sheet-url').on('input', e => {
+        const url = e.target.value;
+        const match = url.match(new RegExp('https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+)/.*(?:gid=([0-9]+))'));
+        if (match) {
+          session.spreadsheetId = match[1];
+          session.sheetId = match[2];
+        } else {
+          session.spreadsheetId = undefined;
+          session.sheetId = undefined;
+        }
+        showSheet();
+      });
     });
   </script>
 
@@ -81,10 +111,10 @@
     }
 
     #options {
-      height: 28%;
+      height: 25%;
     }
 
-    #sheet {
+    #sheet-frame {
       height: 175%;
       width: 250%;
       -webkit-transform: scale(0.4);
