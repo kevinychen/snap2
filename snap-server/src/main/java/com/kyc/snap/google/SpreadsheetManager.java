@@ -211,39 +211,25 @@ public class SpreadsheetManager {
     }
 
     /**
-     * Run a published Google App Script that adds an image to a sheet.
-     *
-     * The published script looks like the following:
-     *
-     * <pre>
-     * function doPost(e) {
-     *   var params = JSON.parse(e.postData.contents);
-     *
-     *   if (SpreadsheetApp.openById(params.spreadsheetId).getOwner().getEmail() != Session.getActiveUser().getEmail()) {
-     *     console.error("Incorrect user");
-     *     return;
-     *   }
-     *
-     *   SpreadsheetApp.openById(params.spreadsheetId).getSheetByName(params.sheetName).insertImage(params.url, params.col, params.row);
-     * }
-     * </pre>
-     *
-     * https://stackoverflow.com/questions/43664483/insert-image-into-google-sheets-cell-using-
-     * google-sheets-api
+     * Run a published Google Apps Script that adds an image to a sheet. The script is here:
+     * https://script.google.com/home/projects/
+     * 1pIMTaT1S2eJ2raU_fJHladPb9vrqyCyDXZybOZIxf2gAJwxoG7icMVUS
      */
-    public void addImage(BufferedImage image, int row, int col) {
-        AddImageScriptService addImageScript = Feign.builder()
+    public void insertImage(BufferedImage image, int row, int col, int offsetX, int offsetY) {
+        WebAppService webApp = Feign.builder()
                 .encoder(new JacksonEncoder())
                 .target(
-                    AddImageScriptService.class,
-                    "https://script.google.com/macros/s/AKfycbwtDXpf8019jeigSig5AnEc4QW-rsU_K3NTpfz5vUE0c-ZwT1NV");
+                    WebAppService.class,
+                    "https://script.google.com/macros/s/AKfycbyE4Qi9jzGMr_m8Q6T6Ddk0U-a8IfmizMyVJcO3lQ");
         try {
-            String response = addImageScript.addImage(getAccessToken(), AddImageRequest.builder()
+            String response = webApp.insertImage(getAccessToken(), InsertImageRequest.builder()
                 .spreadsheetId(spreadsheetId)
                 .sheetName(findSheet(getSpreadsheet(), sheetId).getProperties().getTitle())
                 .url(ImageUtils.toDataURL(image))
+                .column(col + 1 + COL_OFFSET)
                 .row(row + 1 + ROW_OFFSET)
-                .col(col + 1 + COL_OFFSET)
+                .offsetX(offsetX)
+                .offsetY(offsetY)
                 .build());
             if (!response.contains("The script completed"))
                 throw new RuntimeException(response);
@@ -252,22 +238,25 @@ public class SpreadsheetManager {
         }
     }
 
-    interface AddImageScriptService {
+    interface WebAppService {
 
         @RequestLine("POST /exec")
         @Headers("Authorization: Bearer {token}")
-        String addImage(@Param("token") String token, AddImageRequest request);
+        String insertImage(@Param("token") String token, InsertImageRequest request);
     }
 
     @Data
     @Builder
-    public static class AddImageRequest {
+    public static class InsertImageRequest {
 
+        final String command = "insertImage";
         final String spreadsheetId;
         final String sheetName;
         final String url;
+        final int column;
         final int row;
-        final int col;
+        final int offsetX;
+        final int offsetY;
     }
 
     private void executeRequests(Request... requests) {
