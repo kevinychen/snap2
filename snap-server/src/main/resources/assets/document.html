@@ -3,12 +3,20 @@
   </head>
   <body>
     <div class="half">
-      Upload PDF: <input id="pdf-input" type="file" name="pdf"><br>
-      or paste URL: <input id="pdf-url-input" size=80><br>
-      <div id="image-container">
-        <img id="image" alt="" />
-        <canvas id="draw-canvas" class="overlay-canvas" width="0" height="0"></canvas>
-        <canvas id="listener-canvas" class="overlay-canvas" width="0" height="0"></canvas>
+      Upload PDF: <input id="pdf-input" type="file" name="pdf">
+      <br>
+      or paste URL: <input id="pdf-url-input" size=80>
+      <br>
+      <div class="initial-hide after-document">
+        <input id="document-page-left" class="nav" type="button" value="&lt;">
+        Page <span id="document-page-current"></span>/<span id="document-page-total"></span>
+        <input id="document-page-right" class="nav" type="button" value="&gt;">
+        <br>
+        <div id="image-container">
+          <img id="image" alt="" />
+          <canvas id="draw-canvas" class="overlay-canvas" width="0" height="0"></canvas>
+          <canvas id="listener-canvas" class="overlay-canvas" width="0" height="0"></canvas>
+        </div>
       </div>
     </div>
     <div class="half">
@@ -74,12 +82,17 @@
     function setDocument(document) {
       session.document = document;
       setPage(0);
+      $('.after-document').show();
     }
 
     function setPage(page) {
       session.page = page;
       const pages = session.document.pages;
       if (page >= 0 && page < pages.length) {
+        $('#document-page-left').prop('disabled', page == 0);
+        $('#document-page-current').text(page + 1);
+        $('#document-page-total').text(pages.length);
+        $('#document-page-right').prop('disabled', page == pages.length - 1);
         getImageAsDataURL(pages[page].imageId, dataURL => {
           $('#image')
             .attr('src', dataURL)
@@ -95,13 +108,13 @@
     }
 
     function setRectangle(rectangle) {
+      session.rectangle = rectangle;
+      setGridLines(undefined);
       if (rectangle) {
         $('.after-section').show();
       } else {
         $('.after-section').hide();
       }
-      session.rectangle = rectangle;
-      setGridLines(undefined);
     }
 
     function setGridLines(gridLines) {
@@ -150,14 +163,23 @@
     $(document).ready(function() {
       $('#pdf-input').change(e => {
         const pdf = e.target.files[0];
-        const formData = new FormData();
-        formData.append('pdf', pdf);
-        post({ path: '/documents/pdf', body: formData }, setDocument);
+        if (pdf) {
+          const formData = new FormData();
+          formData.append('pdf', pdf);
+          post({ path: '/documents/pdf', body: formData }, setDocument);
+        }
       });
 
       $('#pdf-url-input').on('input', e => {
         const url = e.target.value;
         postJson({ path: '/documents/url', body: { url: url } }, setDocument);
+      });
+
+      $('#document-page-left').on('click', e => {
+        setPage(session.page - 1);
+      });
+      $('#document-page-right').on('click', e => {
+        setPage(session.page + 1);
       });
 
       (function() {
@@ -263,16 +285,27 @@
       margin: 1%;
     }
 
+    .initial-hide {
+      display: none;
+    }
+
+    .nav {
+      color: #000;
+      background-color: #f1f1f1;
+      font-size: 18px;
+      border-radius: 50%;
+    }
+
+    .nav:hover:enabled {
+      background-color: #cccccc;
+    }
+
     .overlay-canvas {
       position: absolute;
       top: 0px;
       left: 0px;
       width: 100%;
       height: 100%;
-    }
-
-    .initial-hide {
-      display: none;
     }
 
     .loader {
