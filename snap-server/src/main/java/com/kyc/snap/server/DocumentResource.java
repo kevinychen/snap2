@@ -1,11 +1,11 @@
 package com.kyc.snap.server;
 
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
@@ -15,6 +15,7 @@ import com.kyc.snap.document.Document;
 import com.kyc.snap.document.Document.DocumentPage;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Pdf;
+import com.kyc.snap.document.Rectangle;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
@@ -50,19 +51,30 @@ public class DocumentResource implements DocumentService {
     @Override
     public Point initializeSheet(String spreadsheetId, int sheetId) {
         SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
-        List<List<String>> content = spreadsheets.getContent();
-        return findMarker(content).orElseGet(() -> {
-            Point marker = new Point(content.isEmpty() ? 0 : content.size() + 1, 0);
-            spreadsheets.setValues(ImmutableList.of(new ValueCell(marker.x, marker.y, MARKER)));
-            return marker;
-        });
+        return findMarker(spreadsheets);
     }
 
-    private static Optional<Point> findMarker(List<List<String>> content) {
+    @Override
+    public StringJson exportSection(String documentId, String spreadsheetId, int sheetId, Section section) {
+        SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
+        Document doc = store.getObject(documentId, Document.class);
+        byte[] imageBlob = store.getBlob(doc.getPages().get(section.getPage()).getImageId());
+        Rectangle r = section.getRectangle();
+        BufferedImage image = ImageUtils.fromBytes(imageBlob).getSubimage(
+            (int) r.getX(), (int) r.getY(), (int) r.getWidth(), (int) r.getHeight());
+        Point marker = findMarker(spreadsheets);
+        spreadsheets.insertImage(image, marker.x, marker.y);
+        return new StringJson("OK");
+    }
+
+    private static Point findMarker(SpreadsheetManager spreadsheets) {
+        List<List<String>> content = spreadsheets.getContent();
         for (int i = 0; i < content.size(); i++)
             for (int j = 0; j < content.get(i).size(); j++)
                 if (content.get(i).get(j).equals(MARKER))
-                    return Optional.of(new Point(i, j));
-        return Optional.empty();
+                    return new Point(i, j);
+        Point marker = new Point(content.isEmpty() ? 0 : content.size() + 1, 0);
+        spreadsheets.setValues(ImmutableList.of(new ValueCell(marker.x, marker.y, MARKER)));
+        return marker;
     }
 }

@@ -23,13 +23,4 @@ public class Document {
         private final String text;
         private final Rectangle bounds;
     }
-
-    @Data
-    public static class Rectangle {
-
-        private final double x;
-        private final double y;
-        private final double width;
-        private final double height;
-    }
 }

@@ -12,7 +12,6 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.kyc.snap.document.Document.DocumentText;
-import com.kyc.snap.document.Pdf;
 import com.kyc.snap.google.GoogleAPIManager;
 
 public class PdfTest {
@@ -22,13 +21,14 @@ public class PdfTest {
 
     @Test
     public void test() throws IOException {
-        Pdf pdf = new Pdf(Files.toByteArray(pdfFile));
-        assertThat(pdf.getNumPages()).isEqualTo(1);
+        try (Pdf pdf = new Pdf(Files.toByteArray(pdfFile))) {
+            assertThat(pdf.getNumPages()).isEqualTo(1);
 
-        List<DocumentText> texts = pdf.getTexts(0);
-        assertThat(texts.stream().map(text -> text.getText()).reduce("", String::concat)).isEqualTo(expectedText);
+            List<DocumentText> texts = pdf.getTexts(0);
+            assertThat(texts.stream().map(text -> text.getText()).reduce("", String::concat)).isEqualTo(expectedText);
 
-        BufferedImage image = pdf.toImage(0);
-        assertThat(new GoogleAPIManager().batchFindText(ImmutableList.of(image)).get(image).trim()).isEqualTo(expectedText);
+            BufferedImage image = pdf.toImage(0);
+            assertThat(new GoogleAPIManager().batchFindText(ImmutableList.of(image)).get(image).trim()).isEqualTo(expectedText);
+        }
     }
 }

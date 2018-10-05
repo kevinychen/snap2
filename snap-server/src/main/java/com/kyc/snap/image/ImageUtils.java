@@ -2,6 +2,7 @@ package com.kyc.snap.image;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -34,6 +35,14 @@ public class ImageUtils {
             for (int y = 0; y < image.getHeight(); y++)
                 newImage.setRGB(image.getHeight() - y - 1, x, image.getRGB(x, y));
         return newImage;
+    }
+
+    public static BufferedImage fromBytes(byte[] bytes) {
+        try {
+            return ImageIO.read(new ByteArrayInputStream(bytes));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static byte[] toBytes(BufferedImage image) {

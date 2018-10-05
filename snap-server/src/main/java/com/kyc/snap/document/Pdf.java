@@ -13,7 +13,6 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
 import com.kyc.snap.document.Document.DocumentText;
-import com.kyc.snap.document.Document.Rectangle;
 
 public class Pdf implements Closeable {
 

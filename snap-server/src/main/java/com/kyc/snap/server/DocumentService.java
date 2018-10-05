@@ -14,6 +14,9 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.kyc.snap.document.Document;
+import com.kyc.snap.document.Rectangle;
+
+import lombok.Data;
 
 @Path("/documents")
 public interface DocumentService {
@@ -28,4 +31,18 @@ public interface DocumentService {
     @Path("/sheets/{spreadsheetId}/{sheetId}")
     @Produces(MediaType.APPLICATION_JSON)
     Point initializeSheet(@PathParam("spreadsheetId") String spreadsheetId, @PathParam("sheetId") int sheetId);
+
+    @POST
+    @Path("/{documentId}/export/{spreadsheetId}/{sheetId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    StringJson exportSection(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
+            @PathParam("sheetId") int sheetId, Section section);
+
+    @Data
+    public static class Section {
+
+        private final int page;
+        private final Rectangle rectangle;
+    }
 }

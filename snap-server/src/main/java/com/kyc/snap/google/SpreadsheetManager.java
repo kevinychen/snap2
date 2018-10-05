@@ -253,7 +253,7 @@ public class SpreadsheetManager {
      * https://script.google.com/home/projects/
      * 1pIMTaT1S2eJ2raU_fJHladPb9vrqyCyDXZybOZIxf2gAJwxoG7icMVUS
      */
-    public void insertImage(BufferedImage image, int row, int col, int offsetX, int offsetY) {
+    public void insertImage(BufferedImage image, int row, int col) {
         WebAppService webApp = Feign.builder()
                 .encoder(new JacksonEncoder())
                 .target(
@@ -266,8 +266,8 @@ public class SpreadsheetManager {
                 .url(ImageUtils.toDataURL(image))
                 .column(col + 1 + COL_OFFSET)
                 .row(row + 1 + ROW_OFFSET)
-                .offsetX(offsetX)
-                .offsetY(offsetY)
+                .offsetX(0)
+                .offsetY(0)
                 .build());
             if (!response.contains("The script completed"))
                 throw new RuntimeException(response);

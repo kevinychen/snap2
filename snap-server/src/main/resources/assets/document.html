@@ -13,6 +13,7 @@
     </div>
     <div class="half">
       <div id="options">
+        <input id="export-section" class="initial-hide after-section" type="button" value="Copy to Google Sheet">
       </div>
       <div id="sheet">
         Sheet URL: <input id="sheet-url" size=80">
@@ -28,7 +29,7 @@
     session = {
       document: undefined,
       page: 0,
-      section: undefined,
+      rectangle: undefined,
       spreadsheetId: undefined,
       sheetId: undefined,
     };
@@ -55,7 +56,7 @@
     }
 
     function post(args, callback) {
-      fetch('/api' + args.path, { method: 'POST', body: args.body })
+      fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
         .then(response => {
           if (!response.ok) {
             alert('Error: ' + response.statusText);
@@ -64,6 +65,14 @@
           return response.json();
         })
         .then(callback);
+    }
+
+    function postJson(args, callback) {
+      post({
+        path: args.path,
+        body: JSON.stringify(args.body),
+        headers: { 'Content-type': 'application/json' },
+      }, callback);
     }
 
     function showSheet(spreadsheetId, sheetId) {
@@ -121,7 +130,7 @@
             if (isMouseDown) {
               const x = canvas.width / canvas.scrollWidth * e.offsetX;
               const y = canvas.height / canvas.scrollHeight * e.offsetY;
-              const section = {
+              const rectangle = {
                 x: Math.min(x, mousedownLoc.x),
                 y: Math.min(y, mousedownLoc.y),
                 width: Math.abs(mousedownLoc.x - x),
@@ -130,17 +139,25 @@
               ctx.clearRect(0, 0, canvas.width, canvas.height);
               ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
-              ctx.clearRect(section.x, section.y, section.width, section.height);
+              ctx.clearRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
               ctx.strokeStyle = 'red';
               ctx.lineWidth = 4;
-              ctx.strokeRect(section.x, section.y, section.width, section.height);
-              session.section = section;
+              ctx.strokeRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+              session.rectangle = rectangle;
+              $('.after-section').show();
             }
           })
           .mouseup(e => {
             isMouseDown = false;
           });
       })();
+
+      $('#export-section').on('click', e => {
+        postJson({ path: `/documents/${session.document.id}/export/${session.spreadsheetId}/${session.sheetId}`, body: {
+          page: session.page,
+          rectangle: session.rectangle,
+        } });
+      });
 
       $('#sheet-url').on('input', e => {
         const url = e.target.value;
@@ -191,6 +208,10 @@
       left: 0px;
       width: 100%;
       height: 100%;
+    }
+
+    .initial-hide {
+      display: none;
     }
 
   </style>
