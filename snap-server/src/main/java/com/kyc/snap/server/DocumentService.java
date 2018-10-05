@@ -36,7 +36,7 @@ public interface DocumentService {
     @Path("/{documentId}/export/{spreadsheetId}/{sheetId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    StringJson exportSection(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
+    Point exportSection(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
             @PathParam("sheetId") int sheetId, Section section);
 
     @Data

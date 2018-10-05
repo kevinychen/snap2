@@ -88,25 +88,37 @@ public class SpreadsheetManager {
     }
 
     /**
-     * Returns all content in the sheet as string values.
+     * Returns data about the current sheet.
      */
-    public List<List<String>> getContent() {
+    public SheetData getSheetData() {
         try {
             Spreadsheet spreadsheet = spreadsheets.getByDataFilter(
                 spreadsheetId,
                 new GetSpreadsheetByDataFilterRequest()
                     .setIncludeGridData(true))
                 .execute();
-            List<RowData> rowData = findSheet(spreadsheet, sheetId).getData().get(0).getRowData();
+            GridData gridData = findSheet(spreadsheet, sheetId).getData().get(0);
+
+            List<Integer> rowHeights = new ArrayList<>();
+            List<DimensionProperties> rowMetadata = gridData.getRowMetadata();
+            for (int i = ROW_OFFSET; i < rowMetadata.size(); i++)
+                rowHeights.add(rowMetadata.get(i).getPixelSize());
+
+            List<Integer> colWidths = new ArrayList<>();
+            List<DimensionProperties> colMetadata = gridData.getColumnMetadata();
+            for (int i = ROW_OFFSET; i < colMetadata.size(); i++)
+                colWidths.add(colMetadata.get(i).getPixelSize());
+
             List<List<String>> content = new ArrayList<>();
+            List<RowData> rowData = gridData.getRowData();
             if (rowData != null)
                 for (int i = ROW_OFFSET; i < rowData.size(); i++) {
-                    List<CellData> cellData = rowData.get(i).getValues();
                     List<String> contentRow = new ArrayList<>();
+                    List<CellData> cellData = rowData.get(i).getValues();
                     if (cellData != null)
                         for (int j = COL_OFFSET; j < cellData.size(); j++) {
-                            ExtendedValue value = cellData.get(j).getEffectiveValue();
                             String contentCell = "";
+                            ExtendedValue value = cellData.get(j).getEffectiveValue();
                             if (value != null) {
                                 if (value.getBoolValue() != null)
                                     contentCell = value.getBoolValue().toString();
@@ -119,7 +131,8 @@ public class SpreadsheetManager {
                         }
                     content.add(contentRow);
                 }
-            return content;
+
+            return new SheetData(rowHeights, colWidths, content);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -372,6 +385,14 @@ public class SpreadsheetManager {
             default:
                 throw new RuntimeException("Invalid style: " + style);
         }
+    }
+
+    @Data
+    public static class SheetData {
+
+        private final List<Integer> rowHeights;
+        private final List<Integer> colWidths;
+        private final List<List<String>> content;
     }
 
     public static enum Dimension {

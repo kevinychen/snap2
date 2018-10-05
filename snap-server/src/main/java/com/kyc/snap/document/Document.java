@@ -14,6 +14,7 @@ public class Document {
     public static class DocumentPage {
 
         private final String imageId;
+        private final double scale;
         private final List<DocumentText> texts;
     }
 
