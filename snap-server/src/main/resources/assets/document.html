@@ -52,13 +52,6 @@
         });
     }
 
-    function loadOverlayCanvas() {
-      $('.overlay-canvas').get().forEach(canvas => {
-        canvas.width = $('#image').width();
-        canvas.height = $('#image').height();
-      });
-    }
-
     function post(args, callback) {
       fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
         .then(response => {
@@ -78,23 +71,55 @@
       }, callback);
     }
 
-    function showDocument(document) {
+    function setDocument(document) {
       session.document = document;
-      if (session.page >= document.pages.length) {
-        session.page = 0;
-      }
-      const page = document.pages[session.page];
-      getImageAsDataURL(page.imageId, dataURL => {
-        $('#image')
-          .attr('src', dataURL)
-          .on('load', e => {
-            const image = $('#image')[0];
-            $('.overlay-canvas').get().forEach(canvas => {
-              canvas.width = image.naturalWidth;
-              canvas.height = image.naturalHeight;
+      setPage(0);
+    }
+
+    function setPage(page) {
+      session.page = page;
+      const pages = session.document.pages;
+      if (page >= 0 && page < pages.length) {
+        getImageAsDataURL(pages[page].imageId, dataURL => {
+          $('#image')
+            .attr('src', dataURL)
+            .on('load', e => {
+              const image = $('#image')[0];
+              $('.overlay-canvas').get().forEach(canvas => {
+                canvas.width = image.naturalWidth;
+                canvas.height = image.naturalHeight;
+              });
             });
-          });
-      });
+        });
+      }
+    }
+
+    function setRectangle(rectangle) {
+      if (rectangle) {
+        $('.after-section').show();
+      } else {
+        $('.after-section').hide();
+      }
+      session.rectangle = rectangle;
+      setGridLines(undefined);
+    }
+
+    function setGridLines(gridLines) {
+      session.gridLines = gridLines;
+      drawCanvas();
+    }
+
+    function setSheet(spreadsheetId, sheetId) {
+      if (spreadsheetId === undefined) {
+        $('#sheet-url').val('Invalid Google Sheet URL');
+        return;
+      }
+      const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}#gid=${sheetId}`
+      $('#sheet-url').val(url);
+      $('#sheet-frame').attr('src', url);
+      session.spreadsheetId = spreadsheetId;
+      session.sheetId = sheetId;
+      post({ path: `/documents/sheets/${spreadsheetId}/${sheetId}` });
     }
 
     function drawCanvas() {
@@ -122,30 +147,17 @@
       }
     }
 
-    function showSheet(spreadsheetId, sheetId) {
-      if (spreadsheetId === undefined) {
-        $('#sheet-url').val('Invalid Google Sheet URL');
-        return;
-      }
-      const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}#gid=${sheetId}`
-      $('#sheet-url').val(url);
-      $('#sheet-frame').attr('src', url);
-      session.spreadsheetId = spreadsheetId;
-      session.sheetId = sheetId;
-      post({ path: `/documents/sheets/${spreadsheetId}/${sheetId}` });
-    }
-
     $(document).ready(function() {
       $('#pdf-input').change(e => {
         const pdf = e.target.files[0];
         const formData = new FormData();
         formData.append('pdf', pdf);
-        post({ path: '/documents/pdf', body: formData }, showDocument);
+        post({ path: '/documents/pdf', body: formData }, setDocument);
       });
 
       $('#pdf-url-input').on('input', e => {
         const url = e.target.value;
-        postJson({ path: '/documents/url', body: { url: url } }, showDocument);
+        postJson({ path: '/documents/url', body: { url: url } }, setDocument);
       });
 
       (function() {
@@ -158,10 +170,9 @@
             const x = canvas.width / canvas.scrollWidth * e.offsetX;
             const y = canvas.height / canvas.scrollHeight * e.offsetY;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            session.gridLines = undefined;
             mousedownLoc = { x: x, y: y };
             isMouseDown = true;
-            drawCanvas();
+            setRectangle(undefined);
           })
           .mousemove(e => {
             if (isMouseDown) {
@@ -180,8 +191,7 @@
               ctx.strokeStyle = 'red';
               ctx.lineWidth = 4;
               ctx.strokeRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-              session.rectangle = rectangle;
-              $('.after-section').show();
+              setRectangle(rectangle);
             }
           })
           .mouseup(e => {
@@ -205,9 +215,8 @@
           page: session.page,
           rectangle: session.rectangle,
         } }, gridLines => {
+          setGridLines(gridLines);
           $('#loader').hide();
-          session.gridLines = gridLines;
-          drawCanvas();
         });
       });
 
@@ -215,13 +224,13 @@
         const url = e.target.value;
         const match = url.match(new RegExp('https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+).*(?:gid=([0-9]+))'));
         if (match) {
-          showSheet(match[1], match[2]);
+          setSheet(match[1], match[2]);
         } else {
-          showSheet();
+          setSheet(undefined);
         }
       });
 
-      showSheet('1k9O-5t-gIpcvwWna4NVfD2BqjjeBQLAED35tLm_L_Vk', 1538405940);
+      setSheet('1k9O-5t-gIpcvwWna4NVfD2BqjjeBQLAED35tLm_L_Vk', 1538405940);
     });
   </script>
 
