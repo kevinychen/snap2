@@ -7,18 +7,21 @@
       or paste URL: <input id="pdf-url-input" size=80><br>
       <div id="image-container">
         <img id="image" alt="" />
+        <canvas id="draw-canvas" class="overlay-canvas" width="0" height="0"></canvas>
         <canvas id="listener-canvas" class="overlay-canvas" width="0" height="0"></canvas>
       </div>
     </div>
     <div class="half">
       <div id="options">
         <input id="export-section" class="initial-hide after-section" type="button" value="Copy to Google Sheet"><br>
+        <br>
+        <input id="operation-parse-grid-lines" class="initial-hide after-section" type="button" value="Parse grid lines"><br>
+        <br>
         <div id="loader" class="initial-hide loader"></div>
       </div>
       <div id="sheet">
         Sheet URL: <input id="sheet-url" size=80>
-        <input id="sheet-new" type="button" value="Create new sheet">
-        <br>
+        <input id="sheet-new" class="initial-hide" type="button" value="Create new sheet"><br>
         <iframe id="sheet-frame" src=""></iframe>
       </div>
     </div>
@@ -30,6 +33,7 @@
       document: undefined,
       page: 0,
       rectangle: undefined,
+      gridLines: undefined,
       spreadsheetId: undefined,
       sheetId: undefined,
     };
@@ -93,6 +97,31 @@
       });
     }
 
+    function drawCanvas() {
+      const image = $('#image')[0];
+      const canvas = $('#draw-canvas')[0];
+      const ctx = canvas.getContext('2d');
+      const widthRatio = canvas.width / image.naturalWidth;
+      const heightRatio = canvas.height / image.naturalHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (session.gridLines) {
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+        for (var row of session.gridLines.horizontalLines) {
+          ctx.beginPath();
+          ctx.moveTo(session.rectangle.x, session.rectangle.y + row * heightRatio);
+          ctx.lineTo(session.rectangle.x + session.rectangle.width, session.rectangle.y + row * heightRatio);
+          ctx.stroke();
+        }
+        for (var col of session.gridLines.verticalLines) {
+          ctx.beginPath();
+          ctx.moveTo(session.rectangle.x + col * widthRatio, session.rectangle.y);
+          ctx.lineTo(session.rectangle.x + col * widthRatio, session.rectangle.y + session.rectangle.height);
+          ctx.stroke();
+        }
+      }
+    }
+
     function showSheet(spreadsheetId, sheetId) {
       if (spreadsheetId === undefined) {
         $('#sheet-url').val('Invalid Google Sheet URL');
@@ -129,8 +158,10 @@
             const x = canvas.width / canvas.scrollWidth * e.offsetX;
             const y = canvas.height / canvas.scrollHeight * e.offsetY;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            session.gridLines = undefined;
             mousedownLoc = { x: x, y: y };
             isMouseDown = true;
+            drawCanvas();
           })
           .mousemove(e => {
             if (isMouseDown) {
@@ -163,7 +194,21 @@
         postJson({ path: `/documents/${session.document.id}/export/${session.spreadsheetId}/${session.sheetId}`, body: {
           page: session.page,
           rectangle: session.rectangle,
-        } }, e => $('#loader').hide());
+        } }, marker => {
+          $('#loader').hide();
+        });
+      });
+
+      $('#operation-parse-grid-lines').on('click', e => {
+        $('#loader').show();
+        postJson({ path: `/documents/${session.document.id}/lines`, body: {
+          page: session.page,
+          rectangle: session.rectangle,
+        } }, gridLines => {
+          $('#loader').hide();
+          session.gridLines = gridLines;
+          drawCanvas();
+        });
       });
 
       $('#sheet-url').on('input', e => {

@@ -15,6 +15,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.kyc.snap.document.Document;
 import com.kyc.snap.document.Rectangle;
+import com.kyc.snap.grid.GridLines;
 
 import lombok.Data;
 
@@ -50,6 +51,12 @@ public interface DocumentService {
     @Produces(MediaType.APPLICATION_JSON)
     Point exportSection(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
             @PathParam("sheetId") int sheetId, Section section);
+
+    @POST
+    @Path("/{documentId}/lines")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    GridLines findGridLines(@PathParam("documentId") String documentId, Section section);
 
     @Data
     public static class Section {

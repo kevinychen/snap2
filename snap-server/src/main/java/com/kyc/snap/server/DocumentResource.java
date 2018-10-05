@@ -20,6 +20,8 @@ import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.SheetData;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
+import com.kyc.snap.grid.GridLines;
+import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
 
@@ -35,6 +37,7 @@ public class DocumentResource implements DocumentService {
 
     private final Store store;
     private final GoogleAPIManager googleApi;
+    private final GridParser gridParser;
 
     @Override
     public Document createDocumentFromPdf(InputStream pdfStream) throws IOException {
@@ -68,21 +71,32 @@ public class DocumentResource implements DocumentService {
 
     @Override
     public Point exportSection(String documentId, String spreadsheetId, int sheetId, Section section) {
+        SectionImage image = getSectionImage(documentId, section);
         SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
+        SheetData sheetData = spreadsheets.getSheetData();
+        Point marker = findOrAddMarker(spreadsheets, sheetData.getContent());
+        int newWidth = (int) (image.getImage().getWidth() / image.getScale());
+        int newHeight = (int) (image.getImage().getHeight() / image.getScale());
+        spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight);
+        Point newMarker = getNewMarker(marker, newWidth, sheetData.getColWidths());
+        updateMarker(Optional.of(marker), Optional.of(newMarker), spreadsheets);
+        return newMarker;
+    }
+
+    @Override
+    public GridLines findGridLines(String documentId, Section section) {
+        SectionImage image = getSectionImage(documentId, section);
+        return gridParser.findGridLines(image.getImage(), 32);
+    }
+
+    private SectionImage getSectionImage(String documentId, Section section) {
         Document doc = store.getObject(documentId, Document.class);
         DocumentPage page = doc.getPages().get(section.getPage());
         byte[] imageBlob = store.getBlob(page.getImageId());
         Rectangle r = section.getRectangle();
         BufferedImage image = ImageUtils.fromBytes(imageBlob)
             .getSubimage((int) r.getX(), (int) r.getY(), (int) r.getWidth(), (int) r.getHeight());
-        SheetData sheetData = spreadsheets.getSheetData();
-        Point marker = findOrAddMarker(spreadsheets, sheetData.getContent());
-        int newWidth = (int) (r.getWidth() / page.getScale());
-        int newHeight = (int) (r.getHeight() / page.getScale());
-        spreadsheets.insertImage(image, marker.y, marker.x, newWidth, newHeight);
-        Point newMarker = getNewMarker(marker, newWidth, sheetData.getColWidths());
-        updateMarker(Optional.of(marker), Optional.of(newMarker), spreadsheets);
-        return newMarker;
+        return new SectionImage(image, page.getScale());
     }
 
     private static Point findOrAddMarker(SpreadsheetManager spreadsheets, List<List<String>> content) {
@@ -109,5 +123,12 @@ public class DocumentResource implements DocumentService {
             col++;
         }
         return new Point(col, marker.y);
+    }
+
+    @Data
+    private static class SectionImage {
+
+        private final BufferedImage image;
+        private final double scale;
     }
 }
