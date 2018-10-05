@@ -28,6 +28,18 @@ public interface DocumentService {
     Document createDocumentFromPdf(@FormDataParam("pdf") InputStream pdf) throws IOException;
 
     @POST
+    @Path("/url")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Document createDocumentFromUrl(CreateDocumentFromUrlRequest url) throws IOException;
+
+    @Data
+    public static class CreateDocumentFromUrlRequest {
+
+        private final String url;
+    }
+
+    @POST
     @Path("/sheets/{spreadsheetId}/{sheetId}")
     @Produces(MediaType.APPLICATION_JSON)
     Point initializeSheet(@PathParam("spreadsheetId") String spreadsheetId, @PathParam("sheetId") int sheetId);

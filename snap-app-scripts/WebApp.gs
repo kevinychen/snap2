@@ -12,12 +12,12 @@ SERVICE_USER = "sheets-creator@snap-187301.iam.gserviceaccount.com";
  */
 function doPost(e) {
   var params = JSON.parse(e.postData.contents);
-  
+
   if (Session.getActiveUser().getEmail() != SERVICE_USER) {
     console.error("Incorrect user");
     return;
   }
-  
+
   if (params.command == "insertImage") {
     insertImage(params);
   }
@@ -33,8 +33,15 @@ function doPost(e) {
  * row: 1-indexed row, e.g. 1
  * offsetX: x-offset from cell position, e.g. 0
  * offsetY: y-offset from cell position, e.g. 0
+ * width: width of image in sheet, e.g. 100
+ * height: height of image in sheet, e.g. 100
  */
 function insertImage(params) {
-  SpreadsheetApp.openById(params.spreadsheetId).getSheetByName(params.sheetName).insertImage(params.url, params.column, params.row, params.offsetX, params.offsetY);
+  var sheet = SpreadsheetApp.openById(params.spreadsheetId)
+    .getSheetByName(params.sheetName);
+  sheet.insertImage(params.url, params.column, params.row, params.offsetX, params.offsetY);
+  var image = sheet.getImages().slice(-1)[0];
+  image.setWidth(params.width);
+  image.setHeight(params.height);
 }
 

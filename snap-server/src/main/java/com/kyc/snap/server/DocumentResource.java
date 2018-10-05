@@ -24,6 +24,9 @@ import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
 
 import lombok.Data;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 @Data
 public class DocumentResource implements DocumentService {
@@ -50,6 +53,14 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
+    public Document createDocumentFromUrl(CreateDocumentFromUrlRequest request) throws IOException {
+        Response response = new OkHttpClient()
+            .newCall(new Request.Builder().url(request.getUrl()).get().build())
+            .execute();
+        return createDocumentFromPdf(response.body().byteStream());
+    }
+
+    @Override
     public Point initializeSheet(String spreadsheetId, int sheetId) {
         SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
         return findOrAddMarker(spreadsheets, spreadsheets.getSheetData().getContent());
@@ -62,13 +73,14 @@ public class DocumentResource implements DocumentService {
         DocumentPage page = doc.getPages().get(section.getPage());
         byte[] imageBlob = store.getBlob(page.getImageId());
         Rectangle r = section.getRectangle();
-        BufferedImage image = ImageUtils.scale(
-            ImageUtils.fromBytes(imageBlob).getSubimage((int) r.getX(), (int) r.getY(), (int) r.getWidth(), (int) r.getHeight()),
-            1 / page.getScale());
+        BufferedImage image = ImageUtils.fromBytes(imageBlob)
+            .getSubimage((int) r.getX(), (int) r.getY(), (int) r.getWidth(), (int) r.getHeight());
         SheetData sheetData = spreadsheets.getSheetData();
         Point marker = findOrAddMarker(spreadsheets, sheetData.getContent());
-        spreadsheets.insertImage(image, marker.y, marker.x);
-        Point newMarker = getNewMarker(marker, image.getWidth(), sheetData.getColWidths());
+        int newWidth = (int) (r.getWidth() / page.getScale());
+        int newHeight = (int) (r.getHeight() / page.getScale());
+        spreadsheets.insertImage(image, marker.y, marker.x, newWidth, newHeight);
+        Point newMarker = getNewMarker(marker, newWidth, sheetData.getColWidths());
         updateMarker(Optional.of(marker), Optional.of(newMarker), spreadsheets);
         return newMarker;
     }

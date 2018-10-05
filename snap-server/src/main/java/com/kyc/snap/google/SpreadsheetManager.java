@@ -266,7 +266,7 @@ public class SpreadsheetManager {
      * https://script.google.com/home/projects/
      * 1pIMTaT1S2eJ2raU_fJHladPb9vrqyCyDXZybOZIxf2gAJwxoG7icMVUS
      */
-    public void insertImage(BufferedImage image, int row, int col) {
+    public void insertImage(BufferedImage image, int row, int col, int width, int height) {
         WebAppService webApp = Feign.builder()
                 .encoder(new JacksonEncoder())
                 .target(
@@ -281,6 +281,8 @@ public class SpreadsheetManager {
                 .row(row + 1 + ROW_OFFSET)
                 .offsetX(0)
                 .offsetY(0)
+                .width(width)
+                .height(height)
                 .build());
             if (!response.contains("The script completed"))
                 throw new RuntimeException(response);
@@ -308,6 +310,8 @@ public class SpreadsheetManager {
         final int row;
         final int offsetX;
         final int offsetY;
+        final int width;
+        final int height;
     }
 
     private void executeRequests(Request... requests) {
