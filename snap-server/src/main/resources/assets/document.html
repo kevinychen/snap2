@@ -13,7 +13,8 @@
     </div>
     <div class="half">
       <div id="options">
-        <input id="export-section" class="initial-hide after-section" type="button" value="Copy to Google Sheet">
+        <input id="export-section" class="initial-hide after-section" type="button" value="Copy to Google Sheet"><br>
+        <div id="loader" class="initial-hide loader"></div>
       </div>
       <div id="sheet">
         Sheet URL: <input id="sheet-url" size=80">
@@ -153,10 +154,11 @@
       })();
 
       $('#export-section').on('click', e => {
+        $('#loader').show();
         postJson({ path: `/documents/${session.document.id}/export/${session.spreadsheetId}/${session.sheetId}`, body: {
           page: session.page,
           rectangle: session.rectangle,
-        } });
+        } }, e => $('#loader').hide());
       });
 
       $('#sheet-url').on('input', e => {
@@ -214,5 +216,18 @@
       display: none;
     }
 
+    .loader {
+      border: 3px solid #f3f3f3;
+      animation: spin 1s linear infinite;
+      border-top: 3px solid #555;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </html>
