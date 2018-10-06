@@ -3,6 +3,7 @@ package com.kyc.snap.grid;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.kyc.snap.document.Document.DocumentText;
+import com.kyc.snap.document.Rectangle;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid.Square;
@@ -131,6 +134,34 @@ public class GridParser {
                 String text = allText.get(subimages.get(new Point(j, i)));
                 grid.square(i, j).setText(text);
             }
+    }
+
+    public void findGridText(List<DocumentText> texts, Rectangle region, GridPosition pos, Grid grid) {
+        StringBuilder[][] builders = new StringBuilder[pos.getNumRows()][pos.getNumCols()];
+        for (int i = 0; i < pos.getNumRows(); i++)
+            for (int j = 0; j < pos.getNumCols(); j++)
+                builders[i][j] = new StringBuilder();
+        for (DocumentText text : texts) {
+            Rectangle r = text.getBounds();
+            int x = (int) (r.getX() + r.getWidth() / 2 - region.getX());
+            int y = (int) (r.getY() + r.getHeight() / 2 - region.getY());
+            if (x <= 0 || x >= region.getWidth() || y <= 0 || y >= region.getHeight())
+                continue;
+            int textRow = Collections.binarySearch(pos.getRows().stream()
+                .map(row -> row.getStartY())
+                .collect(Collectors.toList()), y);
+            if (textRow < 0)
+                textRow = -textRow - 2;
+            int textCol = Collections.binarySearch(pos.getCols().stream()
+                .map(col -> col.getStartX())
+                .collect(Collectors.toList()), x);
+            if (textCol < 0)
+                textCol = -textCol - 2;
+            builders[textRow][textCol].append(text.getText());
+        }
+        for (int i = 0; i < pos.getNumRows(); i++)
+            for (int j = 0; j < pos.getNumCols(); j++)
+                grid.square(i, j).setText(builders[i][j].toString());
     }
 
     public void findGridBorders(BufferedImage image, GridPosition pos, Grid grid) {

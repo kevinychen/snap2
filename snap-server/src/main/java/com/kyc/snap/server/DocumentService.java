@@ -80,6 +80,14 @@ public interface DocumentService {
         private final GridPosition gridPosition;
         private boolean findColors = false;
         private boolean findBorders = false;
+        private FindTextMode findTextMode = FindTextMode.NONE;
+
+        public enum FindTextMode {
+
+            NONE,
+            USE_NATIVE,
+            USE_OCR,
+        }
     }
 
     @POST

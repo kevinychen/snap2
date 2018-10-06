@@ -64,7 +64,6 @@ public class Pdf implements Closeable {
     private static class MyPDFTextStripper extends PDFTextStripper {
 
         private final int pageNo;
-        private PDPage page;
         private List<DocumentText> allText;
 
         public MyPDFTextStripper(int pageNo) throws IOException {
@@ -74,7 +73,6 @@ public class Pdf implements Closeable {
         @Override
         public void processPage(PDPage page) throws IOException {
             if (getCurrentPageNo() == pageNo) {
-                this.page = page;
                 allText = new ArrayList<>();
                 super.processPage(page);
             }
@@ -85,7 +83,7 @@ public class Pdf implements Closeable {
             for (TextPosition position : textPositions)
                 allText.add(new DocumentText(position.getUnicode(), new Rectangle(
                     position.getX() * RENDER_SCALE,
-                    (page.getMediaBox().getHeight() - position.getY()) * RENDER_SCALE,
+                    position.getY() * RENDER_SCALE,
                     position.getWidth() * RENDER_SCALE,
                     position.getHeight() * RENDER_SCALE)));
         }

@@ -26,6 +26,7 @@ import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageUtils;
+import com.kyc.snap.server.DocumentService.FindGridRequest.FindTextMode;
 import com.kyc.snap.store.Store;
 
 import lombok.Data;
@@ -84,11 +85,15 @@ public class DocumentResource implements DocumentService {
     public Grid findGrid(String documentId, FindGridRequest request) {
         GridPosition gridPosition = request.getGridPosition();
         Grid grid = Grid.create(gridPosition.getNumRows(), gridPosition.getNumCols());
-        BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
+        SectionImage image = getSectionImage(documentId, request.getSection());
         if (request.isFindColors())
-            gridParser.findGridColors(image, gridPosition, grid);
+            gridParser.findGridColors(image.getImage(), gridPosition, grid);
+        if (request.getFindTextMode() == FindTextMode.USE_NATIVE)
+            gridParser.findGridText(image.getTexts(), request.getSection().getRectangle(), gridPosition, grid);
+        else if (request.getFindTextMode() == FindTextMode.USE_OCR)
+            gridParser.findGridText(image.getImage(), gridPosition, grid);
         if (request.isFindBorders()) {
-            gridParser.findGridBorders(image, gridPosition, grid);
+            gridParser.findGridBorders(image.getImage(), gridPosition, grid);
             gridParser.findGridBorderStyles(grid);
         }
         return grid;
@@ -123,7 +128,7 @@ public class DocumentResource implements DocumentService {
         Rectangle r = section.getRectangle();
         BufferedImage image = ImageUtils.fromBytes(imageBlob)
             .getSubimage((int) r.getX(), (int) r.getY(), (int) r.getWidth(), (int) r.getHeight());
-        return new SectionImage(image, page.getScale());
+        return new SectionImage(image, page.getScale(), page.getTexts());
     }
 
     private static Point findOrAddMarker(SpreadsheetManager spreadsheets, List<List<String>> content) {
@@ -157,5 +162,6 @@ public class DocumentResource implements DocumentService {
 
         private final BufferedImage image;
         private final double scale;
+        private final List<DocumentText> texts;
     }
 }

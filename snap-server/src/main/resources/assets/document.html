@@ -29,6 +29,9 @@
           <input id="operation-find-grid" type="button" value="Parse grid">
           <input id="operation-find-grid-colors" type="checkbox" checked>colors
           <input id="operation-find-grid-borders" type="checkbox">borders
+          <input name="find-text-type" type="radio" value="NONE" checked>no text
+          <input name="find-text-type" type="radio" value="USE_NATIVE">find stored text
+          <input name="find-text-type" type="radio" value="USE_OCR">infer text with OCR
         </span>
         <br>
         <br>
@@ -170,6 +173,7 @@
       const offsetX = session.rectangle.x;
       const offsetY = session.rectangle.y;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = '24px Helvetica';
       ctx.globalAlpha = 0.5;
       if (session.gridLines) {
         ctx.strokeStyle = 'red';
@@ -205,6 +209,11 @@
             ctx.strokeStyle = 'red';
             ctx.lineWidth = 2;
             ctx.stroke();
+
+            ctx.strokeStyle = 'blue';
+            ctx.strokeText(square.text,
+                offsetX + widthRatio * (col.startX + col.width / 3),
+                offsetY + heightRatio * (row.startY + 2 * row.height / 3));
 
             ctx.fillStyle = rgbToStyle(square.topBorder.rgb);
             ctx.fillRect(
@@ -331,6 +340,7 @@
           gridPosition: session.gridPosition,
           findColors: $('#operation-find-grid-colors').is(':checked'),
           findBorders: $('#operation-find-grid-borders').is(':checked'),
+          findTextMode: $('input:radio[name="find-text-type"]:checked').val(),
         } }, grid => {
           setGrid(grid);
           $('#loader').hide();
