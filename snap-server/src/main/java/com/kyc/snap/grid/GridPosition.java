@@ -2,6 +2,8 @@ package com.kyc.snap.grid;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 
 @Data
@@ -10,10 +12,12 @@ public class GridPosition {
     private final List<Row> rows;
     private final List<Col> cols;
 
+    @JsonIgnore
     public int getNumRows() {
         return rows.size();
     }
 
+    @JsonIgnore
     public int getNumCols() {
         return cols.size();
     }

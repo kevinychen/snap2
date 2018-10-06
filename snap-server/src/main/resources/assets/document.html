@@ -14,7 +14,7 @@
         <br>
         <div id="image-container">
           <img id="image" alt="" />
-          <canvas id="draw-canvas" class="overlay-canvas" width="0" height="0"></canvas>
+          <canvas id="section-canvas" class="overlay-canvas" width="0" height="0"></canvas>
           <canvas id="listener-canvas" class="overlay-canvas" width="0" height="0"></canvas>
         </div>
       </div>
@@ -23,7 +23,14 @@
       <div id="options">
         <input id="export-section" class="initial-hide after-section" type="button" value="Copy to Google Sheet"><br>
         <br>
-        <input id="operation-parse-grid-lines" class="initial-hide after-section" type="button" value="Parse grid lines"><br>
+        <input id="operation-find-grid-lines" class="initial-hide after-section" type="button" value="Parse grid lines">
+        <br>
+        <span class="initial-hide after-grid-lines">
+          <input id="operation-find-grid" type="button" value="Parse grid">
+          <input id="operation-find-grid-colors" type="checkbox" checked>colors
+          <input id="operation-find-grid-borders" type="checkbox">borders
+        </span>
+        <br>
         <br>
         <div id="loader" class="initial-hide loader"></div>
       </div>
@@ -42,6 +49,8 @@
       page: 0,
       rectangle: undefined,
       gridLines: undefined,
+      gridPosition: undefined,
+      grid: undefined,
       spreadsheetId: undefined,
       sheetId: undefined,
     };
@@ -69,6 +78,10 @@
           }
           return response.json().then(callback);
         })
+    }
+
+    function rgbToStyle(rgb) {
+      return 'rgb(' + ((rgb >> 16) & 0xff) + ',' + ((rgb >> 8) & 0xff) + ',' + ((rgb >> 0) & 0xff) + ')';
     }
 
     function postJson(args, callback) {
@@ -117,9 +130,22 @@
       }
     }
 
-    function setGridLines(gridLines) {
+    function setGridLines(gridLines, gridPosition) {
       session.gridLines = gridLines;
-      drawCanvas();
+      session.gridPosition = gridPosition;
+      setGrid(undefined);
+      if (gridLines) {
+        $('.after-grid-lines').show();
+      } else {
+        $('.after-grid-lines').hide();
+      }
+    }
+
+    function setGrid(grid) {
+      session.grid = grid;
+      if (session.rectangle) {
+        drawSectionCanvas();
+      }
     }
 
     function setSheet(spreadsheetId, sheetId) {
@@ -135,27 +161,65 @@
       post({ path: `/documents/sheets/${spreadsheetId}/${sheetId}` });
     }
 
-    function drawCanvas() {
+    function drawSectionCanvas() {
       const image = $('#image')[0];
-      const canvas = $('#draw-canvas')[0];
+      const canvas = $('#section-canvas')[0];
       const ctx = canvas.getContext('2d');
       const widthRatio = canvas.width / image.naturalWidth;
       const heightRatio = canvas.height / image.naturalHeight;
+      const offsetX = session.rectangle.x;
+      const offsetY = session.rectangle.y;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (session.gridLines) {
         ctx.strokeStyle = 'red';
         ctx.lineWidth = 2;
         for (var row of session.gridLines.horizontalLines) {
           ctx.beginPath();
-          ctx.moveTo(session.rectangle.x, session.rectangle.y + row * heightRatio);
-          ctx.lineTo(session.rectangle.x + session.rectangle.width, session.rectangle.y + row * heightRatio);
+          ctx.moveTo(offsetX, offsetY + row * heightRatio);
+          ctx.lineTo(offsetX + session.rectangle.width, offsetY + row * heightRatio);
           ctx.stroke();
         }
         for (var col of session.gridLines.verticalLines) {
           ctx.beginPath();
-          ctx.moveTo(session.rectangle.x + col * widthRatio, session.rectangle.y);
-          ctx.lineTo(session.rectangle.x + col * widthRatio, session.rectangle.y + session.rectangle.height);
+          ctx.moveTo(offsetX + col * widthRatio, offsetY);
+          ctx.lineTo(offsetX + col * widthRatio, offsetY + session.rectangle.height);
           ctx.stroke();
+        }
+      }
+      if (session.grid) {
+        for (var i = 0; i < session.grid.numRows; i++) {
+          for (var j = 0; j < session.grid.numCols; j++) {
+            const row = session.gridPosition.rows[i];
+            const col = session.gridPosition.cols[j];
+            const square = session.grid.squares[i][j];
+
+            ctx.rect(
+              offsetX + widthRatio * (col.startX + col.width / 3),
+              offsetY + heightRatio * (row.startY + row.height / 3),
+              widthRatio * (col.width / 3),
+              heightRatio * (row.height / 3));
+            ctx.fillStyle = rgbToStyle(square.rgb);
+            ctx.fill();
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.rect(
+              offsetX + widthRatio * (col.startX + col.width * 2 / 3 + 1),
+              offsetY + heightRatio * (row.startY + row.height / 3),
+              widthRatio * (square.rightBorder.width),
+              heightRatio * (row.height / 3));
+            ctx.fillStyle = rgbToStyle(square.rightBorder.rgb);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.rect(
+              offsetX + widthRatio * (col.startX + col.width / 3),
+              offsetY + heightRatio * (row.startY + row.height * 2 / 3 + 1),
+              widthRatio * (col.width / 3),
+              heightRatio * (square.bottomBorder.width));
+            ctx.fillStyle = rgbToStyle(square.bottomBorder.rgb);
+            ctx.fill();
+          }
         }
       }
     }
@@ -231,13 +295,29 @@
         });
       });
 
-      $('#operation-parse-grid-lines').on('click', e => {
+      $('#operation-find-grid-lines').on('click', e => {
         $('#loader').show();
         postJson({ path: `/documents/${session.document.id}/lines`, body: {
           page: session.page,
           rectangle: session.rectangle,
-        } }, gridLines => {
-          setGridLines(gridLines);
+        } }, response => {
+          setGridLines(response.gridLines, response.gridPosition);
+          $('#loader').hide();
+        });
+      });
+
+      $('#operation-find-grid').on('click', e => {
+        $('#loader').show();
+        postJson({ path: `/documents/${session.document.id}/grid`, body: {
+          section: {
+            page: session.page,
+            rectangle: session.rectangle,
+          },
+          gridPosition: session.gridPosition,
+          findColors: $('#operation-find-grid-colors').is(':checked'),
+          findBorders: $('#operation-find-grid-borders').is(':checked'),
+        } }, grid => {
+          setGrid(grid);
           $('#loader').hide();
         });
       });

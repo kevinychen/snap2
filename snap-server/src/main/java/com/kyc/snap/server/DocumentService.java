@@ -15,7 +15,9 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.kyc.snap.document.Document;
 import com.kyc.snap.document.Rectangle;
+import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
+import com.kyc.snap.grid.GridPosition;
 
 import lombok.Data;
 
@@ -56,12 +58,34 @@ public interface DocumentService {
     @Path("/{documentId}/lines")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    GridLines findGridLines(@PathParam("documentId") String documentId, Section section);
+    FindGridLinesResponse findGridLines(@PathParam("documentId") String documentId, Section section);
 
     @Data
     public static class Section {
 
         private final int page;
         private final Rectangle rectangle;
+    }
+
+    @Data
+    public static class FindGridLinesResponse {
+
+        private final GridLines gridLines;
+        private final GridPosition gridPosition;
+    }
+
+    @POST
+    @Path("/{documentId}/grid")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Grid findGrid(@PathParam("documentId") String documentId, FindGridRequest request);
+
+    @Data
+    public static class FindGridRequest {
+
+        private final Section section;
+        private final GridPosition gridPosition;
+        private final boolean findColors;
+        private final boolean findBorders;
     }
 }

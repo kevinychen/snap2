@@ -20,8 +20,10 @@ import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.SheetData;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
+import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridParser;
+import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
 
@@ -84,9 +86,25 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public GridLines findGridLines(String documentId, Section section) {
-        SectionImage image = getSectionImage(documentId, section);
-        return gridParser.findGridLines(image.getImage(), 32);
+    public FindGridLinesResponse findGridLines(String documentId, Section section) {
+        BufferedImage image = getSectionImage(documentId, section).getImage();
+        GridLines gridLines = gridParser.findGridLines(image, 64);
+        GridPosition gridPosition = gridParser.getGridPosition(gridLines);
+        return new FindGridLinesResponse(gridLines, gridPosition);
+    }
+
+    @Override
+    public Grid findGrid(String documentId, FindGridRequest request) {
+        GridPosition gridPosition = request.getGridPosition();
+        Grid grid = new Grid(gridPosition.getNumRows(), gridPosition.getNumCols());
+        BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
+        if (request.isFindColors())
+            gridParser.findGridColors(image, gridPosition, grid);
+        if (request.isFindBorders()) {
+            gridParser.findGridBorders(image, gridPosition, grid);
+            gridParser.findGridBorderStyles(grid);
+        }
+        return grid;
     }
 
     private SectionImage getSectionImage(String documentId, Section section) {
