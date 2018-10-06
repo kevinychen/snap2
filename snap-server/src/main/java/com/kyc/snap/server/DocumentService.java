@@ -48,13 +48,6 @@ public interface DocumentService {
     Point initializeSheet(@PathParam("spreadsheetId") String spreadsheetId, @PathParam("sheetId") int sheetId);
 
     @POST
-    @Path("/{documentId}/export/{spreadsheetId}/{sheetId}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    Point exportSection(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
-            @PathParam("sheetId") int sheetId, Section section);
-
-    @POST
     @Path("/{documentId}/lines")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -85,7 +78,22 @@ public interface DocumentService {
 
         private final Section section;
         private final GridPosition gridPosition;
-        private final boolean findColors;
-        private final boolean findBorders;
+        private boolean findColors = false;
+        private boolean findBorders = false;
+    }
+
+    @POST
+    @Path("/{documentId}/export/{spreadsheetId}/{sheetId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Point export(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
+            @PathParam("sheetId") int sheetId, ExportRequest request);
+
+    @Data
+    public static class ExportRequest {
+
+        private final Section section;
+        private GridPosition gridPosition;
+        private Grid grid;
     }
 }

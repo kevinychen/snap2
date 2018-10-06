@@ -16,6 +16,7 @@ import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.crossword.CrosswordSpreadsheetWrapper;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.SpreadsheetManager;
+import com.kyc.snap.google.SpreadsheetManager.Dimension;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridParser;
@@ -30,6 +31,10 @@ import lombok.Data;
 
 @Data
 public class ImageResource implements ImageService {
+
+    public static final int DEFAULT_SHEET_ROW_OFFSET = 0;
+    public static final int DEFAULT_SHEET_COL_OFFSET = 0;
+    public static final int DEFAULT_CELL_LENGTH = 21;
 
     private final SnapConfiguration configuration;
     private final GoogleAPIManager googleApi;
@@ -99,7 +104,7 @@ public class ImageResource implements ImageService {
         ImageSession session = sessions.getIfPresent(sessionId);
         GridPosition pos = gridParser.getGridPosition(session.getLines());
         session.setPos(pos);
-        session.setGrid(new Grid(pos.getNumRows(), pos.getNumCols()));
+        session.setGrid(Grid.create(pos.getNumRows(), pos.getNumCols()));
         return pos;
     }
 
@@ -142,8 +147,12 @@ public class ImageResource implements ImageService {
         ImageSession session = sessions.getIfPresent(sessionId);
         Parameters parameters = session.getParameters();
         SpreadsheetManager spreadsheets = googleApi.getSheet(parameters.getSpreadsheetId(), parameters.getSheetId());
-        GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets);
-        gridSpreadsheets.toSpreadsheet(session.getPos(), session.getGrid());
+        GridSpreadsheetWrapper gridSpreadsheets = new GridSpreadsheetWrapper(spreadsheets, DEFAULT_SHEET_ROW_OFFSET,
+            DEFAULT_SHEET_COL_OFFSET);
+        spreadsheets.clear();
+        spreadsheets.setAllRowOrColumnSizes(Dimension.ROWS, DEFAULT_CELL_LENGTH);
+        spreadsheets.setAllRowOrColumnSizes(Dimension.COLUMNS, DEFAULT_CELL_LENGTH);
+        gridSpreadsheets.toSpreadsheet(session.getPos(), session.getGrid(), GridSpreadsheetWrapper.DEFAULT_SCALE);
         return new StringJson(spreadsheets.getUrl());
     }
 

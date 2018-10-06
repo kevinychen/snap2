@@ -16,24 +16,21 @@ import lombok.Data;
 @Data
 public class GridSpreadsheetWrapper {
 
-    public static final int DEFAULT_CELL_LENGTH = 21;
     public static final double DEFAULT_SCALE = 0.75;
 
     private final SpreadsheetManager spreadsheets;
+    private final int rowOffset;
+    private final int colOffset;
 
-    public void toSpreadsheet(GridPosition pos, Grid grid) {
-        spreadsheets.clear();
-        spreadsheets.setAllRowOrColumnSizes(Dimension.ROWS, DEFAULT_CELL_LENGTH);
-        spreadsheets.setAllRowOrColumnSizes(Dimension.COLUMNS, DEFAULT_CELL_LENGTH);
-
+    public void toSpreadsheet(GridPosition pos, Grid grid, double scale) {
         List<SizedRowOrColumn> rows = new ArrayList<>();
         for (int i = 0; i < pos.getNumRows(); i++)
-            rows.add(new SizedRowOrColumn(i, (int) (pos.getRows().get(i).getHeight() * DEFAULT_SCALE)));
+            rows.add(new SizedRowOrColumn(i + rowOffset, (int) (pos.getRows().get(i).getHeight() * scale)));
         spreadsheets.setRowOrColumnSizes(Dimension.ROWS, rows);
 
         List<SizedRowOrColumn> cols = new ArrayList<>();
         for (int j = 0; j < pos.getNumCols(); j++)
-            cols.add(new SizedRowOrColumn(j, (int) (pos.getCols().get(j).getWidth() * DEFAULT_SCALE)));
+            cols.add(new SizedRowOrColumn(j + colOffset, (int) (pos.getCols().get(j).getWidth() * scale)));
         spreadsheets.setRowOrColumnSizes(Dimension.COLUMNS, cols);
 
         List<ColoredCell> coloredCells = new ArrayList<>();
@@ -42,11 +39,11 @@ public class GridSpreadsheetWrapper {
         for (int i = 0; i < grid.getNumRows(); i++)
             for (int j = 0; j < grid.getNumCols(); j++) {
                 Square square = grid.square(i, j);
-                coloredCells.add(new ColoredCell(i, j, square.getRgb()));
-                valueCells.add(new ValueCell(i, j, square.getText().trim()));
+                coloredCells.add(new ColoredCell(i + rowOffset, j + colOffset, square.getRgb()));
+                valueCells.add(new ValueCell(i + rowOffset, j + colOffset, square.getText().trim()));
                 borderedCells.add(new BorderedCell(
-                    i,
-                    j,
+                    i + rowOffset,
+                    j + colOffset,
                     square.getTopBorder(),
                     square.getRightBorder(),
                     square.getBottomBorder(),

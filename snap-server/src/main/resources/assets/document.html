@@ -21,7 +21,7 @@
     </div>
     <div class="half">
       <div id="options">
-        <input id="export-section" class="initial-hide after-section" type="button" value="Copy to Google Sheet"><br>
+        <input id="export" class="initial-hide after-section" type="button" value="Copy to Google Sheet"><br>
         <br>
         <input id="operation-find-grid-lines" class="initial-hide after-section" type="button" value="Parse grid lines">
         <br>
@@ -296,11 +296,15 @@
           });
       })();
 
-      $('#export-section').on('click', e => {
+      $('#export').on('click', e => {
         $('#loader').show();
         postJson({ path: `/documents/${session.document.id}/export/${session.spreadsheetId}/${session.sheetId}`, body: {
-          page: session.page,
-          rectangle: session.rectangle,
+          section: {
+            page: session.page,
+            rectangle: session.rectangle,
+          },
+          gridPosition: session.gridPosition,
+          grid: session.grid,
         } }, marker => {
           $('#loader').hide();
         });

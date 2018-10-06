@@ -24,6 +24,7 @@ import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.grid.GridPosition;
+import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
 
@@ -72,20 +73,6 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public Point exportSection(String documentId, String spreadsheetId, int sheetId, Section section) {
-        SectionImage image = getSectionImage(documentId, section);
-        SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
-        SheetData sheetData = spreadsheets.getSheetData();
-        Point marker = findOrAddMarker(spreadsheets, sheetData.getContent());
-        int newWidth = (int) (image.getImage().getWidth() / image.getScale());
-        int newHeight = (int) (image.getImage().getHeight() / image.getScale());
-        spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight);
-        Point newMarker = getNewMarker(marker, newWidth, sheetData.getColWidths());
-        updateMarker(Optional.of(marker), Optional.of(newMarker), spreadsheets);
-        return newMarker;
-    }
-
-    @Override
     public FindGridLinesResponse findGridLines(String documentId, Section section) {
         BufferedImage image = getSectionImage(documentId, section).getImage();
         GridLines gridLines = gridParser.findGridLines(image, 64);
@@ -96,7 +83,7 @@ public class DocumentResource implements DocumentService {
     @Override
     public Grid findGrid(String documentId, FindGridRequest request) {
         GridPosition gridPosition = request.getGridPosition();
-        Grid grid = new Grid(gridPosition.getNumRows(), gridPosition.getNumCols());
+        Grid grid = Grid.create(gridPosition.getNumRows(), gridPosition.getNumCols());
         BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
         if (request.isFindColors())
             gridParser.findGridColors(image, gridPosition, grid);
@@ -105,6 +92,28 @@ public class DocumentResource implements DocumentService {
             gridParser.findGridBorderStyles(grid);
         }
         return grid;
+    }
+
+    @Override
+    public Point export(String documentId, String spreadsheetId, int sheetId, ExportRequest request) {
+        SectionImage image = getSectionImage(documentId, request.getSection());
+        SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
+        SheetData sheetData = spreadsheets.getSheetData();
+        Point marker = findOrAddMarker(spreadsheets, sheetData.getContent());
+        updateMarker(Optional.of(marker), Optional.empty(), spreadsheets);
+        Point newMarker;
+        if (request.getGridPosition() != null && request.getGrid() != null) {
+            new GridSpreadsheetWrapper(spreadsheets, marker.y, marker.x)
+                .toSpreadsheet(request.getGridPosition(), request.getGrid(), 1 / image.getScale());
+            newMarker = new Point(marker.x + request.getGridPosition().getNumCols() + 1, marker.y);
+        } else {
+            int newWidth = (int) (image.getImage().getWidth() / image.getScale());
+            int newHeight = (int) (image.getImage().getHeight() / image.getScale());
+            spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight);
+            newMarker = getNewMarker(marker, newWidth, sheetData.getColWidths());
+        }
+        updateMarker(Optional.empty(), Optional.of(newMarker), spreadsheets);
+        return newMarker;
     }
 
     private SectionImage getSectionImage(String documentId, Section section) {
@@ -122,7 +131,7 @@ public class DocumentResource implements DocumentService {
             for (int j = 0; j < content.get(i).size(); j++)
                 if (content.get(i).get(j).equals(MARKER))
                     return new Point(j, i);
-        Point marker = new Point(0, content.isEmpty() ? 0 : content.size() + 1);
+        Point marker = new Point(0, content.size() + 1);
         updateMarker(Optional.empty(), Optional.of(marker), spreadsheets);
         return marker;
     }

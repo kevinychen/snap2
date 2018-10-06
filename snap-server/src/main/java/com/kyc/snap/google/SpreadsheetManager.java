@@ -54,9 +54,6 @@ import lombok.Data;
 @Data
 public class SpreadsheetManager {
 
-    public static final int ROW_OFFSET = 1;
-    public static final int COL_OFFSET = 1;
-
     private final GoogleCredential credential;
     private final Spreadsheets spreadsheets;
     private final String spreadsheetId;
@@ -67,8 +64,6 @@ public class SpreadsheetManager {
     }
 
     public String getRef(int row, int col) {
-        row += ROW_OFFSET;
-        col += COL_OFFSET;
         Preconditions.checkArgument(col < 26 + 26 * 26, "Column too large to compute ref");
         StringBuilder ref = new StringBuilder();
         if (col >= 26)
@@ -101,22 +96,22 @@ public class SpreadsheetManager {
 
             List<Integer> rowHeights = new ArrayList<>();
             List<DimensionProperties> rowMetadata = gridData.getRowMetadata();
-            for (int i = ROW_OFFSET; i < rowMetadata.size(); i++)
+            for (int i = 0; i < rowMetadata.size(); i++)
                 rowHeights.add(rowMetadata.get(i).getPixelSize());
 
             List<Integer> colWidths = new ArrayList<>();
             List<DimensionProperties> colMetadata = gridData.getColumnMetadata();
-            for (int i = ROW_OFFSET; i < colMetadata.size(); i++)
+            for (int i = 0; i < colMetadata.size(); i++)
                 colWidths.add(colMetadata.get(i).getPixelSize());
 
             List<List<String>> content = new ArrayList<>();
             List<RowData> rowData = gridData.getRowData();
             if (rowData != null)
-                for (int i = ROW_OFFSET; i < rowData.size(); i++) {
+                for (int i = 0; i < rowData.size(); i++) {
                     List<String> contentRow = new ArrayList<>();
                     List<CellData> cellData = rowData.get(i).getValues();
                     if (cellData != null)
-                        for (int j = COL_OFFSET; j < cellData.size(); j++) {
+                        for (int j = 0; j < cellData.size(); j++) {
                             String contentCell = "";
                             ExtendedValue value = cellData.get(j).getEffectiveValue();
                             if (value != null) {
@@ -283,8 +278,8 @@ public class SpreadsheetManager {
                 .spreadsheetId(spreadsheetId)
                 .sheetName(findSheet(getSpreadsheet(), sheetId).getProperties().getTitle())
                 .url(ImageUtils.toDataURL(image))
-                .column(col + 1 + COL_OFFSET)
-                .row(row + 1 + ROW_OFFSET)
+                .column(col + 1)
+                .row(row + 1)
                 .offsetX(0)
                 .offsetY(0)
                 .width(width)
@@ -357,17 +352,17 @@ public class SpreadsheetManager {
         return new DimensionRange()
             .setSheetId(sheetId)
             .setDimension(dimension.name())
-            .setStartIndex(startIndex + (dimension == Dimension.ROWS ? ROW_OFFSET : COL_OFFSET))
-            .setEndIndex(endIndex + (dimension == Dimension.ROWS ? ROW_OFFSET : COL_OFFSET));
+            .setStartIndex(startIndex)
+            .setEndIndex(endIndex);
     }
 
     private GridRange getRange(int row, int col) {
         return new GridRange()
             .setSheetId(sheetId)
-            .setStartRowIndex(row + ROW_OFFSET)
-            .setEndRowIndex(row + 1 + ROW_OFFSET)
-            .setStartColumnIndex(col + COL_OFFSET)
-            .setEndColumnIndex(col + 1 + COL_OFFSET);
+            .setStartRowIndex(row)
+            .setEndRowIndex(row + 1)
+            .setStartColumnIndex(col)
+            .setEndColumnIndex(col + 1);
     }
 
     private static Sheet findSheet(Spreadsheet spreadsheet, int sheetId) {
