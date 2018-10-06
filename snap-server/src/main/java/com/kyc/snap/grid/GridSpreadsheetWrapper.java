@@ -44,7 +44,13 @@ public class GridSpreadsheetWrapper {
                 Square square = grid.square(i, j);
                 coloredCells.add(new ColoredCell(i, j, square.getRgb()));
                 valueCells.add(new ValueCell(i, j, square.getText().trim()));
-                borderedCells.add(new BorderedCell(i, j, square.getRightBorder(), square.getBottomBorder()));
+                borderedCells.add(new BorderedCell(
+                    i,
+                    j,
+                    square.getTopBorder(),
+                    square.getRightBorder(),
+                    square.getBottomBorder(),
+                    square.getLeftBorder()));
             }
         spreadsheets.setBackgroundColors(coloredCells);
         spreadsheets.setValues(valueCells);

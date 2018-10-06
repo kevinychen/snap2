@@ -11,7 +11,6 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid.Square;
@@ -140,22 +139,26 @@ public class GridParser {
                 Row row = pos.getRows().get(i);
                 Col col = pos.getCols().get(j);
                 Square square = grid.square(i, j);
-                if (j < pos.getNumCols() - 1) {
-                    Border rightBorder = ImageUtils.findVerticalBorder(image.getSubimage(
-                        col.getStartX() + col.getWidth() / 2,
-                        row.getStartY(),
-                        col.getWidth() / 2 + pos.getCols().get(j + 1).getWidth() / 2,
-                        row.getHeight()));
-                    square.setRightBorder(rightBorder);
-                }
-                if (i < pos.getNumRows() - 1) {
-                    Border bottomBorder = ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
-                        col.getStartX(),
-                        row.getStartY() + row.getHeight() / 2,
-                        col.getWidth(),
-                        row.getHeight() / 2 + pos.getRows().get(i + 1).getHeight() / 2)));
-                    square.setBottomBorder(bottomBorder);
-                }
+                square.setTopBorder(ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
+                    col.getStartX(),
+                    Math.max(0, row.getStartY() - row.getHeight() / 2),
+                    col.getWidth(),
+                    row.getHeight()))));
+                square.setRightBorder(ImageUtils.findVerticalBorder(image.getSubimage(
+                    Math.min(image.getWidth() - col.getWidth(), col.getStartX() + col.getWidth() / 2),
+                    row.getStartY(),
+                    col.getWidth(),
+                    row.getHeight())));
+                square.setBottomBorder(ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
+                    col.getStartX(),
+                    Math.min(image.getHeight() - row.getHeight(), row.getStartY() + row.getHeight() / 2),
+                    col.getWidth(),
+                    row.getHeight()))));
+                square.setLeftBorder(ImageUtils.findVerticalBorder(image.getSubimage(
+                    Math.max(0, col.getStartX() - col.getWidth() / 2),
+                    row.getStartY(),
+                    col.getWidth(),
+                    row.getHeight())));
             }
     }
 
@@ -164,7 +167,7 @@ public class GridParser {
         for (int i = 0; i < grid.getNumRows(); i++)
             for (int j = 0; j < grid.getNumCols(); j++) {
                 Square square = grid.square(i, j);
-                for (Border border : ImmutableList.of(square.getRightBorder(), square.getBottomBorder()))
+                for (Border border : square.borders())
                     if (border.getWidth() > 0)
                         borderWidths.add(new Tuple(border.getWidth()));
             }
@@ -193,7 +196,7 @@ public class GridParser {
         for (int i = 0; i < grid.getNumRows(); i++)
             for (int j = 0; j < grid.getNumCols(); j++) {
                 Square square = grid.square(i, j);
-                for (Border border : ImmutableList.of(square.getRightBorder(), square.getBottomBorder())) {
+                for (Border border : square.borders()) {
                     int width = border.getWidth();
                     int styleLevel;
                     if (width == 0)

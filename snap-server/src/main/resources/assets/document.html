@@ -170,6 +170,7 @@
       const offsetX = session.rectangle.x;
       const offsetY = session.rectangle.y;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 0.5;
       if (session.gridLines) {
         ctx.strokeStyle = 'red';
         ctx.lineWidth = 2;
@@ -193,6 +194,7 @@
             const col = session.gridPosition.cols[j];
             const square = session.grid.squares[i][j];
 
+            ctx.beginPath();
             ctx.rect(
               offsetX + widthRatio * (col.startX + col.width / 3),
               offsetY + heightRatio * (row.startY + row.height / 3),
@@ -204,21 +206,30 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            ctx.rect(
+            ctx.fillStyle = rgbToStyle(square.topBorder.rgb);
+            ctx.fillRect(
+              offsetX + widthRatio * (col.startX + col.width / 3),
+              offsetY + heightRatio * (row.startY + row.height / 3 - 1),
+              widthRatio * (col.width / 3),
+              -heightRatio * (square.topBorder.width));
+            ctx.fillStyle = rgbToStyle(square.rightBorder.rgb);
+            ctx.fillRect(
               offsetX + widthRatio * (col.startX + col.width * 2 / 3 + 1),
               offsetY + heightRatio * (row.startY + row.height / 3),
               widthRatio * (square.rightBorder.width),
               heightRatio * (row.height / 3));
-            ctx.fillStyle = rgbToStyle(square.rightBorder.rgb);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.rect(
+            ctx.fillStyle = rgbToStyle(square.bottomBorder.rgb);
+            ctx.fillRect(
               offsetX + widthRatio * (col.startX + col.width / 3),
               offsetY + heightRatio * (row.startY + row.height * 2 / 3 + 1),
               widthRatio * (col.width / 3),
               heightRatio * (square.bottomBorder.width));
-            ctx.fillStyle = rgbToStyle(square.bottomBorder.rgb);
-            ctx.fill();
+            ctx.fillStyle = rgbToStyle(square.leftBorder.rgb);
+            ctx.fillRect(
+              offsetX + widthRatio * (col.startX + col.width / 3 - 1),
+              offsetY + heightRatio * (row.startY + row.height / 3),
+              -widthRatio * (square.leftBorder.width),
+              heightRatio * (row.height / 3));
           }
         }
       }

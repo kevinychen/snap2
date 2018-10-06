@@ -251,12 +251,18 @@ public class SpreadsheetManager {
         executeRequests(cells.stream()
             .map(cell -> new Request()
                 .setUpdateBorders(new UpdateBordersRequest()
+                    .setTop(new Border()
+                        .setStyle(toStyle(cell.topBorder.getStyle()))
+                        .setColor(toColor(cell.topBorder.getRgb())))
                     .setRight(new Border()
                         .setStyle(toStyle(cell.rightBorder.getStyle()))
                         .setColor(toColor(cell.rightBorder.getRgb())))
                     .setBottom(new Border()
                         .setStyle(toStyle(cell.bottomBorder.getStyle()))
                         .setColor(toColor(cell.bottomBorder.getRgb())))
+                    .setLeft(new Border()
+                        .setStyle(toStyle(cell.leftBorder.getStyle()))
+                        .setColor(toColor(cell.leftBorder.getRgb())))
                     .setRange(getRange(cell.row, cell.col))))
             .collect(Collectors.toList()));
     }
@@ -433,7 +439,9 @@ public class SpreadsheetManager {
 
         private final int row;
         private final int col;
+        private final com.kyc.snap.grid.Border topBorder;
         private final com.kyc.snap.grid.Border rightBorder;
         private final com.kyc.snap.grid.Border bottomBorder;
+        private final com.kyc.snap.grid.Border leftBorder;
     }
 }
