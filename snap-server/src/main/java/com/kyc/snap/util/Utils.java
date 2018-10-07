@@ -50,7 +50,7 @@ public class Utils {
             return Math.hypot(sin, cos) * Math.sqrt(x);
         };
 
-        double coarsePeriod = IntStream.range(1, maxMark / 2)
+        double coarsePeriod = IntStream.range(1, maxMark)
             .<Double>mapToObj(Double::valueOf)
             .max(Comparator.comparing(x -> scoreFunction.apply(x)))
             .get();

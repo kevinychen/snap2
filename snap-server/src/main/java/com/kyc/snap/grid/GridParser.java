@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Rectangle;
 import com.kyc.snap.google.GoogleAPIManager;
@@ -76,6 +77,8 @@ public class GridParser {
             .collect(Collectors.toList()));
 
         BiFunction<TreeSet<Integer>, Integer, TreeSet<Integer>> findSurroundingMarksFunction = (marks, limit) -> {
+            if (marks.size() < 2)
+                return new TreeSet<>(ImmutableList.of(0, limit));
             Preconditions.checkArgument(marks.size() >= 2,
                 "Expected at least two marks: %s", marks);
             List<Integer> sortedMarks = new ArrayList<>(marks);

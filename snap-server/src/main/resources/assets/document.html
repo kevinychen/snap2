@@ -128,10 +128,23 @@
 
     function setRectangle(rectangle) {
       session.rectangle = rectangle;
-      setGridLines({
-        horizontalLines: [],
-        verticalLines: [],
-      });
+      if (rectangle) {
+        setGridLines({
+          horizontalLines: [0, rectangle.height],
+          verticalLines: [0, rectangle.width],
+        }, {
+          rows: [{
+            startY: 0,
+            height: rectangle.height,
+          }],
+          cols: [{
+            startX: 0,
+            width: rectangle.width,
+          }],
+        });
+      } else {
+        setGridLines(undefined);
+      }
       if (rectangle) {
         $('.after-section').show();
       } else {
