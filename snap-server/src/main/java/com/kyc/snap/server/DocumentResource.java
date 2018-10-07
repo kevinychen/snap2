@@ -85,6 +85,8 @@ public class DocumentResource implements DocumentService {
             gridLines = gridParser.findImplicitGridLines(image);
         else
             throw new RuntimeException("Invalid find grid lines mode: " + request.getFindGridLinesMode());
+        if (request.isInterpolate())
+            gridLines = gridParser.getInterpolatedGridLines(gridLines);
         GridPosition gridPosition = gridParser.getGridPosition(gridLines);
         return new FindGridLinesResponse(gridLines, gridPosition);
     }

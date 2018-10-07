@@ -27,6 +27,7 @@
           <input id="operation-find-grid-lines" type="button" value="Find grid lines">
           <input name="find-grid-lines-mode" type="radio" value="EXPLICIT" checked>explicit
           <input name="find-grid-lines-mode" type="radio" value="IMPLICIT">implicit
+          <input id="operation-find-grid-lines-interpolate" type="checkbox">interpolate
           <br>
           <input id="operation-find-grid" type="button" value="Parse content">
           <input id="operation-find-grid-colors" type="checkbox" checked>colors
@@ -334,6 +335,7 @@
             rectangle: session.rectangle,
           },
           findGridLinesMode: $('input:radio[name="find-grid-lines-mode"]:checked').val(),
+          interpolate: $('#operation-find-grid-lines-interpolate').is(':checked'),
         } }, response => {
           setGridLines(response.gridLines, response.gridPosition);
           $('#loader').hide();

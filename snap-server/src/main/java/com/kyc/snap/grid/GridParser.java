@@ -3,7 +3,6 @@ package com.kyc.snap.grid;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -145,19 +144,20 @@ public class GridParser {
             Rectangle r = text.getBounds();
             int x = (int) (r.getX() + r.getWidth() / 2 - region.getX());
             int y = (int) (r.getY() + r.getHeight() / 2 - region.getY());
-            if (x <= 0 || x >= region.getWidth() || y <= 0 || y >= region.getHeight())
-                continue;
-            int textRow = Collections.binarySearch(pos.getRows().stream()
-                .map(row -> row.getStartY())
-                .collect(Collectors.toList()), y);
-            if (textRow < 0)
-                textRow = -textRow - 2;
-            int textCol = Collections.binarySearch(pos.getCols().stream()
-                .map(col -> col.getStartX())
-                .collect(Collectors.toList()), x);
-            if (textCol < 0)
-                textCol = -textCol - 2;
-            builders[textRow][textCol].append(text.getText());
+            int textRow = -1;
+            for (int i = 0; i < pos.getNumRows(); i++) {
+                Row row = pos.getRows().get(i);
+                if (y >= row.getStartY() && y < row.getStartY() + row.getHeight())
+                    textRow = i;
+            }
+            int textCol = -1;
+            for (int i = 0; i < pos.getNumCols(); i++) {
+                Col col = pos.getCols().get(i);
+                if (x >= col.getStartX() && x < col.getStartX() + col.getWidth())
+                    textCol = i;
+            }
+            if (textRow != -1 && textCol != -1)
+                builders[textRow][textCol].append(text.getText());
         }
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++)

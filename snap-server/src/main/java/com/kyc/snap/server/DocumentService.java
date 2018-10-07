@@ -58,6 +58,7 @@ public interface DocumentService {
 
         private final Section section;
         private FindGridLinesMode findGridLinesMode = FindGridLinesMode.EXPLICIT;
+        private boolean interpolate = false;
 
         public enum FindGridLinesMode {
 
