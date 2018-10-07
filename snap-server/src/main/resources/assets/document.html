@@ -60,6 +60,7 @@
       spreadsheetId: undefined,
       sheetId: undefined,
     };
+    eps = 10;
 
     function getImageAsDataURL(id, callback) {
       fetch(`/api/files/${id}`, { method: 'GET' })
@@ -84,6 +85,12 @@
           }
           return response.json().then(callback);
         })
+    }
+
+    function drawPoint(ctx, x, y) {
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, 2 * Math.PI, true);
+      ctx.fill();
     }
 
     function rgbToStyle(rgb) {
@@ -132,15 +139,6 @@
         setGridLines({
           horizontalLines: [0, rectangle.height],
           verticalLines: [0, rectangle.width],
-        }, {
-          rows: [{
-            startY: 0,
-            height: rectangle.height,
-          }],
-          cols: [{
-            startX: 0,
-            width: rectangle.width,
-          }],
         });
       } else {
         setGridLines(undefined);
@@ -152,9 +150,8 @@
       }
     }
 
-    function setGridLines(gridLines, gridPosition) {
+    function setGridLines(gridLines) {
       session.gridLines = gridLines;
-      session.gridPosition = gridPosition;
       setGrid(undefined);
       if (gridLines) {
         $('.after-grid-lines').show();
@@ -163,7 +160,8 @@
       }
     }
 
-    function setGrid(grid) {
+    function setGrid(gridPosition, grid) {
+      session.gridPosition = gridPosition;
       session.grid = grid;
       drawSectionCanvas();
     }
@@ -190,26 +188,29 @@
       }
 
       const image = $('#image')[0];
-      const widthRatio = canvas.width / image.naturalWidth;
-      const heightRatio = canvas.height / image.naturalHeight;
       const offsetX = session.rectangle.x;
       const offsetY = session.rectangle.y;
       ctx.font = '24px Helvetica';
       ctx.globalAlpha = 0.5;
       if (session.gridLines) {
         ctx.strokeStyle = 'red';
+        ctx.fillStyle = 'red';
         ctx.lineWidth = 2;
         for (var row of session.gridLines.horizontalLines) {
           ctx.beginPath();
-          ctx.moveTo(offsetX, offsetY + row * heightRatio);
-          ctx.lineTo(offsetX + session.rectangle.width, offsetY + row * heightRatio);
+          ctx.moveTo(offsetX, offsetY + row);
+          ctx.lineTo(offsetX + session.rectangle.width, offsetY + row);
           ctx.stroke();
+          drawPoint(ctx, offsetX, offsetY + row);
+          drawPoint(ctx, offsetX + session.rectangle.width, offsetY + row);
         }
         for (var col of session.gridLines.verticalLines) {
           ctx.beginPath();
-          ctx.moveTo(offsetX + col * widthRatio, offsetY);
-          ctx.lineTo(offsetX + col * widthRatio, offsetY + session.rectangle.height);
+          ctx.moveTo(offsetX + col, offsetY);
+          ctx.lineTo(offsetX + col, offsetY + session.rectangle.height);
           ctx.stroke();
+          drawPoint(ctx, offsetX + col, offsetY);
+          drawPoint(ctx, offsetX + col, offsetY + session.rectangle.height);
         }
       }
       if (session.grid) {
@@ -221,10 +222,10 @@
 
             ctx.beginPath();
             ctx.rect(
-              offsetX + widthRatio * (col.startX + col.width / 3),
-              offsetY + heightRatio * (row.startY + row.height / 3),
-              widthRatio * (col.width / 3),
-              heightRatio * (row.height / 3));
+              offsetX + col.startX + col.width / 3,
+              offsetY + row.startY + row.height / 3,
+              col.width / 3,
+              row.height / 3);
             ctx.fillStyle = rgbToStyle(square.rgb);
             ctx.fill();
             ctx.strokeStyle = 'red';
@@ -233,33 +234,33 @@
 
             ctx.strokeStyle = 'blue';
             ctx.strokeText(square.text,
-                offsetX + widthRatio * (col.startX + col.width / 3),
-                offsetY + heightRatio * (row.startY + 2 * row.height / 3));
+                offsetX + col.startX + col.width / 3,
+                offsetY + row.startY + 2 * row.height / 3);
 
             ctx.fillStyle = rgbToStyle(square.topBorder.rgb);
             ctx.fillRect(
-              offsetX + widthRatio * (col.startX + col.width / 3),
-              offsetY + heightRatio * (row.startY + row.height / 3 - 1),
-              widthRatio * (col.width / 3),
-              -heightRatio * (square.topBorder.width));
+              offsetX + col.startX + col.width / 3,
+              offsetY + row.startY + row.height / 3 - 1,
+              col.width / 3,
+              -square.topBorder.width);
             ctx.fillStyle = rgbToStyle(square.rightBorder.rgb);
             ctx.fillRect(
-              offsetX + widthRatio * (col.startX + col.width * 2 / 3 + 1),
-              offsetY + heightRatio * (row.startY + row.height / 3),
-              widthRatio * (square.rightBorder.width),
-              heightRatio * (row.height / 3));
+              offsetX + col.startX + col.width * 2 / 3 + 1,
+              offsetY + row.startY + row.height / 3,
+              square.rightBorder.width,
+              row.height / 3);
             ctx.fillStyle = rgbToStyle(square.bottomBorder.rgb);
             ctx.fillRect(
-              offsetX + widthRatio * (col.startX + col.width / 3),
-              offsetY + heightRatio * (row.startY + row.height * 2 / 3 + 1),
-              widthRatio * (col.width / 3),
-              heightRatio * (square.bottomBorder.width));
+              offsetX + col.startX + col.width / 3,
+              offsetY + row.startY + row.height * 2 / 3 + 1,
+              col.width / 3,
+              square.bottomBorder.width);
             ctx.fillStyle = rgbToStyle(square.leftBorder.rgb);
             ctx.fillRect(
-              offsetX + widthRatio * (col.startX + col.width / 3 - 1),
-              offsetY + heightRatio * (row.startY + row.height / 3),
-              -widthRatio * (square.leftBorder.width),
-              heightRatio * (row.height / 3));
+              offsetX + col.startX + col.width / 3 - 1,
+              offsetY + row.startY + row.height / 3,
+              -square.leftBorder.width,
+              row.height / 3);
           }
         }
       }
@@ -290,21 +291,83 @@
       (function() {
         const canvas = $('#listener-canvas')[0];
         const ctx = canvas.getContext('2d');
+        var mouseMode = undefined;
         var mousedownLoc = undefined;
-        var isMouseDown = false;
+        var mousedownLines = undefined;
         $('#listener-canvas')
           .mousedown(e => {
-            const x = canvas.width / canvas.scrollWidth * e.offsetX;
-            const y = canvas.height / canvas.scrollHeight * e.offsetY;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            mousedownLoc = { x: x, y: y };
-            isMouseDown = true;
-            setRectangle(undefined);
+            const xRatio = canvas.scrollWidth / canvas.width;
+            const yRatio = canvas.scrollHeight / canvas.height;
+            if (session.gridLines) {
+              const offsetX = session.rectangle.x;
+              const offsetY = session.rectangle.y;
+              const rectangleStartX = xRatio * offsetX;
+              const rectangleEndX = xRatio * (offsetX + session.rectangle.width);
+              const rectangleStartY = yRatio * offsetY;
+              const rectangleEndY = yRatio * (offsetY + session.rectangle.height);
+              if ((Math.abs(e.offsetX - rectangleStartX) < eps
+                || Math.abs(e.offsetX - rectangleEndX) < eps)
+                && e.offsetY > rectangleStartY + eps
+                && e.offsetY < rectangleEndY - eps) {
+                mousedownLines = session.gridLines.horizontalLines;
+                mouseMode = "editHorizontal";
+                var found = false;
+                for (var row of session.gridLines.horizontalLines) {
+                  if (Math.abs(e.offsetY - yRatio * (offsetY + row)) < eps) {
+                    mousedownLines.splice(mousedownLines.indexOf(row), 1);
+                    found = true;
+                  }
+                }
+                if (!found) {
+                  setGridLines({
+                    ...session.gridLines,
+                    horizontalLines: mousedownLines.concat(e.offsetY / yRatio - offsetY),
+                  });
+                }
+              } else if ((Math.abs(e.offsetY - rectangleStartY) < eps
+                || Math.abs(e.offsetY - rectangleEndY) < eps)
+                && e.offsetX > rectangleStartX + eps
+                && e.offsetX < rectangleEndX - eps) {
+                mousedownLines = session.gridLines.verticalLines;
+                mouseMode = "editVertical";
+                var found = false;
+                for (var col of session.gridLines.verticalLines) {
+                  if (Math.abs(e.offsetX - xRatio * (offsetX + col)) < eps) {
+                    mousedownLines.splice(mousedownLines.indexOf(col), 1);
+                    found = true;
+                  }
+                }
+                if (!found) {
+                  setGridLines({
+                    ...session.gridLines,
+                    verticalLines: mousedownLines.concat(e.offsetX / xRatio - offsetX),
+                  });
+                }
+              }
+            }
+            if (!mouseMode) {
+              mousedownLoc = { x: e.offsetX / xRatio, y: e.offsetY / yRatio };
+              mouseMode = "select";
+              setRectangle(undefined);
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
           })
           .mousemove(e => {
-            if (isMouseDown) {
-              const x = canvas.width / canvas.scrollWidth * e.offsetX;
-              const y = canvas.height / canvas.scrollHeight * e.offsetY;
+            const xRatio = canvas.scrollWidth / canvas.width;
+            const yRatio = canvas.scrollHeight / canvas.height;
+            if (mouseMode == "editHorizontal") {
+              setGridLines({
+                ...session.gridLines,
+                horizontalLines: mousedownLines.concat(e.offsetY / yRatio - session.rectangle.y),
+              });
+            } else if (mouseMode == "editVertical") {
+              setGridLines({
+                ...session.gridLines,
+                verticalLines: mousedownLines.concat(e.offsetX / xRatio - session.rectangle.x),
+              });
+            } else if (mouseMode == "select") {
+              const x = e.offsetX / xRatio;
+              const y = e.offsetY / yRatio;
               const rectangle = {
                 x: Math.min(x, mousedownLoc.x),
                 y: Math.min(y, mousedownLoc.y),
@@ -322,7 +385,8 @@
             }
           })
           .mouseup(e => {
-            isMouseDown = false;
+            mouseMode = undefined;
+            drawSectionCanvas();
           });
       })();
 
@@ -349,8 +413,8 @@
           },
           findGridLinesMode: $('input:radio[name="find-grid-lines-mode"]:checked').val(),
           interpolate: $('#operation-find-grid-lines-interpolate').is(':checked'),
-        } }, response => {
-          setGridLines(response.gridLines, response.gridPosition);
+        } }, gridLines => {
+          setGridLines(gridLines);
           $('#loader').hide();
         });
       });
@@ -362,12 +426,12 @@
             page: session.page,
             rectangle: session.rectangle,
           },
-          gridPosition: session.gridPosition,
+          gridLines: session.gridLines,
           findColors: $('#operation-find-grid-colors').is(':checked'),
           findBorders: $('#operation-find-grid-borders').is(':checked'),
           findTextMode: $('input:radio[name="find-text-mode"]:checked').val(),
-        } }, grid => {
-          setGrid(grid);
+        } }, response => {
+          setGrid(response.gridPosition, response.grid);
           $('#loader').hide();
         });
       });

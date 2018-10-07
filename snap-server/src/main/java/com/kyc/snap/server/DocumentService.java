@@ -51,7 +51,7 @@ public interface DocumentService {
     @Path("/{documentId}/lines")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    FindGridLinesResponse findGridLines(@PathParam("documentId") String documentId, FindGridLinesRequest request);
+    GridLines findGridLines(@PathParam("documentId") String documentId, FindGridLinesRequest request);
 
     @Data
     public static class FindGridLinesRequest {
@@ -67,24 +67,17 @@ public interface DocumentService {
         }
     }
 
-    @Data
-    public static class FindGridLinesResponse {
-
-        private final GridLines gridLines;
-        private final GridPosition gridPosition;
-    }
-
     @POST
     @Path("/{documentId}/grid")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Grid findGrid(@PathParam("documentId") String documentId, FindGridRequest request);
+    FindGridResponse findGrid(@PathParam("documentId") String documentId, FindGridRequest request);
 
     @Data
     public static class FindGridRequest {
 
         private final Section section;
-        private final GridPosition gridPosition;
+        private final GridLines gridLines;
         private boolean findColors = false;
         private boolean findBorders = false;
         private FindTextMode findTextMode = FindTextMode.NONE;
@@ -95,6 +88,13 @@ public interface DocumentService {
             USE_NATIVE,
             USE_OCR,
         }
+    }
+
+    @Data
+    public static class FindGridResponse {
+
+        private final GridPosition gridPosition;
+        private final Grid grid;
     }
 
     @POST

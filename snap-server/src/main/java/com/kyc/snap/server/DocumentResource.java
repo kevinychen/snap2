@@ -76,7 +76,7 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public FindGridLinesResponse findGridLines(String documentId, FindGridLinesRequest request) {
+    public GridLines findGridLines(String documentId, FindGridLinesRequest request) {
         BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
         GridLines gridLines;
         if (request.getFindGridLinesMode() == FindGridLinesMode.EXPLICIT)
@@ -87,13 +87,13 @@ public class DocumentResource implements DocumentService {
             throw new RuntimeException("Invalid find grid lines mode: " + request.getFindGridLinesMode());
         if (request.isInterpolate())
             gridLines = gridParser.getInterpolatedGridLines(gridLines);
-        GridPosition gridPosition = gridParser.getGridPosition(gridLines);
-        return new FindGridLinesResponse(gridLines, gridPosition);
+        return gridLines;
     }
 
     @Override
-    public Grid findGrid(String documentId, FindGridRequest request) {
-        GridPosition gridPosition = request.getGridPosition();
+    public FindGridResponse findGrid(String documentId, FindGridRequest request) {
+        GridLines gridLines = request.getGridLines();
+        GridPosition gridPosition = gridParser.getGridPosition(gridLines);
         Grid grid = Grid.create(gridPosition.getNumRows(), gridPosition.getNumCols());
         SectionImage image = getSectionImage(documentId, request.getSection());
         if (request.isFindColors())
@@ -106,7 +106,7 @@ public class DocumentResource implements DocumentService {
             gridParser.findGridBorders(image.getImage(), gridPosition, grid);
             gridParser.findGridBorderStyles(grid);
         }
-        return grid;
+        return new FindGridResponse(gridPosition, grid);
     }
 
     @Override
