@@ -14,7 +14,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.kyc.snap.document.Document;
-import com.kyc.snap.document.Rectangle;
+import com.kyc.snap.document.Section;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
@@ -51,13 +51,19 @@ public interface DocumentService {
     @Path("/{documentId}/lines")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    FindGridLinesResponse findGridLines(@PathParam("documentId") String documentId, Section section);
+    FindGridLinesResponse findGridLines(@PathParam("documentId") String documentId, FindGridLinesRequest request);
 
     @Data
-    public static class Section {
+    public static class FindGridLinesRequest {
 
-        private final int page;
-        private final Rectangle rectangle;
+        private final Section section;
+        private FindGridLinesMode findGridLinesMode = FindGridLinesMode.EXPLICIT;
+
+        public enum FindGridLinesMode {
+
+            EXPLICIT,
+            IMPLICIT,
+        }
     }
 
     @Data

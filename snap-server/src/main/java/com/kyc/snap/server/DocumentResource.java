@@ -16,6 +16,7 @@ import com.kyc.snap.document.Document.DocumentPage;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Pdf;
 import com.kyc.snap.document.Rectangle;
+import com.kyc.snap.document.Section;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.SheetData;
@@ -26,6 +27,7 @@ import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageUtils;
+import com.kyc.snap.server.DocumentService.FindGridLinesRequest.FindGridLinesMode;
 import com.kyc.snap.server.DocumentService.FindGridRequest.FindTextMode;
 import com.kyc.snap.store.Store;
 
@@ -74,9 +76,15 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public FindGridLinesResponse findGridLines(String documentId, Section section) {
-        BufferedImage image = getSectionImage(documentId, section).getImage();
-        GridLines gridLines = gridParser.findGridLines(image, 64);
+    public FindGridLinesResponse findGridLines(String documentId, FindGridLinesRequest request) {
+        BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
+        GridLines gridLines;
+        if (request.getFindGridLinesMode() == FindGridLinesMode.EXPLICIT)
+            gridLines = gridParser.findGridLines(image, 64);
+        else if (request.getFindGridLinesMode() == FindGridLinesMode.IMPLICIT)
+            gridLines = gridParser.findImplicitGridLines(image);
+        else
+            throw new RuntimeException("Invalid find grid lines mode: " + request.getFindGridLinesMode());
         GridPosition gridPosition = gridParser.getGridPosition(gridLines);
         return new FindGridLinesResponse(gridLines, gridPosition);
     }

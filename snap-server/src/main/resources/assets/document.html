@@ -23,17 +23,19 @@
       <div id="options">
         <input id="export" class="initial-hide after-section" type="button" value="Copy to Google Sheet"><br>
         <br>
-        <input id="operation-find-grid-lines" class="initial-hide after-section" type="button" value="Parse grid lines">
-        <br>
-        <span class="initial-hide after-grid-lines">
-          <input id="operation-find-grid" type="button" value="Parse grid">
+        <span class="initial-hide after-section">
+          <input id="operation-find-grid-lines" type="button" value="Find grid lines">
+          <input name="find-grid-lines-mode" type="radio" value="EXPLICIT" checked>explicit
+          <input name="find-grid-lines-mode" type="radio" value="IMPLICIT">implicit
+          <br>
+          <input id="operation-find-grid" type="button" value="Parse content">
           <input id="operation-find-grid-colors" type="checkbox" checked>colors
           <input id="operation-find-grid-borders" type="checkbox">borders
-          <input name="find-text-type" type="radio" value="NONE" checked>no text
-          <input name="find-text-type" type="radio" value="USE_NATIVE">find stored text
-          <input name="find-text-type" type="radio" value="USE_OCR">infer text with OCR
+          <input name="find-text-mode" type="radio" value="NONE" checked>no text
+          <input name="find-text-mode" type="radio" value="USE_NATIVE">find stored text
+          <input name="find-text-mode" type="radio" value="USE_OCR">infer text with OCR
+          <br>
         </span>
-        <br>
         <br>
         <div id="loader" class="initial-hide loader"></div>
       </div>
@@ -125,7 +127,10 @@
 
     function setRectangle(rectangle) {
       session.rectangle = rectangle;
-      setGridLines(undefined);
+      setGridLines({
+        horizontalLines: [],
+        verticalLines: [],
+      });
       if (rectangle) {
         $('.after-section').show();
       } else {
@@ -146,9 +151,7 @@
 
     function setGrid(grid) {
       session.grid = grid;
-      if (session.rectangle) {
-        drawSectionCanvas();
-      }
+      drawSectionCanvas();
     }
 
     function setSheet(spreadsheetId, sheetId) {
@@ -165,14 +168,18 @@
     }
 
     function drawSectionCanvas() {
-      const image = $('#image')[0];
       const canvas = $('#section-canvas')[0];
       const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!session.rectangle) {
+        return;
+      }
+
+      const image = $('#image')[0];
       const widthRatio = canvas.width / image.naturalWidth;
       const heightRatio = canvas.height / image.naturalHeight;
       const offsetX = session.rectangle.x;
       const offsetY = session.rectangle.y;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.font = '24px Helvetica';
       ctx.globalAlpha = 0.5;
       if (session.gridLines) {
@@ -322,8 +329,11 @@
       $('#operation-find-grid-lines').on('click', e => {
         $('#loader').show();
         postJson({ path: `/documents/${session.document.id}/lines`, body: {
-          page: session.page,
-          rectangle: session.rectangle,
+          section: {
+            page: session.page,
+            rectangle: session.rectangle,
+          },
+          findGridLinesMode: $('input:radio[name="find-grid-lines-mode"]:checked').val(),
         } }, response => {
           setGridLines(response.gridLines, response.gridPosition);
           $('#loader').hide();
@@ -340,7 +350,7 @@
           gridPosition: session.gridPosition,
           findColors: $('#operation-find-grid-colors').is(':checked'),
           findBorders: $('#operation-find-grid-borders').is(':checked'),
-          findTextMode: $('input:radio[name="find-text-type"]:checked').val(),
+          findTextMode: $('input:radio[name="find-text-mode"]:checked').val(),
         } }, grid => {
           setGrid(grid);
           $('#loader').hide();
