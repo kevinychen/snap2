@@ -42,7 +42,7 @@
       </div>
       <div id="sheet">
         Sheet URL: <input id="sheet-url" size=80>
-        <input id="sheet-new" class="initial-hide" type="button" value="Create new sheet"><br>
+        <input id="sheet-new" type="button" value="Create new sheet"><br>
         <iframe id="sheet-frame" src=""></iframe>
       </div>
     </div>
@@ -113,6 +113,7 @@
 
     function setPage(page) {
       session.page = page;
+      setRectangle(undefined);
       const pages = session.document.pages;
       if (page >= 0 && page < pages.length) {
         $('#document-page-left').prop('disabled', page == 0);
@@ -444,6 +445,12 @@
         } else {
           setSheet(undefined);
         }
+      });
+
+      $('#sheet-new').on('click', e => {
+        post({ path: '/documents/sheets' }, response => {
+          setSheet(response.spreadsheetId, response.sheetId);
+        });
       });
 
       setSheet('1k9O-5t-gIpcvwWna4NVfD2BqjjeBQLAED35tLm_L_Vk', 1538405940);

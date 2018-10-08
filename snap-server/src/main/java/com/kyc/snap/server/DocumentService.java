@@ -34,12 +34,24 @@ public interface DocumentService {
     @Path("/url")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Document createDocumentFromUrl(CreateDocumentFromUrlRequest url) throws IOException;
+    Document createDocumentFromUrl(CreateDocumentFromUrlRequest request) throws IOException;
 
     @Data
     public static class CreateDocumentFromUrlRequest {
 
         private final String url;
+    }
+
+    @POST
+    @Path("/sheets")
+    @Produces(MediaType.APPLICATION_JSON)
+    CreateSheetResponse createSheet();
+
+    @Data
+    public static class CreateSheetResponse {
+
+        private final String spreadsheetId;
+        private final int sheetId;
     }
 
     @POST

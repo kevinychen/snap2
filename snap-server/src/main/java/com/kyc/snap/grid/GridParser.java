@@ -79,8 +79,6 @@ public class GridParser {
         BiFunction<TreeSet<Integer>, Integer, TreeSet<Integer>> findSurroundingMarksFunction = (marks, limit) -> {
             if (marks.size() < 2)
                 return new TreeSet<>(ImmutableList.of(0, limit));
-            Preconditions.checkArgument(marks.size() >= 2,
-                "Expected at least two marks: %s", marks);
             List<Integer> sortedMarks = new ArrayList<>(marks);
             TreeSet<Integer> surroundingMarks = new TreeSet<>();
             surroundingMarks.add(Math.max(0, sortedMarks.get(0) - (sortedMarks.get(1) - sortedMarks.get(0)) / 2));

@@ -40,6 +40,7 @@ import okhttp3.Response;
 public class DocumentResource implements DocumentService {
 
     public static String MARKER = "🍊";
+    public static String DEFAULT_FOLDER_ID = "1kmRcpAj_O3UYZgnlkclVBHPseB2Swkd-";
 
     private final Store store;
     private final GoogleAPIManager googleApi;
@@ -67,6 +68,12 @@ public class DocumentResource implements DocumentService {
             .newCall(new Request.Builder().url(request.getUrl()).get().build())
             .execute();
         return createDocumentFromPdf(response.body().byteStream());
+    }
+
+    @Override
+    public CreateSheetResponse createSheet() {
+        SpreadsheetManager spreadsheets = googleApi.createSheet(DEFAULT_FOLDER_ID);
+        return new CreateSheetResponse(spreadsheets.getSpreadsheetId(), spreadsheets.getSheetId());
     }
 
     @Override
