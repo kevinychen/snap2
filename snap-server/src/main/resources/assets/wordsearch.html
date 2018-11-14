@@ -8,8 +8,6 @@
         <textarea id="wordsearch-textarea"></textarea>
         <br>
         <input id="solve-wordsearch" type="button" value="Solve Wordsearch"><br>
-        <input name="direction-mode" type="radio" value="straight" checked>Straight
-        <input name="direction-mode" type="radio" value="boggle">Boggle
         <div id="loader" class="initial-hide loader"></div>
       </div>
       <div id="view-mode" class="initial-hide">
@@ -20,6 +18,9 @@
       </div>
     </div>
     <div class="half">
+      <input name="direction-mode" type="radio" value="straight" checked>Straight
+      <input name="direction-mode" type="radio" value="boggle">Boggle
+      <br>
       <div id="results-list">
       </div>
     </div>
@@ -37,8 +38,7 @@
           .map(word => word.replace(/\s/g, ''));
     }
 
-    function setResults(results) {
-      session.results = results;
+    function setResults() {
       const grid = getGrid();
 
       $('#results-grid').empty();
@@ -57,6 +57,7 @@
       }
 
       $('#results-list').empty();
+      var results = session.results;
       if ($('input:radio[name="direction-mode"]:checked').val() === 'straight') {
         results = results.filter(result => {
           const steps = new Set();
@@ -100,7 +101,8 @@
       $('#solve-wordsearch').click(e => {
         $('.loader').show();
         postJson({ path: '/words/search', body: { grid: getGrid() } }, response => {
-          setResults(response.results);
+          session.results = response.results;
+          setResults();
           $('#edit-mode').hide();
           $('#view-mode').show();
           $('.loader').hide();
@@ -108,7 +110,7 @@
       });
 
       $('input[type=radio][name="direction-mode"]').change(() => {
-        setResults(session.results);
+        setResults();
       });
     });
   </script>
