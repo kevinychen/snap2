@@ -26,29 +26,11 @@
   </body>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="common.js"></script>
   <script>
     session = {
       results: [],
     };
-
-    function post(args, callback) {
-      fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
-        .then(response => {
-          if (!response.ok) {
-            alert('Error: ' + response.statusText);
-            return;
-          }
-          return response.json().then(callback);
-        })
-    }
-
-    function postJson(args, callback) {
-      post({
-        path: args.path,
-        body: JSON.stringify(args.body),
-        headers: { 'Content-type': 'application/json' },
-      }, callback);
-    }
 
     function getGrid() {
       return $('#wordsearch-textarea').val().trim().toUpperCase().split('\n')
@@ -131,43 +113,8 @@
     });
   </script>
 
+  <link rel="stylesheet" href="style.css">
   <style>
-    .half {
-      height: 100%;
-      width: 48%;
-      float: left;
-      margin: 1%;
-    }
-
-    .initial-hide {
-      display: none;
-    }
-
-    .linker {
-      color: #000;
-      background-color: #f1f1f1;
-      font-size: 18px;
-      border-radius: 10%;
-    }
-
-    .linker:hover:enabled {
-      background-color: #cccccc;
-    }
-
-    .loader {
-      border: 3px solid #f3f3f3;
-      animation: spin 1s linear infinite;
-      border-top: 3px solid #555;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
     #wordsearch-textarea {
       width: 80%;
       height: 80%;

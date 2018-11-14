@@ -49,6 +49,7 @@
   </body>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="common.js"></script>
   <script>
     session = {
       document: undefined,
@@ -76,17 +77,6 @@
         });
     }
 
-    function post(args, callback) {
-      fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
-        .then(response => {
-          if (!response.ok) {
-            alert('Error: ' + response.statusText);
-            return;
-          }
-          return response.json().then(callback);
-        })
-    }
-
     function drawPoint(ctx, x, y) {
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI, true);
@@ -95,14 +85,6 @@
 
     function rgbToStyle(rgb) {
       return 'rgb(' + ((rgb >> 16) & 0xff) + ',' + ((rgb >> 8) & 0xff) + ',' + ((rgb >> 0) & 0xff) + ')';
-    }
-
-    function postJson(args, callback) {
-      post({
-        path: args.path,
-        body: JSON.stringify(args.body),
-        headers: { 'Content-type': 'application/json' },
-      }, callback);
     }
 
     function setDocument(document) {
@@ -457,17 +439,8 @@
     });
   </script>
 
+  <link rel="stylesheet" href="style.css">
   <style>
-    #image-container {
-      position: relative;
-    }
-
-    #image {
-      max-height: 100%;
-      max-width: 100%;
-      border: 1px black solid;
-    }
-
     #options {
       height: 25%;
     }
@@ -477,50 +450,6 @@
       width: 250%;
       -webkit-transform: scale(0.4);
       -webkit-transform-origin: 0 0;
-    }
-
-    .half {
-      height: 100%;
-      width: 48%;
-      float: left;
-      margin: 1%;
-    }
-
-    .initial-hide {
-      display: none;
-    }
-
-    .nav {
-      color: #000;
-      background-color: #f1f1f1;
-      font-size: 18px;
-      border-radius: 50%;
-    }
-
-    .nav:hover:enabled {
-      background-color: #cccccc;
-    }
-
-    .overlay-canvas {
-      position: absolute;
-      top: 0px;
-      left: 0px;
-      width: 100%;
-      height: 100%;
-    }
-
-    .loader {
-      border: 3px solid #f3f3f3;
-      animation: spin 1s linear infinite;
-      border-top: 3px solid #555;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
   </style>
 </html>

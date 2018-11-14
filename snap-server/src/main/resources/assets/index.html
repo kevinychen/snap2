@@ -66,6 +66,7 @@
   </body>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="common.js"></script>
   <script>
     session = {
       sessionId: undefined,
@@ -76,18 +77,6 @@
       clues: undefined,
       spreadsheetUrl: undefined,
       mousedownLoc: undefined,
-    }
-
-    function post(args, callback) {
-      fetch('/api' + args.path, { method: 'POST', body: args.body })
-        .then(response => {
-          if (!response.ok) {
-            alert('Error: ' + response.statusText);
-            return;
-          }
-          return response.json();
-        })
-        .then(callback);
     }
 
     function sessionPost(args, callback) {
@@ -324,28 +313,12 @@
     });
   </script>
 
+  <link rel="stylesheet" href="style.css">
   <style>
     .section-div {
       float: left;
       margin: 20px;
       width: calc(33% - 60px);
-    }
-
-    #image-container {
-      position: relative;
-    }
-
-    #image {
-      max-height: 100%;
-      max-width: 100%;
-    }
-
-    .overlay-canvas {
-      position: absolute;
-      top: 0px;
-      left: 0px;
-      width: 100%;
-      height: 100%;
     }
 
     [type=button] {
@@ -354,10 +327,6 @@
 
     .group {
       margin-bottom: 10px;
-    }
-
-    .hide {
-      display: none;
     }
 
     #crossword-clues-textarea {
