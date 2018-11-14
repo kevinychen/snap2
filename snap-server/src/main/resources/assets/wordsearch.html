@@ -1,0 +1,186 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <div class="half">
+      <div id="edit-mode">
+        <div>Enter wordsearch grid:</div>
+        <textarea id="wordsearch-textarea"></textarea>
+        <br>
+        <input id="solve-wordsearch" type="button" value="Solve Wordsearch"><br>
+        <input name="direction-mode" type="radio" value="straight" checked>Straight
+        <input name="direction-mode" type="radio" value="boggle">Boggle
+        <div id="loader" class="initial-hide loader"></div>
+      </div>
+      <div id="view-mode" class="initial-hide">
+        <input id="back-to-edit-mode" class="linker" type="button" value="&lt; Edit grid">
+        <br>
+        <table id="results-grid">
+        </table>
+      </div>
+    </div>
+    <div class="half">
+      <div id="results-list">
+      </div>
+    </div>
+  </body>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script>
+    session = {
+      results: [],
+    };
+
+    function post(args, callback) {
+      fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
+        .then(response => {
+          if (!response.ok) {
+            alert('Error: ' + response.statusText);
+            return;
+          }
+          return response.json().then(callback);
+        })
+    }
+
+    function postJson(args, callback) {
+      post({
+        path: args.path,
+        body: JSON.stringify(args.body),
+        headers: { 'Content-type': 'application/json' },
+      }, callback);
+    }
+
+    function getGrid() {
+      return $('#wordsearch-textarea').val().trim().toUpperCase().split('\n')
+          .map(word => word.replace(/\s/g, ''));
+    }
+
+    function setResults(results) {
+      session.results = results;
+      const grid = getGrid();
+
+      $('#results-grid').empty();
+      const table = [];
+      for (var i = 0; i < grid.length; i++) {
+        const row = [];
+        const rowHtml = document.createElement('tr');
+        for (var j = 0; j < grid[i].length; j++) {
+          const colHtml = document.createElement('td');
+          colHtml.innerText = grid[i][j];
+          row.push(colHtml);
+          rowHtml.append(colHtml);
+        }
+        table.push(row);
+        $('#results-grid').append(rowHtml);
+      }
+
+      $('#results-list').empty();
+      if ($('input:radio[name="direction-mode"]:checked').val() === 'straight') {
+        results = results.filter(result => {
+          const steps = new Set();
+          for (var i = 0; i < result.positions.length - 1; i++) {
+            steps.add({
+              x: result.positions[i + 1].x - result.positions[i].x,
+              y: result.positions[i + 1].y - result.positions[i].y,
+            });
+          }
+          return steps.size === 1;
+        });
+      }
+      results.sort(function(result1, result2) {
+        return result2.word.length - result1.word.length;
+      });
+      for (const result of results) {
+        const resultHtml = document.createElement('input');
+        resultHtml.value = result.word;
+        resultHtml.readOnly = true;
+        resultHtml.className = 'linker';
+        resultHtml.onmouseenter = function() {
+          for (const position of result.positions) {
+            table[position.y][position.x].style.background = '#cccccc';
+          }
+        }
+        resultHtml.onmouseleave = function() {
+          for (const position of result.positions) {
+            table[position.y][position.x].style.background = '';
+          }
+        }
+        $('#results-list').append(resultHtml);
+      }
+    }
+
+    $(document).ready(function() {
+      $('#back-to-edit-mode').click(e => {
+        $('#edit-mode').show();
+        $('#view-mode').hide();
+      });
+
+      $('#solve-wordsearch').click(e => {
+        $('.loader').show();
+        postJson({ path: '/words/search', body: { grid: getGrid() } }, response => {
+          setResults(response.results);
+          $('#edit-mode').hide();
+          $('#view-mode').show();
+          $('.loader').hide();
+        });
+      });
+
+      $('input[type=radio][name="direction-mode"]').change(() => {
+        setResults(session.results);
+      });
+    });
+  </script>
+
+  <style>
+    .half {
+      height: 100%;
+      width: 48%;
+      float: left;
+      margin: 1%;
+    }
+
+    .initial-hide {
+      display: none;
+    }
+
+    .linker {
+      color: #000;
+      background-color: #f1f1f1;
+      font-size: 18px;
+      border-radius: 10%;
+    }
+
+    .linker:hover:enabled {
+      background-color: #cccccc;
+    }
+
+    .loader {
+      border: 3px solid #f3f3f3;
+      animation: spin 1s linear infinite;
+      border-top: 3px solid #555;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #wordsearch-textarea {
+      width: 80%;
+      height: 80%;
+    }
+
+    #results-grid {
+      border: 1px black solid;
+      margin: 10px;
+    }
+
+    #results-list {
+      max-height: 90%;
+      overflow: auto;
+    }
+  </style>
+</html>

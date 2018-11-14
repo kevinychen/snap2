@@ -1,6 +1,7 @@
 package com.kyc.snap.server;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -9,6 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
+import com.kyc.snap.words.WordsearchSolver;
 
 import lombok.Data;
 
@@ -79,5 +81,28 @@ public interface WordsService {
     public static class FetchCrosswordClueSuggestionsResponse {
 
         private final List<ClueSuggestion> suggestions;
+    }
+
+    @POST
+    @Path("words/search")
+    SolveWordsearchResponse solveWordsearch(SolveWordsearchRequest request);
+
+    public static class SolveWordsearchRequest {
+
+        private List<String> grid;
+
+        public List<String> getGrid() {
+            return grid;
+        }
+
+        public void setGrid(List<String> grid) {
+            this.grid = grid;
+        }
+    }
+
+    @Data
+    public static class SolveWordsearchResponse {
+
+        private final Set<WordsearchSolver.Result> results;
     }
 }

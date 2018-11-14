@@ -22,6 +22,10 @@ public class DictionaryManager {
         }
     }
 
+    public Map<String, Long> getWordFrequencies() {
+        return wordFrequencies;
+    }
+
     public Map<String, Long> getFrequenciesForWordsWithPrefix(String prefix) {
         return wordFrequencies.subMap(prefix, prefix + Character.MAX_VALUE);
     }
