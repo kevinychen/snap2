@@ -15,7 +15,7 @@ public class WordsearchSolver {
 
     public Set<Result> find(List<String> grid) {
         Set<Result> results = new HashSet<>();
-        for (String word : dictionary.getWordFrequencies().keySet())
+        for (String word : dictionary.getWords())
             for (int i = 0; i < grid.size(); i++)
                 for (int j = 0; j < grid.get(i).length(); j++)
                     if (grid.get(i).charAt(j) == word.charAt(0))

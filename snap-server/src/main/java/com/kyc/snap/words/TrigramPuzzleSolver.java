@@ -75,10 +75,9 @@ public class TrigramPuzzleSolver {
             counts = nextLetterCountsForPrefixCache.get(key);
         else {
             counts = new double[NUM_LETTERS];
-            dictionary.getFrequenciesForWordsWithPrefix(prefix).forEach((word, frequency) -> {
-                if (word.length() == wordTemplate.length)
-                    // taking the square root gives a more accurate estimation of relative probabilities
-                    counts[word.charAt(prefix.length()) - 'A'] += Math.sqrt(frequency);
+            dictionary.getWordFrequencies(wordTemplate.length, prefix).forEach((word, frequency) -> {
+                // taking the square root gives a more accurate estimation of relative probabilities
+                counts[word.charAt(prefix.length()) - 'A'] += Math.sqrt(frequency);
             });
             if (prefix.length() <= 2)
                 nextLetterCountsForPrefixCache.put(key, counts);
