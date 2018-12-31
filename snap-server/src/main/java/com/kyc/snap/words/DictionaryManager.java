@@ -2,32 +2,31 @@ package com.kyc.snap.words;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeMap;
 
 public class DictionaryManager {
 
     public static final String WORD_FREQUENCIES_FILE = "./data/count_1w.txt";
 
-    private List<String> words;
+    private TreeMap<String, Long> wordFrequencies;
     /**
      * { wordLength: { word: frequency } }
      */
-    private Map<Integer, TreeMap<String, Long>> wordFrequencies;
+    private Map<Integer, TreeMap<String, Long>> wordFrequenciesByLen;
 
     public DictionaryManager() {
-        words = new ArrayList<>();
-        wordFrequencies = new HashMap<>();
+        wordFrequencies = new TreeMap<>();
+        wordFrequenciesByLen = new HashMap<>();
         try (Scanner scanner = new Scanner(new File(WORD_FREQUENCIES_FILE))) {
             while (scanner.hasNext()) {
                 String word = scanner.next().toUpperCase();
                 long freq = scanner.nextLong();
-                words.add(word);
-                wordFrequencies.computeIfAbsent(word.length(), len -> new TreeMap<>())
+                wordFrequencies.put(word, freq);
+                wordFrequenciesByLen.computeIfAbsent(word.length(), len -> new TreeMap<>())
                     .put(word, freq);
             }
         } catch (IOException e) {
@@ -35,12 +34,16 @@ public class DictionaryManager {
         }
     }
 
-    public List<String> getWords() {
-        return words;
+    public Set<String> getWords() {
+        return wordFrequencies.keySet();
+    }
+
+    public Map<String, Long> getWordFrequencies(String prefix) {
+        return wordFrequencies.subMap(prefix, prefix + Character.MAX_VALUE);
     }
 
     public Map<String, Long> getWordFrequencies(int wordLen, String prefix) {
-        return wordFrequencies.getOrDefault(wordLen, new TreeMap<>())
+        return wordFrequenciesByLen.getOrDefault(wordLen, new TreeMap<>())
             .subMap(prefix, prefix + Character.MAX_VALUE);
     }
 }
