@@ -21,6 +21,57 @@ public class CromulenceSolver {
     private final DictionaryManager dictionary;
     private final Map<String, double[]> nextLetterProbabilitiesCache = new HashMap<>();
 
+    public Result solveSlug(String slug) {
+        return solve(new Input<Integer>(slug.length()) {
+
+            @Override
+            public Integer initialState() {
+                return 0;
+            }
+
+            @Override
+            public List<EmissionAndNewState<Integer>> getNextEmissions(Integer state) {
+                return ImmutableList.of(new EmissionAndNewState<>(Emission.of(slug.charAt(state)), state + 1));
+            }
+        });
+    }
+
+    public Result solveRearrangement(List<String> parts) {
+        return solve(new Input<SolveRearrangementState>(parts.stream().mapToInt(String::length).sum()) {
+
+            @Override
+            public SolveRearrangementState initialState() {
+                return new SolveRearrangementState(0, -1, 0);
+            }
+
+            @Override
+            public List<EmissionAndNewState<SolveRearrangementState>> getNextEmissions(SolveRearrangementState state) {
+                List<EmissionAndNewState<SolveRearrangementState>> nextEmissions = new ArrayList<>();
+                for (int i = 0; i < parts.size(); i++) {
+                    if (state.currentPart != -1 && i != state.currentPart)
+                        continue;
+                    if ((state.usedBitset & (1 << i)) == 0) {
+                        SolveRearrangementState newState = state.currentIndex == parts.get(i).length() - 1
+                                ? new SolveRearrangementState(state.usedBitset | (1 << i), -1, 0)
+                                : new SolveRearrangementState(state.usedBitset, i, state.currentIndex + 1);
+                        nextEmissions.add(new EmissionAndNewState<>(
+                                Emission.of(parts.get(i).charAt(state.currentIndex)),
+                                newState));
+                    }
+                }
+                return nextEmissions;
+            }
+        });
+    }
+
+    @Data
+    public static class SolveRearrangementState {
+
+        private final int usedBitset;
+        private final int currentPart;
+        private final int currentIndex;
+    }
+
     public <State> Result solve(Input<State> input) {
         List<Candidate<State>> candidates = ImmutableList.of(Candidate.<State> builder()
             .words(ImmutableList.of())
@@ -107,7 +158,13 @@ public class CromulenceSolver {
 
         public static Emission of(char c) {
             double[] probs = new double[2 * NUM_LETTERS];
-            probs[c - 'A'] = probs[c - 'A' + NUM_LETTERS] = 1.0;
+            if (c == '*') {
+                for (int i = 0; i < NUM_LETTERS; i++)
+                    probs[i] = probs[i + NUM_LETTERS] = 1.0 / NUM_LETTERS;
+            } else {
+                c = Character.toUpperCase(c);
+                probs[c - 'A'] = probs[c - 'A' + NUM_LETTERS] = 1.0;
+            }
             return new Emission(probs);
         }
     }
