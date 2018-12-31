@@ -32,6 +32,25 @@ public class CromulenceSolverTest {
         assertThat(result.getWords()).containsExactlyInAnyOrder("ADD", "TWO", "TO", "BDAY", "YEAR");
     }
 
+    @Test
+    public void testSolveRearrangementWithLengths() {
+        CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of(
+            "CHA", "DEB", "ERO", "GRA", "HES", "ITY", "LFO", "MPI", "ONC", "REV", "TIT", "TOF", "TOT", "UDE", "WEA", "WIL", "E"),
+            ImmutableList.of(8, 4, 4, 7, 3, 1, 4, 2, 9, 2, 5));
+        assertThat(result.getWords()).containsExactly("CHAMPION", "CITY", "WILL", "FOREVER", "OWE", "A", "DEBT", "OF", "GRATITUDE", "TO",
+            "THESE");
+    }
+
+    @Test
+    public void testSolveRearrangementWithLengths2() {
+        CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of(
+            "ACE", "BLE", "CAL", "CHA", "DAY", "DWI", "EBI", "ERY", "GRA", "HEV", "HIS", "LLE", "LST", "NGE", "REF", "STH", "THT", "TOF",
+            "VES", "WEA"),
+            ImmutableList.of(2, 3, 5, 4, 3, 4, 7, 2, 10, 3, 5, 5, 4, 3));
+        assertThat(result.getWords()).containsExactly("WE", "ARE", "FACED", "WITH", "THE", "VERY", "GRAVEST", "OF", "CHALLENGES", "THE",
+            "BIBLE", "CALLS", "THIS", "DAY");
+    }
+
     @Data
     public static class TestState {
 

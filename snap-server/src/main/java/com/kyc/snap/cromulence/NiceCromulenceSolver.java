@@ -1,6 +1,7 @@
 
 package com.kyc.snap.cromulence;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,18 @@ public class NiceCromulenceSolver {
         return solver.solveRearrangement(parts.stream()
             .map(str -> toEmissions(str))
             .collect(Collectors.toList()));
+    }
+
+    public CromulenceSolverResult solveRearrangement(List<String> parts, List<Integer> wordLens) {
+        List<Double> endOfWordProbs = new ArrayList<>();
+        for (int wordLen : wordLens) {
+            for (int i = 0; i < wordLen - 1; i++)
+                endOfWordProbs.add(0.0);
+            endOfWordProbs.add(1.0);
+        }
+        return solver.solveRearrangement(parts.stream()
+            .map(str -> toEmissions(str))
+            .collect(Collectors.toList()), endOfWordProbs);
     }
 
     private static List<Emission> toEmissions(String str) {
