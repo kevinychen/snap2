@@ -16,13 +16,13 @@ public class CromulenceSolverTest {
 
     @Test
     public void testSolveSlug() {
-        Result result = cromulence.solveSlug("icanfindthespacesinthisslug");
+        Result result = cromulence.solveSlug("ICANFINDTHESPACESINTHISSLUG");
         assertThat(result.getWords()).containsExactly("I", "CAN", "FIND", "THE", "SPACES", "IN", "THIS", "SLUG");
     }
 
     @Test
     public void testSolveSlugWithWildcards() {
-        Result result = cromulence.solveSlug("*h*s*neh**so*e**k*ow**e*te*s");
+        Result result = cromulence.solveSlug("*H*S*nEH**so*E**KNeWN*E*tE*S");
         assertThat(result.getWords()).containsExactly("THIS", "ONE", "HAS", "SOME", "UNKNOWN", "LETTERS");
     }
 

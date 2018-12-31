@@ -161,9 +161,14 @@ public class CromulenceSolver {
             if (c == '*') {
                 for (int i = 0; i < NUM_LETTERS; i++)
                     probs[i] = probs[i + NUM_LETTERS] = 1.0 / NUM_LETTERS;
-            } else {
-                c = Character.toUpperCase(c);
+            } else if (Character.isUpperCase(c)) {
                 probs[c - 'A'] = probs[c - 'A' + NUM_LETTERS] = 1.0;
+            } else if (Character.isLowerCase(c)) {
+                for (int i = 0; i < NUM_LETTERS; i++)
+                    probs[i] = probs[i + NUM_LETTERS] = 0.2 / (NUM_LETTERS - 1);
+                probs[c - 'a'] = probs[c - 'a' + NUM_LETTERS] = 0.8;
+            } else {
+                throw new IllegalArgumentException("Invalid emission code: " + c);
             }
             return new Emission(probs);
         }
