@@ -64,10 +64,7 @@ public class LowLevelCromulenceSolver {
                 .limit(SEARCH_LIMIT)
                 .collect(Collectors.toList());
         }
-        Candidate<State> bestCandidate = candidates.stream()
-                .filter(candidate -> candidate.currentPrefix.isEmpty())
-                .findFirst()
-                .get();
+        Candidate<State> bestCandidate = candidates.get(0);
         return new CromulenceSolverResult(bestCandidate.words, bestCandidate.score);
     }
 

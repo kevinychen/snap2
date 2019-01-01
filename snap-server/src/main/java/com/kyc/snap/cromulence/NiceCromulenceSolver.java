@@ -24,7 +24,11 @@ public class NiceCromulenceSolver {
     private final CromulenceSolver solver;
 
     public CromulenceSolverResult solveSlug(String slug) {
-        return solver.solveSlug(toEmissions(slug));
+        return solver.solveSlug(toEmissions(slug), defaultEndOfWordProbs(slug.length()));
+    }
+
+    public CromulenceSolverResult solveSlug(String slug, List<Integer> wordLens) {
+        return solver.solveSlug(toEmissions(slug), toEndOfWordProbs(wordLens));
     }
 
     public CromulenceSolverResult anagramSingleWord(String anagram) {
@@ -41,19 +45,31 @@ public class NiceCromulenceSolver {
     public CromulenceSolverResult solveRearrangement(List<String> parts) {
         return solver.solveRearrangement(parts.stream()
             .map(str -> toEmissions(str))
-            .collect(Collectors.toList()));
+            .collect(Collectors.toList()), defaultEndOfWordProbs(parts.stream().mapToInt(String::length).sum()));
     }
 
     public CromulenceSolverResult solveRearrangement(List<String> parts, List<Integer> wordLens) {
+        return solver.solveRearrangement(parts.stream()
+            .map(str -> toEmissions(str))
+            .collect(Collectors.toList()), toEndOfWordProbs(wordLens));
+    }
+
+    private static List<Double> defaultEndOfWordProbs(int len) {
+        List<Double> endOfWordProbs = new ArrayList<>();
+        for (int i = 0; i < len - 1; i++)
+            endOfWordProbs.add(0.5);
+        endOfWordProbs.add(1.0);
+        return endOfWordProbs;
+    }
+
+    private static List<Double> toEndOfWordProbs(List<Integer> wordLens) {
         List<Double> endOfWordProbs = new ArrayList<>();
         for (int wordLen : wordLens) {
             for (int i = 0; i < wordLen - 1; i++)
                 endOfWordProbs.add(0.0);
             endOfWordProbs.add(1.0);
         }
-        return solver.solveRearrangement(parts.stream()
-            .map(str -> toEmissions(str))
-            .collect(Collectors.toList()), endOfWordProbs);
+        return endOfWordProbs;
     }
 
     private static List<Emission> toEmissions(String str) {

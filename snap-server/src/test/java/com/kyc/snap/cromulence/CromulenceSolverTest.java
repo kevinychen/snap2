@@ -27,6 +27,12 @@ public class CromulenceSolverTest {
     }
 
     @Test
+    public void testSolveSlugWithLengths() {
+        CromulenceSolverResult result = cromulence.solveSlug("d*y**k****h***sw**", ImmutableList.of(2, 3, 4, 3, 6));
+        assertThat(result.getWords()).containsExactly("DO", "YOU", "KNOW", "THE", "ANSWER");
+    }
+
+    @Test
     public void testSolveAnagram() {
         CromulenceSolverResult result = cromulence.anagramSingleWord("CRROA*UL");
         assertThat(result.getWords()).containsExactly("ORACULAR");

@@ -18,7 +18,7 @@ public class CromulenceSolver {
 
     private final LowLevelCromulenceSolver solver;
 
-    public CromulenceSolverResult solveSlug(List<Emission> emissions) {
+    public CromulenceSolverResult solveSlug(List<Emission> emissions, List<Double> endOfWordProbs) {
         return solver.solve(new CromulenceSolverInput<Integer>(emissions.size()) {
 
             @Override
@@ -28,13 +28,10 @@ public class CromulenceSolver {
 
             @Override
             public List<EmissionAndNewState<Integer>> getNextEmissions(Integer state) {
-                return ImmutableList.of(new EmissionAndNewState<>(emissions.get(state), state + 1));
+                return ImmutableList.of(
+                    new EmissionAndNewState<>(skewEmission(emissions.get(state), endOfWordProbs.get(state)), state + 1));
             }
         });
-    }
-
-    public CromulenceSolverResult solveRearrangement(List<List<Emission>> parts) {
-        return solveRearrangement(parts, Collections.nCopies(parts.stream().mapToInt(List::size).sum(), 0.5));
     }
 
     public CromulenceSolverResult solveRearrangement(List<List<Emission>> originalParts, List<Double> endOfWordProbs) {
