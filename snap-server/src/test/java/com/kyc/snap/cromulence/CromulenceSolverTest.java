@@ -27,6 +27,18 @@ public class CromulenceSolverTest {
     }
 
     @Test
+    public void testSolveAnagram() {
+        CromulenceSolverResult result = cromulence.anagramSingleWord("CRROA*UL");
+        assertThat(result.getWords()).containsExactly("ORACULAR");
+    }
+
+    @Test
+    public void testSolveAnagramMultiword() {
+        CromulenceSolverResult result = cromulence.anagramPhrase("AADDDEGILNNOORRRRUU");
+        assertThat(result.getWords()).containsExactlyInAnyOrder("UNDERGROUND", "RAILROAD");
+    }
+
+    @Test
     public void testSolveRearrangement() {
         CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of("AD", "**", "AY", "BD", "DT", "TO", "WO", "YE"));
         assertThat(result.getWords()).containsExactlyInAnyOrder("ADD", "TWO", "TO", "BDAY", "YEAR");

@@ -2,6 +2,7 @@ package com.kyc.snap.cromulence;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -36,7 +37,9 @@ public class CromulenceSolver {
         return solveRearrangement(parts, Collections.nCopies(parts.stream().mapToInt(List::size).sum(), 0.5));
     }
 
-    public CromulenceSolverResult solveRearrangement(List<List<Emission>> parts, List<Double> endOfWordProbs) {
+    public CromulenceSolverResult solveRearrangement(List<List<Emission>> originalParts, List<Double> endOfWordProbs) {
+        List<List<Emission>> parts = new ArrayList<>(originalParts);
+        Collections.sort(parts, Comparator.comparingInt(Object::hashCode));
         return solver.solve(new CromulenceSolverInput<SolveRearrangementState>(parts.stream().mapToInt(List::size).sum()) {
 
             @Override
@@ -55,6 +58,10 @@ public class CromulenceSolver {
                     if (state.currentPart != -1 && i != state.currentPart)
                         continue;
                     if ((state.usedBitset & (1 << i)) == 0) {
+                        // avoid recursing on something recursed on previously
+                        if (i > 0 && (state.usedBitset & (1 << (i - 1))) == 0 && parts.get(i - 1).equals(parts.get(i)))
+                            continue;
+
                         SolveRearrangementState newState = state.currentIndex == parts.get(i).size() - 1
                                 ? new SolveRearrangementState(state.usedBitset | (1 << i), -1, 0)
                                 : new SolveRearrangementState(state.usedBitset, i, state.currentIndex + 1);

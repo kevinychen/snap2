@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
+
 import lombok.Data;
 
 /**
@@ -23,6 +25,17 @@ public class NiceCromulenceSolver {
 
     public CromulenceSolverResult solveSlug(String slug) {
         return solver.solveSlug(toEmissions(slug));
+    }
+
+    public CromulenceSolverResult anagramSingleWord(String anagram) {
+        return solveRearrangement(
+            anagram.chars().mapToObj(c -> "" + (char) c).collect(Collectors.toList()),
+            ImmutableList.of(anagram.length()));
+    }
+
+    public CromulenceSolverResult anagramPhrase(String anagram) {
+        return solveRearrangement(
+            anagram.chars().mapToObj(c -> "" + (char) c).collect(Collectors.toList()));
     }
 
     public CromulenceSolverResult solveRearrangement(List<String> parts) {
