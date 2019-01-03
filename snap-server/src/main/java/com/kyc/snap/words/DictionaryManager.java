@@ -6,28 +6,35 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
+
+import com.google.common.collect.ImmutableSortedMap;
 
 public class DictionaryManager {
 
     public static final String WORD_FREQUENCIES_FILE = "./data/count_1w.txt";
-
-    private TreeMap<String, Long> wordFrequencies;
+    public static final String BIWORD_FREQUENCIES_FILE = "./data/count_2w.txt";
     /**
-     * { wordLength: { word: frequency } }
+     * The value to scale frequencies in the biword frequencies file. This value was estimated
+     * heuristically such that all biword frequencies (which are greater than 100,000) automatically
+     * map to frequencies in the top 1 percentile of single word frequencies.
      */
-    private Map<Integer, TreeMap<String, Long>> wordFrequenciesByLen;
+    public static final int BIWORD_FREQUENCY_MULTIPLIER = 10000;
+
+    private final SortedMap<String, Long> wordFrequencies;
+    private final Map<String, SortedMap<String, Long>> biwordFrequencies;
 
     public DictionaryManager() {
         wordFrequencies = new TreeMap<>();
-        wordFrequenciesByLen = new HashMap<>();
-        try (Scanner scanner = new Scanner(new File(WORD_FREQUENCIES_FILE))) {
-            while (scanner.hasNext()) {
-                String word = scanner.next().toUpperCase();
-                long freq = scanner.nextLong();
-                wordFrequencies.put(word, freq);
-                wordFrequenciesByLen.computeIfAbsent(word.length(), len -> new TreeMap<>())
-                    .put(word, freq);
+        biwordFrequencies = new HashMap<>();
+        try (Scanner scanner = new Scanner(new File(WORD_FREQUENCIES_FILE));
+                Scanner scanner2 = new Scanner(new File(BIWORD_FREQUENCIES_FILE))) {
+            while (scanner.hasNext())
+                wordFrequencies.put(scanner.next().toUpperCase(), scanner.nextLong());
+            while (scanner2.hasNext()) {
+                biwordFrequencies.computeIfAbsent(scanner2.next().toUpperCase(), key -> new TreeMap<>())
+                    .put(scanner2.next().toUpperCase(), scanner2.nextLong() * BIWORD_FREQUENCY_MULTIPLIER);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -42,8 +49,7 @@ public class DictionaryManager {
         return wordFrequencies.subMap(prefix, prefix + Character.MAX_VALUE);
     }
 
-    public Map<String, Long> getWordFrequencies(int wordLen, String prefix) {
-        return wordFrequenciesByLen.getOrDefault(wordLen, new TreeMap<>())
-            .subMap(prefix, prefix + Character.MAX_VALUE);
+    public Map<String, Long> getWordFrequencies(String prevWord, String prefix) {
+        return biwordFrequencies.getOrDefault(prevWord, ImmutableSortedMap.of()).subMap(prefix, prefix + Character.MAX_VALUE);
     }
 }

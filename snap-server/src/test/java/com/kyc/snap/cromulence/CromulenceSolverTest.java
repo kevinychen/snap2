@@ -11,8 +11,8 @@ import lombok.Data;
 
 public class CromulenceSolverTest {
 
-    DictionaryManager dictionary = new DictionaryManager();
-    NiceCromulenceSolver cromulence = new NiceCromulenceSolver(new CromulenceSolver(new LowLevelCromulenceSolver(dictionary)));
+    static DictionaryManager dictionary = new DictionaryManager();
+    static NiceCromulenceSolver cromulence = new NiceCromulenceSolver(new CromulenceSolver(new LowLevelCromulenceSolver(dictionary)));
 
     @Test
     public void testSolveSlug() {
@@ -46,8 +46,8 @@ public class CromulenceSolverTest {
 
     @Test
     public void testSolveRearrangement() {
-        CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of("AD", "**", "AY", "BD", "DT", "TO", "WO", "YE"));
-        assertThat(result.getWords()).containsExactlyInAnyOrder("ADD", "TWO", "TO", "BDAY", "YEAR");
+        CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of("AS", "EL", "KE", "NE", "TA", "TH", "TO"));
+        assertThat(result.getWords()).containsExactly("TAKE", "THE", "LAST", "ONE");
     }
 
     @Test

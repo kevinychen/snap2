@@ -1,6 +1,7 @@
 package com.kyc.snap.cromulence;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +26,7 @@ public class LowLevelCromulenceSolver {
     private static final int SEARCH_LIMIT = 1000;
 
     private final DictionaryManager dictionary;
-    private final Map<String, double[]> nextLetterProbabilitiesCache = new HashMap<>();
+    private final Map<String, double[]> nextLetterFreqsCache = new HashMap<>();
 
     public <State> CromulenceSolverResult solve(CromulenceSolverInput<State> input) {
         List<Candidate<State>> candidates = ImmutableList.of(Candidate.<State> builder()
@@ -37,7 +38,7 @@ public class LowLevelCromulenceSolver {
         for (int n = 0; n < input.getNumEmissions(); n++) {
             List<Candidate<State>> newCandidates = new ArrayList<>();
             for (Candidate<State> candidate : candidates) {
-                double[] nextLetterProbs = getNextLetterProbabilities(candidate.currentPrefix);
+                double[] nextLetterProbs = getNextLetterProbabilities(candidate.words, candidate.currentPrefix);
                 for (EmissionAndNewState<State> emission : input.getNextEmissions(candidate.state))
                     for (int j = 0; j < Emission.SIZE; j++) {
                         double prob = nextLetterProbs[j] * emission.getEmission().getProbs()[j];
@@ -68,24 +69,36 @@ public class LowLevelCromulenceSolver {
         return new CromulenceSolverResult(bestCandidate.words, bestCandidate.score);
     }
 
-    private double[] getNextLetterProbabilities(String prefix) {
-        if (nextLetterProbabilitiesCache.containsKey(prefix))
-            return nextLetterProbabilitiesCache.get(prefix);
-        double[] probs = new double[Emission.SIZE];
-        dictionary.getWordFrequencies(prefix).forEach((word, frequency) -> {
+    private double[] getNextLetterProbabilities(List<String> words, String prefix) {
+        double[] freqs = Arrays.copyOf(getCachedFrequencies(prefix), Emission.SIZE);
+        // bias toward words that appear in the biword list after the previous word
+        // TODO use n-grams for better probability estimation for words not in the dictionary
+        if (!words.isEmpty())
+            updateFrequencies(dictionary.getWordFrequencies(words.get(words.size() - 1), prefix), prefix, freqs);
+        double totalProb = 0;
+        for (double prob : freqs)
+            totalProb += prob;
+        for (int i = 0; i < freqs.length; i++)
+            freqs[i] /= totalProb;
+        return freqs;
+    }
+
+    private double[] getCachedFrequencies(String prefix) {
+        if (nextLetterFreqsCache.containsKey(prefix))
+            return nextLetterFreqsCache.get(prefix);
+        double[] freqs = new double[Emission.SIZE];
+        updateFrequencies(dictionary.getWordFrequencies(prefix), prefix, freqs);
+        if (prefix.length() <= 2)
+            nextLetterFreqsCache.put(prefix, freqs);
+        return freqs;
+    }
+
+    private static void updateFrequencies(Map<String, Long> wordFreqs, String prefix, double[] freqs) {
+        wordFreqs.forEach((word, frequency) -> {
             boolean isWordEnd = word.length() == prefix.length() + 1;
             if (!word.equals(prefix))
-                probs[word.charAt(prefix.length()) - 'A' + (isWordEnd ? Emission.NUM_LETTERS : 0)] += frequency;
+                freqs[word.charAt(prefix.length()) - 'A' + (isWordEnd ? Emission.NUM_LETTERS : 0)] += frequency;
         });
-        double totalProb = 0;
-        for (double prob : probs)
-            totalProb += prob;
-        // TODO use n-grams for better probability estimation
-        for (int i = 0; i < probs.length; i++)
-            probs[i] /= totalProb;
-        if (prefix.length() <= 2)
-            nextLetterProbabilitiesCache.put(prefix, probs);
-        return probs;
     }
 
     @Data
