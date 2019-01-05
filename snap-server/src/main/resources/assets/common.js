@@ -1,6 +1,8 @@
 function post(args, callback) {
+  $('#loader').show();
   fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
     .then(response => {
+      $('#loader').hide();
       if (!response.ok) {
         alert('Error: ' + response.statusText);
         return;

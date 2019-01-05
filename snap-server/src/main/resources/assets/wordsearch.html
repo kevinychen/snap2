@@ -99,13 +99,11 @@
       });
 
       $('#solve-wordsearch').click(e => {
-        $('.loader').show();
         postJson({ path: '/words/search', body: { grid: getGrid() } }, response => {
           session.results = response.results;
           setResults();
           $('#edit-mode').hide();
           $('#view-mode').show();
-          $('.loader').hide();
         });
       });
 

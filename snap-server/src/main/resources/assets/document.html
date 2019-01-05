@@ -374,7 +374,6 @@
       })();
 
       $('#export').on('click', e => {
-        $('#loader').show();
         postJson({ path: `/documents/${session.document.id}/export/${session.spreadsheetId}/${session.sheetId}`, body: {
           section: {
             page: session.page,
@@ -382,13 +381,10 @@
           },
           gridPosition: session.gridPosition,
           grid: session.grid,
-        } }, marker => {
-          $('#loader').hide();
-        });
+        } });
       });
 
       $('#operation-find-grid-lines').on('click', e => {
-        $('#loader').show();
         postJson({ path: `/documents/${session.document.id}/lines`, body: {
           section: {
             page: session.page,
@@ -396,14 +392,10 @@
           },
           findGridLinesMode: $('input:radio[name="find-grid-lines-mode"]:checked').val(),
           interpolate: $('#operation-find-grid-lines-interpolate').is(':checked'),
-        } }, gridLines => {
-          setGridLines(gridLines);
-          $('#loader').hide();
-        });
+        } }, setGridLines);
       });
 
       $('#operation-find-grid').on('click', e => {
-        $('#loader').show();
         postJson({ path: `/documents/${session.document.id}/grid`, body: {
           section: {
             page: session.page,
@@ -415,7 +407,6 @@
           findTextMode: $('input:radio[name="find-text-mode"]:checked').val(),
         } }, response => {
           setGrid(response.gridPosition, response.grid);
-          $('#loader').hide();
         });
       });
 
