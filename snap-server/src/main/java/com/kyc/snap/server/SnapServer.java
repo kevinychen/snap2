@@ -8,7 +8,6 @@ import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.store.FileStore;
 import com.kyc.snap.words.DictionaryManager;
-import com.kyc.snap.words.TrigramPuzzleSolver;
 import com.kyc.snap.words.WordsearchSolver;
 
 import io.dropwizard.Application;
@@ -34,7 +33,6 @@ public class SnapServer extends Application<SnapConfiguration> {
         GridParser gridParser = new GridParser(openCv, googleApi);
         CrosswordParser crosswordParser = new CrosswordParser();
         DictionaryManager dictionary = new DictionaryManager();
-        TrigramPuzzleSolver trigramPuzzleSolver = new TrigramPuzzleSolver(dictionary);
         WordsearchSolver wordsearchSolver = new WordsearchSolver(dictionary);
         FileStore store = new FileStore();
 
@@ -42,7 +40,7 @@ public class SnapServer extends Application<SnapConfiguration> {
 
         environment.jersey().register(new MultiPartFeature());
         environment.jersey().register(new ImageResource(configuration, googleApi, gridParser, crosswordParser));
-        environment.jersey().register(new WordsResource(trigramPuzzleSolver, wordsearchSolver));
+        environment.jersey().register(new WordsResource(wordsearchSolver));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser));
     }
