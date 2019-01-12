@@ -187,7 +187,7 @@ public class ImageResource implements ImageService {
         ImageSession session = sessions.getIfPresent(sessionId);
         Parameters parameters = session.getParameters();
         SpreadsheetManager spreadsheets = googleApi.getSheet(parameters.getSpreadsheetId(), parameters.getSheetId());
-        CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets);
+        CrosswordSpreadsheetWrapper crosswordSpreadsheets = new CrosswordSpreadsheetWrapper(spreadsheets, 0, 0);
         crosswordSpreadsheets.toSpreadsheet(session.getGrid(), session.getCrossword(), session.getClues());
         return new StringJson(spreadsheets.getUrl());
     }

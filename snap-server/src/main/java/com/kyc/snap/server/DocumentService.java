@@ -13,6 +13,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
+import com.kyc.snap.crossword.Crossword;
+import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.document.Document;
 import com.kyc.snap.document.Section;
 import com.kyc.snap.grid.Grid;
@@ -28,7 +30,13 @@ public interface DocumentService {
     @Path("/pdf")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    Document createDocumentFromPdf(@FormDataParam("pdf") InputStream pdf) throws IOException;
+    Document createDocumentFromPdf(@FormDataParam("pdf") InputStream pdfStream) throws IOException;
+
+    @POST
+    @Path("/image")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    Document createDocumentFromImage(@FormDataParam("image") InputStream imageStream) throws IOException;
 
     @POST
     @Path("/url")
@@ -71,6 +79,7 @@ public interface DocumentService {
         private final Section section;
         private FindGridLinesMode findGridLinesMode = FindGridLinesMode.EXPLICIT;
         private boolean interpolate = false;
+        private int approxGridSquareSize = 64;
 
         public enum FindGridLinesMode {
 
@@ -122,5 +131,7 @@ public interface DocumentService {
         private final Section section;
         private GridPosition gridPosition;
         private Grid grid;
+        private Crossword crossword;
+        private CrosswordClues crosswordClues;
     }
 }

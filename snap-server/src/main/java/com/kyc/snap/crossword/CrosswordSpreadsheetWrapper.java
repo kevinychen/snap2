@@ -29,44 +29,47 @@ public class CrosswordSpreadsheetWrapper {
 
     private static final int BLANK_MARKER_ROW = 500;
     private static final int UNKNOWN_MARKER_ROW = 501;
+    private static final int MARKER_COL = 25;
     private static final int[] DROW = { 0, 1 };
     private static final int[] DCOL = { 1, 0 };
 
     private final SpreadsheetManager spreadsheets;
+    private final int rowOffset;
+    private final int colOffset;
 
     public void toSpreadsheet(Grid grid, Crossword crossword, CrosswordClues clues) {
         List<Integer> directionColumns = new ArrayList<>();
         for (int i = 0; i < clues.getSections().size(); i++)
-            directionColumns.add(grid.getNumCols() + 1 + 4 * i);
+            directionColumns.add(grid.getNumCols() + 1 + 4 * i + colOffset);
 
         Multimap<ClueKey, Crossword.Entry> crosswordEntries = Multimaps.index(crossword.getEntries(),
             entry -> new ClueKey(entry.getDirection(), entry.getClueNumber()));
         Multimap<Point, PointAndIndex> gridToAnswers = ArrayListMultimap.create();
 
         List<ValueCell> valueCells = new ArrayList<>();
-        valueCells.add(new ValueCell(UNKNOWN_MARKER_ROW, 0, "."));
+        valueCells.add(new ValueCell(UNKNOWN_MARKER_ROW, MARKER_COL, "."));
         List<ValueCell> formulaCells = new ArrayList<>();
         for (int i = 0; i < clues.getSections().size(); i++) {
             ClueSection section = clues.getSections().get(i);
             for (int j = 0; j < section.getClues().size(); j++) {
                 NumberedClue clue = section.getClues().get(j);
-                valueCells.add(new ValueCell(j, directionColumns.get(i), clue.getClue().trim()));
+                valueCells.add(new ValueCell(j + rowOffset, directionColumns.get(i), clue.getClue().trim()));
 
                 Crossword.Entry crosswordEntry = Iterables
                     .getOnlyElement(crosswordEntries.get(new ClueKey(section.getDirection(), clue.getClueNumber())));
                 List<String> gridRefs = new ArrayList<>();
                 for (int k = 0; k < crosswordEntry.getNumSquares(); k++) {
-                    int row = crosswordEntry.getStartRow() + k * DROW[i];
-                    int col = crosswordEntry.getStartCol() + k * DCOL[i];
+                    int row = crosswordEntry.getStartRow() + k * DROW[i] + rowOffset;
+                    int col = crosswordEntry.getStartCol() + k * DCOL[i] + colOffset;
                     gridRefs.add(String.format(
                         "IF(%1$s=%2$s, %3$s, %1$s)",
                         spreadsheets.getRef(row, col),
-                        spreadsheets.getRef(BLANK_MARKER_ROW, 0),
-                        spreadsheets.getRef(UNKNOWN_MARKER_ROW, 0)));
-                    gridToAnswers.put(new Point(col, row), new PointAndIndex(j, directionColumns.get(i) + 2, k));
+                        spreadsheets.getRef(BLANK_MARKER_ROW, MARKER_COL),
+                        spreadsheets.getRef(UNKNOWN_MARKER_ROW, MARKER_COL)));
+                    gridToAnswers.put(new Point(col, row), new PointAndIndex(j + rowOffset, directionColumns.get(i) + 2, k));
                 }
                 formulaCells.add(new ValueCell(
-                    j,
+                    j + rowOffset,
                     directionColumns.get(i) + 1,
                     String.format(
                         "=CONCATENATE(%s, \" (%d)\")",
@@ -109,7 +112,8 @@ public class CrosswordSpreadsheetWrapper {
             spreadsheets.setAutomaticRowOrColumnSizes(Dimension.COLUMNS, ImmutableList.of(directionColumn));
             spreadsheets.setRowOrColumnSizes(Dimension.COLUMNS, ImmutableList.of(
                 new SizedRowOrColumn(directionColumn + 1, 100),
-                new SizedRowOrColumn(directionColumn + 2, 100)));
+                new SizedRowOrColumn(directionColumn + 2, 100),
+                new SizedRowOrColumn(directionColumn + 3, 50)));
         }
     }
 

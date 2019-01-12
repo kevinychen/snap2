@@ -9,8 +9,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
 import org.apache.commons.io.IOUtils;
 
+import com.google.common.collect.ImmutableList;
+import com.kyc.snap.crossword.CrosswordSpreadsheetWrapper;
 import com.kyc.snap.document.Document;
 import com.kyc.snap.document.Document.DocumentPage;
 import com.kyc.snap.document.Document.DocumentText;
@@ -63,11 +67,29 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
+    public Document createDocumentFromImage(InputStream imageStream) throws IOException {
+        String id = UUID.randomUUID().toString();
+        String imageId = store.storeBlob(ImageUtils.toBytes(ImageIO.read(imageStream)));
+        Document doc = new Document(id, ImmutableList.of(new DocumentPage(imageId, 1, ImmutableList.of())));
+        store.updateObject(id, doc);
+        return doc;
+    }
+
+    @Override
     public Document createDocumentFromUrl(CreateDocumentFromUrlRequest request) throws IOException {
+        String url = request.getUrl();
+        String urlExtension = url.substring(url.lastIndexOf('.') + 1).toLowerCase();
         Response response = new OkHttpClient()
-            .newCall(new Request.Builder().url(request.getUrl()).get().build())
+            .newCall(new Request.Builder().url(url).get().build())
             .execute();
-        return createDocumentFromPdf(response.body().byteStream());
+        String contentType = response.header("Content-Type").toLowerCase();
+        InputStream responseStream = response.body().byteStream();
+        if (contentType.equals("application/pdf") || urlExtension.equals("pdf"))
+            return createDocumentFromPdf(responseStream);
+        else if (contentType.startsWith("image/") || urlExtension.equals("png") || urlExtension.equals("jpg"))
+            return createDocumentFromImage(responseStream);
+        else
+            throw new IllegalArgumentException("Invalid URL");
     }
 
     @Override
@@ -87,7 +109,7 @@ public class DocumentResource implements DocumentService {
         BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
         GridLines gridLines;
         if (request.getFindGridLinesMode() == FindGridLinesMode.EXPLICIT)
-            gridLines = gridParser.findGridLines(image, 64);
+            gridLines = gridParser.findGridLines(image, request.getApproxGridSquareSize());
         else if (request.getFindGridLinesMode() == FindGridLinesMode.IMPLICIT)
             gridLines = gridParser.findImplicitGridLines(image);
         else
@@ -125,9 +147,15 @@ public class DocumentResource implements DocumentService {
         updateMarker(Optional.of(marker), Optional.empty(), spreadsheets);
         Point newMarker;
         if (request.getGridPosition() != null && request.getGrid() != null) {
+            int numCols = request.getGridPosition().getNumCols();
             new GridSpreadsheetWrapper(spreadsheets, marker.y, marker.x)
                 .toSpreadsheet(request.getGridPosition(), request.getGrid(), 1 / image.getScale());
-            newMarker = new Point(marker.x + request.getGridPosition().getNumCols() + 1, marker.y);
+            if (request.getCrossword() != null && request.getCrosswordClues() != null) {
+                new CrosswordSpreadsheetWrapper(spreadsheets, marker.y, marker.x)
+                    .toSpreadsheet(request.getGrid(), request.getCrossword(), request.getCrosswordClues());
+                numCols += 4 * (request.getCrosswordClues().getSections().size() - 1);
+            }
+            newMarker = new Point(marker.x + numCols + 1, marker.y);
         } else {
             int newWidth = (int) (image.getImage().getWidth() / image.getScale());
             int newHeight = (int) (image.getImage().getHeight() / image.getScale());

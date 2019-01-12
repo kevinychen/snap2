@@ -9,7 +9,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.kyc.snap.crossword.Crossword;
+import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
+import com.kyc.snap.grid.Grid;
 import com.kyc.snap.words.WordsearchSolver;
 
 import lombok.Data;
@@ -23,26 +26,11 @@ public interface WordsService {
     @Path("words/crossword")
     FetchCrosswordClueSuggestionsResponse fetchCrosswordClueSuggestions(FetchCrosswordClueSuggestionsRequest request);
 
+    @Data
     public static class FetchCrosswordClueSuggestionsRequest {
 
-        private String clue;
-        private int numLetters;
-
-        public String getClue() {
-            return clue;
-        }
-
-        public int getNumLetters() {
-            return numLetters;
-        }
-
-        public void setClue(String clue) {
-            this.clue = clue;
-        }
-
-        public void setNumLetters(int numLetters) {
-            this.numLetters = numLetters;
-        }
+        private final String clue;
+        private final int numLetters;
     }
 
     @Data
@@ -55,22 +43,47 @@ public interface WordsService {
     @Path("words/search")
     SolveWordsearchResponse solveWordsearch(SolveWordsearchRequest request);
 
+    @Data
     public static class SolveWordsearchRequest {
 
         private List<String> grid;
-
-        public List<String> getGrid() {
-            return grid;
-        }
-
-        public void setGrid(List<String> grid) {
-            this.grid = grid;
-        }
     }
 
     @Data
     public static class SolveWordsearchResponse {
 
         private final Set<WordsearchSolver.Result> results;
+    }
+
+    @POST
+    @Path("words/findCrossword")
+    FindCrosswordResponse findCrossword(FindCrosswordRequest request);
+
+    @Data
+    public static class FindCrosswordRequest {
+
+        private final Grid grid;
+    }
+
+    @Data
+    public static class FindCrosswordResponse {
+
+        private final Crossword crossword;
+    }
+
+    @POST
+    @Path("words/parseCrosswordClues")
+    ParseCrosswordCluesResponse parseCrosswordClues(ParseCrosswordCluesRequest request);
+
+    @Data
+    public static class ParseCrosswordCluesRequest {
+
+        private final String unparsedClues;
+    }
+
+    @Data
+    public static class ParseCrosswordCluesResponse {
+
+        private final CrosswordClues clues;
     }
 }

@@ -5,12 +5,15 @@
     <div class="half">
       Upload PDF: <input id="pdf-input" type="file" name="pdf">
       <br>
-      or paste URL: <input id="pdf-url-input" size=80>
+      or upload image: <input id="image-input" type="file" name="image">
+      <br>
+      or paste URL: <input id="url-input" size=80>
       <br>
       <div class="initial-hide after-document">
         <input id="document-page-left" class="nav" type="button" value="&lt;">
         Page <span id="document-page-current"></span>/<span id="document-page-total"></span>
         <input id="document-page-right" class="nav" type="button" value="&gt;">
+        <input id="select-all" type="button" value="Select all">
         <br>
         <div id="image-container">
           <img id="image" alt="" />
@@ -29,24 +32,41 @@
         <br>
         <span class="initial-hide after-section">
           <input id="operation-find-grid-lines" type="button" value="Find grid lines">
-          <input name="find-grid-lines-mode" type="radio" value="EXPLICIT" checked>explicit
-          <input name="find-grid-lines-mode" type="radio" value="IMPLICIT">implicit
-          <input id="operation-find-grid-lines-interpolate" type="checkbox">interpolate
+          <span title="Lines are explicitly marked in the image.">
+            <input name="find-grid-lines-mode" type="radio" value="EXPLICIT" checked>explicit
+          </span>
+          <span title="Lines are not explicitly present in the image, but there is spacing between rows and columns.">
+            <input name="find-grid-lines-mode" type="radio" value="IMPLICIT">implicit
+          </span>
+          <span title="Lines should be evenly spaced, but some lines are missing from the image.">
+            <input id="operation-find-grid-lines-interpolate" type="checkbox">interpolate
+          </span>
+          <span title="Approximate size in pixels of a single grid square. Not required, but can be manually tuned for better results.">
+            <input id="operation-find-grid-lines-approx-grid-square-size" type="number" value="64">approx square size
+          </span>
           <br>
+
           <input id="operation-find-grid" type="button" value="Parse content">
           <input id="operation-find-grid-colors" type="checkbox" checked>colors
           <input id="operation-find-grid-borders" type="checkbox">borders
           <input name="find-text-mode" type="radio" value="NONE" checked>no text
-          <input name="find-text-mode" type="radio" value="USE_NATIVE">find stored text
+          <span title="Text is present in the document (e.g. textual PDFs).">
+            <input name="find-text-mode" type="radio" value="USE_NATIVE">find stored text
+          </span>
           <input name="find-text-mode" type="radio" value="USE_OCR">infer text with OCR
           <br>
+        </span>
+        <span class="initial-hide after-grid">
+          <input id="operation-find-crossword" type="button" value="Parse crossword">
+          <input id="operation-find-crossword-clues" type="button" value="Open clues menu">
+          <br>
+          <textarea id="crossword-clues-textarea" class="initial-hide" placeholder="Enter clues here"></textarea>
         </span>
         <br>
         <div id="loader" class="initial-hide loader"></div>
       </div>
       <div id="sheet">
         Sheet URL: <input id="sheet-url" size=80>
-        <input id="sheet-new" type="button" value="Create new sheet"><br>
         <iframe id="sheet-frame" src=""></iframe>
       </div>
     </div>
@@ -62,6 +82,8 @@
       gridLines: undefined,
       gridPosition: undefined,
       grid: undefined,
+      crossword: undefined,
+      crosswordClues: undefined,
       spreadsheetId: undefined,
       sheetId: undefined,
     };
@@ -151,6 +173,30 @@
       session.gridPosition = gridPosition;
       session.grid = grid;
       drawSectionCanvas();
+      if (grid) {
+        $('.after-grid').show();
+      } else {
+        $('.after-grid').hide();
+      }
+    }
+
+    function setCrossword(crossword) {
+      session.crossword = crossword;
+      drawSectionCanvas();
+    }
+
+    function setCrosswordClues(clues) {
+      session.crosswordClues = clues;
+
+      var cluesText = '';
+      for (var section of clues.sections) {
+        cluesText += section.direction + '\n';
+        for (var clue of section.clues) {
+          cluesText += clue.clue + '\n';
+        }
+      }
+      $('#crossword-clues-textarea').val(cluesText);
+      $('#crossword-clues-textarea').addClass('parsed');
     }
 
     function setSheet(spreadsheetId, sheetId) {
@@ -251,6 +297,20 @@
           }
         }
       }
+      if (session.crossword) {
+        ctx.font = "18px Helvetica";
+        ctx.strokeStyle = 'blue';
+        const image = $('#image')[0];
+        const widthRatio = canvas.width / image.naturalWidth;
+        const heightRatio = canvas.height / image.naturalHeight;
+        for (var entry of session.crossword.entries) {
+          const row = session.gridPosition.rows[entry.startRow];
+          const col = session.gridPosition.cols[entry.startCol];
+          ctx.strokeText(entry.clueNumber,
+              widthRatio * (col.startX + col.width / 3),
+              heightRatio * (row.startY + row.height * 2 / 3));
+        }
+      }
     }
 
     $(document).ready(function() {
@@ -263,7 +323,16 @@
         }
       });
 
-      $('#pdf-url-input').on('input', e => {
+      $('#image-input').change(e => {
+        const image = e.target.files[0];
+        if (image) {
+          const formData = new FormData();
+          formData.append('image', image);
+          post({ path: '/documents/image', body: formData }, setDocument);
+        }
+      });
+
+      $('#url-input').on('input', e => {
         const url = e.target.value;
         postJson({ path: '/documents/url', body: { url: url } }, setDocument);
       });
@@ -375,6 +444,17 @@
             mouseMode = undefined;
             drawSectionCanvas();
           });
+
+        $('#select-all').on('click', e => {
+          setRectangle({
+            x: 0,
+            y: 0,
+            width: canvas.width,
+            height: canvas.height,
+          });
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawSectionCanvas();
+        });
       })();
 
       $('#export').on('click', e => {
@@ -385,6 +465,8 @@
           },
           gridPosition: session.gridPosition,
           grid: session.grid,
+          crossword: session.crossword,
+          crosswordClues: session.crosswordClues,
         } });
       });
 
@@ -396,6 +478,7 @@
           },
           findGridLinesMode: $('input:radio[name="find-grid-lines-mode"]:checked').val(),
           interpolate: $('#operation-find-grid-lines-interpolate').is(':checked'),
+          approxGridSquareSize: parseInt($('#operation-find-grid-lines-approx-grid-square-size').val()),
         } }, setGridLines);
       });
 
@@ -412,6 +495,32 @@
         } }, response => {
           setGrid(response.gridPosition, response.grid);
         });
+      });
+
+      $('#operation-find-crossword').on('click', e => {
+        postJson({ path: `/words/findCrossword`, body: {
+          grid: session.grid,
+        } }, response => {
+          setCrossword(response.crossword);
+        });
+        postJson({ path: `/words/parseCrosswordClues`, body: {
+          unparsedClues: $('#crossword-clues-textarea').val(),
+        } }, response => {
+          setCrosswordClues(response.clues);
+        });
+      });
+
+      $('#operation-find-crossword-clues').on('click', e => {
+        if ($('#crossword-clues-textarea').is(':hidden')) {
+          $('#crossword-clues-textarea').show();
+          $('#operation-find-crossword-clues').val('Close clues menu');
+        } else {
+          $('#crossword-clues-textarea').hide();
+          $('#operation-find-crossword-clues').val('Open clues menu');
+        }
+      });
+      $('#crossword-clues-textarea').on('input', e => {
+        $('#crossword-clues-textarea').removeClass('parsed');
       });
 
       $('#sheet-url').on('input', e => {
@@ -438,6 +547,7 @@
   <style>
     #options {
       height: 25%;
+      min-height: 140px;
     }
 
     #sheet-frame {
@@ -445,6 +555,21 @@
       width: 250%;
       -webkit-transform: scale(0.4);
       -webkit-transform-origin: 0 0;
+    }
+
+    input {
+      margin-left: 10px;
+    }
+
+    input[type=number] {
+      width: 42px;
+    }
+
+    #crossword-clues-textarea {
+      width: 80%;
+      height: 80%;
+      position: absolute;
+      z-index: 2915;
     }
   </style>
 </html>
