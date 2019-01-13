@@ -15,6 +15,8 @@ Add a `google-api-credentials.json` file with Snap's [service account credential
 
 Update the `config.yml` configuration file with the socket address that the Snap server will run at.
 
+Update the `gradle.properties` configuration file with your platform.
+
 Download data files:
 
     cd snap-server
