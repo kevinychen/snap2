@@ -2,6 +2,9 @@ package com.kyc.snap.server;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import com.kyc.snap.cromulence.CromulenceSolver;
+import com.kyc.snap.cromulence.LowLevelCromulenceSolver;
+import com.kyc.snap.cromulence.NiceCromulenceSolver;
 import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.GridParser;
@@ -34,13 +37,14 @@ public class SnapServer extends Application<SnapConfiguration> {
         CrosswordParser crosswordParser = new CrosswordParser();
         DictionaryManager dictionary = new DictionaryManager();
         WordsearchSolver wordsearchSolver = new WordsearchSolver(dictionary);
+        NiceCromulenceSolver cromulenceSolver = new NiceCromulenceSolver(new CromulenceSolver(new LowLevelCromulenceSolver(dictionary)));
         FileStore store = new FileStore();
 
         environment.jersey().setUrlPattern("/api/*");
 
         environment.jersey().register(new MultiPartFeature());
         environment.jersey().register(new ImageResource(configuration, googleApi, gridParser, crosswordParser));
-        environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser));
+        environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser));
     }

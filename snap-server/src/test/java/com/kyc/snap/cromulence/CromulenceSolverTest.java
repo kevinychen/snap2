@@ -16,37 +16,37 @@ public class CromulenceSolverTest {
 
     @Test
     public void testSolveSlug() {
-        CromulenceSolverResult result = cromulence.solveSlug("ICANFINDTHESPACESINTHISSLUG");
+        CromulenceSolverResult result = cromulence.solveSlug("ICANFINDTHESPACESINTHISSLUG").get(0);
         assertThat(result.getWords()).containsExactly("I", "CAN", "FIND", "THE", "SPACES", "IN", "THIS", "SLUG");
     }
 
     @Test
     public void testSolveSlugWithWildcards() {
-        CromulenceSolverResult result = cromulence.solveSlug("*H*S*nEH**so*E**KNeWN*E*tE*S");
+        CromulenceSolverResult result = cromulence.solveSlug("*H*S*nEH**so*E**KNeWN*E*tE*S").get(0);
         assertThat(result.getWords()).containsExactly("THIS", "ONE", "HAS", "SOME", "UNKNOWN", "LETTERS");
     }
 
     @Test
     public void testSolveSlugWithLengths() {
-        CromulenceSolverResult result = cromulence.solveSlug("d*y**k****h***sw**", ImmutableList.of(2, 3, 4, 3, 6));
+        CromulenceSolverResult result = cromulence.solveSlug("d*y**k****h***sw**", ImmutableList.of(2, 3, 4, 3, 6)).get(0);
         assertThat(result.getWords()).containsExactly("DO", "YOU", "KNOW", "THE", "ANSWER");
     }
 
     @Test
     public void testSolveAnagram() {
-        CromulenceSolverResult result = cromulence.anagramSingleWord("CRROA*UL");
+        CromulenceSolverResult result = cromulence.anagramSingleWord("CRROA*UL").get(0);
         assertThat(result.getWords()).containsExactly("ORACULAR");
     }
 
     @Test
     public void testSolveAnagramMultiword() {
-        CromulenceSolverResult result = cromulence.anagramPhrase("AADDDEGILNNOORRRRUU");
+        CromulenceSolverResult result = cromulence.anagramPhrase("AADDDEGILNNOORRRRUU").get(0);
         assertThat(result.getWords()).containsExactlyInAnyOrder("UNDERGROUND", "RAILROAD");
     }
 
     @Test
     public void testSolveRearrangement() {
-        CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of("AS", "EL", "KE", "NE", "TA", "TH", "TO"));
+        CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of("AS", "EL", "KE", "NE", "TA", "TH", "TO")).get(0);
         assertThat(result.getWords()).containsExactly("TAKE", "THE", "LAST", "ONE");
     }
 
@@ -54,7 +54,7 @@ public class CromulenceSolverTest {
     public void testSolveRearrangementWithLengths() {
         CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of(
             "CHA", "DEB", "ERO", "GRA", "HES", "ITY", "LFO", "MPI", "ONC", "REV", "TIT", "TOF", "TOT", "UDE", "WEA", "WIL", "E"),
-            ImmutableList.of(8, 4, 4, 7, 3, 1, 4, 2, 9, 2, 5));
+            ImmutableList.of(8, 4, 4, 7, 3, 1, 4, 2, 9, 2, 5)).get(0);
         assertThat(result.getWords()).containsExactly("CHAMPION", "CITY", "WILL", "FOREVER", "OWE", "A", "DEBT", "OF", "GRATITUDE", "TO",
             "THESE");
     }
@@ -64,7 +64,7 @@ public class CromulenceSolverTest {
         CromulenceSolverResult result = cromulence.solveRearrangement(ImmutableList.of(
             "ACE", "BLE", "CAL", "CHA", "DAY", "DWI", "EBI", "ERY", "GRA", "HEV", "HIS", "LLE", "LST", "NGE", "REF", "STH", "THT", "TOF",
             "VES", "WEA"),
-            ImmutableList.of(2, 3, 5, 4, 3, 4, 7, 2, 10, 3, 5, 5, 4, 3));
+            ImmutableList.of(2, 3, 5, 4, 3, 4, 7, 2, 10, 3, 5, 5, 4, 3)).get(0);
         assertThat(result.getWords()).containsExactly("WE", "ARE", "FACED", "WITH", "THE", "VERY", "GRAVEST", "OF", "CHALLENGES", "THE",
             "BIBLE", "CALLS", "THIS", "DAY");
     }

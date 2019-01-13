@@ -24,11 +24,12 @@ import lombok.Data;
 public class LowLevelCromulenceSolver {
 
     private static final int SEARCH_LIMIT = 1000;
+    private static final int NUM_RESULTS = 50;
 
     private final DictionaryManager dictionary;
     private final Map<String, double[]> nextLetterFreqsCache = new HashMap<>();
 
-    public <State> CromulenceSolverResult solve(CromulenceSolverInput<State> input) {
+    public <State> List<CromulenceSolverResult> solve(CromulenceSolverInput<State> input) {
         List<Candidate<State>> candidates = ImmutableList.of(Candidate.<State> builder()
             .words(ImmutableList.of())
             .currentPrefix("")
@@ -65,8 +66,10 @@ public class LowLevelCromulenceSolver {
                 .limit(SEARCH_LIMIT)
                 .collect(Collectors.toList());
         }
-        Candidate<State> bestCandidate = candidates.get(0);
-        return new CromulenceSolverResult(bestCandidate.words, bestCandidate.score);
+        return candidates.stream()
+                .limit(NUM_RESULTS)
+                .map(candidate -> new CromulenceSolverResult(candidate.words, candidate.score))
+                .collect(Collectors.toList());
     }
 
     private double[] getNextLetterProbabilities(List<String> words, String prefix) {

@@ -23,32 +23,32 @@ public class NiceCromulenceSolver {
 
     private final CromulenceSolver solver;
 
-    public CromulenceSolverResult solveSlug(String slug) {
+    public List<CromulenceSolverResult> solveSlug(String slug) {
         return solver.solveSlug(toEmissions(slug), defaultEndOfWordProbs(slug.length()));
     }
 
-    public CromulenceSolverResult solveSlug(String slug, List<Integer> wordLens) {
+    public List<CromulenceSolverResult> solveSlug(String slug, List<Integer> wordLens) {
         return solver.solveSlug(toEmissions(slug), toEndOfWordProbs(wordLens));
     }
 
-    public CromulenceSolverResult anagramSingleWord(String anagram) {
+    public List<CromulenceSolverResult> anagramSingleWord(String anagram) {
         return solveRearrangement(
             anagram.chars().mapToObj(c -> "" + (char) c).collect(Collectors.toList()),
             ImmutableList.of(anagram.length()));
     }
 
-    public CromulenceSolverResult anagramPhrase(String anagram) {
+    public List<CromulenceSolverResult> anagramPhrase(String anagram) {
         return solveRearrangement(
             anagram.chars().mapToObj(c -> "" + (char) c).collect(Collectors.toList()));
     }
 
-    public CromulenceSolverResult solveRearrangement(List<String> parts) {
+    public List<CromulenceSolverResult> solveRearrangement(List<String> parts) {
         return solver.solveRearrangement(parts.stream()
             .map(str -> toEmissions(str))
             .collect(Collectors.toList()), defaultEndOfWordProbs(parts.stream().mapToInt(String::length).sum()));
     }
 
-    public CromulenceSolverResult solveRearrangement(List<String> parts, List<Integer> wordLens) {
+    public List<CromulenceSolverResult> solveRearrangement(List<String> parts, List<Integer> wordLens) {
         return solver.solveRearrangement(parts.stream()
             .map(str -> toEmissions(str))
             .collect(Collectors.toList()), toEndOfWordProbs(wordLens));

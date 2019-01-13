@@ -18,7 +18,7 @@ public class CromulenceSolver {
 
     private final LowLevelCromulenceSolver solver;
 
-    public CromulenceSolverResult solveSlug(List<Emission> emissions, List<Double> endOfWordProbs) {
+    public List<CromulenceSolverResult> solveSlug(List<Emission> emissions, List<Double> endOfWordProbs) {
         return solver.solve(new CromulenceSolverInput<Integer>(emissions.size()) {
 
             @Override
@@ -34,7 +34,7 @@ public class CromulenceSolver {
         });
     }
 
-    public CromulenceSolverResult solveRearrangement(List<List<Emission>> originalParts, List<Double> endOfWordProbs) {
+    public List<CromulenceSolverResult> solveRearrangement(List<List<Emission>> originalParts, List<Double> endOfWordProbs) {
         List<List<Emission>> parts = new ArrayList<>(originalParts);
         Collections.sort(parts, Comparator.comparingInt(Object::hashCode));
         return solver.solve(new CromulenceSolverInput<SolveRearrangementState>(parts.stream().mapToInt(List::size).sum()) {

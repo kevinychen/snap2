@@ -9,6 +9,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.kyc.snap.cromulence.CromulenceSolverResult;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
@@ -85,5 +86,23 @@ public interface WordsService {
     public static class ParseCrosswordCluesResponse {
 
         private final CrosswordClues clues;
+    }
+
+    @POST
+    @Path("words/cromulence")
+    OptimizeCromulenceResponse optimizeCromulence(OptimizeCromulenceRequest request);
+
+    @Data
+    public static class OptimizeCromulenceRequest {
+
+        private final List<String> parts;
+        private boolean canRearrange;
+        private List<Integer> wordLengths;
+    }
+
+    @Data
+    public static class OptimizeCromulenceResponse {
+
+        private final List<CromulenceSolverResult> results;
     }
 }
