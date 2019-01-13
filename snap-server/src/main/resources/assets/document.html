@@ -533,13 +533,12 @@
         }
       });
 
-      $('#sheet-new').on('click', e => {
-        post({ path: '/documents/sheets' }, response => {
-          setSheet(response.spreadsheetId, response.sheetId);
-        });
-      });
-
-      setSheet('1k9O-5t-gIpcvwWna4NVfD2BqjjeBQLAED35tLm_L_Vk', 1538405940);
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('spreadsheetId') && urlParams.has('sheetId')) {
+        setSheet(urlParams.get('spreadsheetId'), urlParams.get('sheetId'));
+      } else {
+        setSheet('1n2XG8kgi-XZoD1n5jZoW4UbIFI99U2l0Uc_9SQPb8TA', '0');
+      }
     });
   </script>
 
