@@ -25,6 +25,7 @@ import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
 import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageSpreadsheetWrapper;
+import com.kyc.snap.opencv.OpenCvManager.OcrMode;
 import com.kyc.snap.server.ImageSession.Parameters;
 
 import lombok.Data;
@@ -129,7 +130,7 @@ public class ImageResource implements ImageService {
     public Grid findGridText(String sessionId) {
         ImageSession session = sessions.getIfPresent(sessionId);
         Grid grid = session.getGrid();
-        gridParser.findGridText(session.getImage(), session.getPos(), grid);
+        gridParser.findGridText(session.getImage(), session.getPos(), grid, OcrMode.DEFAULT);
         return grid;
     }
 

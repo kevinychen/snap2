@@ -54,6 +54,7 @@
             <input name="find-text-mode" type="radio" value="USE_NATIVE">find stored text
           </span>
           <input name="find-text-mode" type="radio" value="USE_OCR">infer text with OCR
+          <input id="operation-find-grid-digits-only" type="checkbox">digits only
           <br>
         </span>
         <span class="initial-hide after-grid">
@@ -492,6 +493,7 @@
           findColors: $('#operation-find-grid-colors').is(':checked'),
           findBorders: $('#operation-find-grid-borders').is(':checked'),
           findTextMode: $('input:radio[name="find-text-mode"]:checked').val(),
+          ocrMode: $('#operation-find-grid-digits-only').is(':checked') ? 'DIGITS_ONLY' : 'DEFAULT',
         } }, response => {
           setGrid(response.gridPosition, response.grid);
         });

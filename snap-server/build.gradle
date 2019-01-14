@@ -53,7 +53,10 @@ task downloadFiles(type: Download) {
         "http://norvig.com/ngrams/count_1w.txt",
         "http://norvig.com/ngrams/count_2w.txt",
         "http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/sphinxdict/cmudict.0.7a_SPHINX_40",
-        "https://github.com/tesseract-ocr/tessdata_fast/raw/master/eng.traineddata"
+        "https://github.com/tesseract-ocr/tessdata_fast/raw/4.0.0/eng.traineddata",
+        // hardcoded training data until Tesseract 4 supports tessedit_char_whitelist
+        // https://github.com/tesseract-ocr/tesseract/issues/751
+        "https://github.com/Shreeshrii/tessdata_shreetest/raw/b69b7e6ba6c7b0bd15f1b5541ac8fa5746383ad4/digits.traineddata"
     ])
     dest "data"
 }

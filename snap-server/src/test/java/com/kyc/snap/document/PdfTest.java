@@ -12,7 +12,8 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.kyc.snap.document.Document.DocumentText;
-import com.kyc.snap.google.GoogleAPIManager;
+import com.kyc.snap.opencv.OpenCvManager;
+import com.kyc.snap.opencv.OpenCvManager.OcrMode;
 
 public class PdfTest {
 
@@ -28,7 +29,8 @@ public class PdfTest {
             assertThat(texts.stream().map(text -> text.getText()).reduce("", String::concat)).isEqualTo(expectedText);
 
             BufferedImage image = pdf.toImage(0);
-            assertThat(new GoogleAPIManager().batchFindText(ImmutableList.of(image)).get(image).trim()).isEqualTo(expectedText);
+            assertThat(new OpenCvManager().batchFindText(ImmutableList.of(image), OcrMode.DEFAULT).get(image).trim())
+                .isEqualTo(expectedText);
         }
     }
 }

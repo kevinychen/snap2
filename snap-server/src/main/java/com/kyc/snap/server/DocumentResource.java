@@ -130,7 +130,7 @@ public class DocumentResource implements DocumentService {
         if (request.getFindTextMode() == FindTextMode.USE_NATIVE)
             gridParser.findGridText(image.getTexts(), request.getSection().getRectangle(), gridPosition, grid);
         else if (request.getFindTextMode() == FindTextMode.USE_OCR)
-            gridParser.findGridText(image.getImage(), gridPosition, grid);
+            gridParser.findGridText(image.getImage(), gridPosition, grid, request.getOcrMode());
         if (request.isFindBorders()) {
             gridParser.findGridBorders(image.getImage(), gridPosition, grid);
             gridParser.findGridBorderStyles(grid);

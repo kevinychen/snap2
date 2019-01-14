@@ -3,15 +3,24 @@ package com.kyc.snap.opencv;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.IntPointer;
+import org.bytedeco.javacpp.lept;
+import org.bytedeco.javacpp.lept.PIX;
+import org.bytedeco.javacpp.tesseract.TessBaseAPI;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.TermCriteria;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import com.google.common.collect.ImmutableList;
@@ -82,6 +91,31 @@ public class OpenCvManager {
         return new Clusters(variance, clusterLabels, clusterCenters);
     }
 
+    public Map<BufferedImage, String> batchFindText(Collection<BufferedImage> images, OcrMode mode) {
+        try (TessBaseAPI api = new TessBaseAPI()) {
+            String language = mode == OcrMode.DIGITS_ONLY ? "digits" : "eng";
+            api.SetPageSegMode(10);
+            api.SetVariable("load_system_dawg", "0");
+            api.SetVariable("load_freq_dawg", "0");
+            if (api.Init("./data", language) != 0)
+                throw new IllegalStateException("Could not initialize tesseract.");
+            Map<BufferedImage, String> result = new HashMap<>();
+            images.forEach(image -> {
+                MatOfByte bytes = new MatOfByte();
+                Imgcodecs.imencode(".tif", toMat(image), bytes);
+                ByteBuffer buffer = ByteBuffer.wrap(bytes.toArray());
+                try (PIX pix = lept.pixReadMem(buffer, buffer.capacity())) {
+                    api.SetImage(pix);
+                    try (BytePointer textPtr = api.GetUTF8Text();
+                            IntPointer confidencePtr = api.AllWordConfidences()) {
+                        result.put(image, confidencePtr.get(0) > 50 ? textPtr.getString() : "");
+                    }
+                }
+            });
+            return result;
+        }
+    }
+
     private Mat toMat(BufferedImage image) {
         BufferedImage newImage = ImageUtils.copy(image);
         Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
@@ -127,5 +161,11 @@ public class OpenCvManager {
         private final double variance;
         private final Map<Tuple, Integer> labels;
         private final List<Tuple> centers;
+    }
+
+    public static enum OcrMode {
+
+        DEFAULT,
+        DIGITS_ONLY,
     }
 }

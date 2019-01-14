@@ -23,6 +23,7 @@ import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.image.ImageUtils.Blob;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.opencv.OpenCvManager.Clusters;
+import com.kyc.snap.opencv.OpenCvManager.OcrMode;
 import com.kyc.snap.opencv.OpenCvManager.Line;
 import com.kyc.snap.opencv.OpenCvManager.Tuple;
 import com.kyc.snap.util.Utils;
@@ -118,7 +119,7 @@ public class GridParser {
             }
     }
 
-    public void findGridText(BufferedImage image, GridPosition pos, Grid grid) {
+    public void findGridText(BufferedImage image, GridPosition pos, Grid grid, OcrMode mode) {
         Map<Point, BufferedImage> subimages = new HashMap<>();
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
@@ -128,7 +129,7 @@ public class GridParser {
                     new Point(j, i),
                     image.getSubimage(col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight()));
             }
-        Map<BufferedImage, String> allText = googleApi.batchFindText(subimages.values());
+        Map<BufferedImage, String> allText = openCv.batchFindText(subimages.values(), mode);
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
                 String text = allText.get(subimages.get(new Point(j, i)));
