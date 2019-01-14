@@ -54,12 +54,40 @@
             <input name="find-text-mode" type="radio" value="USE_NATIVE">find stored text
           </span>
           <input name="find-text-mode" type="radio" value="USE_OCR">infer text with OCR
-          <input id="operation-find-grid-digits-only" type="checkbox">digits only
+          <input id="operation-find-grid-ocr-options" type="button" value="Open OCR options">
+          <br>
+          <div id="ocr-options-section" class="initial-hide">
+            <div class="section">
+              <input id="ocr-options-single-character" type="checkbox">Single character per square
+            </div>
+            <div class="section">
+              Allowed characters:
+              <br>
+              <input name="ocr-options-allowed-characters" type="radio" value="ALL" checked>all
+              <br>
+              <input name="ocr-options-allowed-characters" type="radio" value="DIGITS_ONLY">digits only
+              <br>
+              <input name="ocr-options-allowed-characters" type="radio" value="UPPERCASE_LETTERS_ONLY">uppercase letters only
+              <br>
+              <input name="ocr-options-allowed-characters" type="radio" value="CUSTOM">custom (enter all valid characters in a string):
+              <input id="ocr-options-allowed-characters-custom">
+            </div>
+            <div class="section">
+              <input id="ocr-options-fullness" type="number" value="0.8" min="0.0" max="1.0">0 ≤ Fullness ≤ 1
+              <br>
+              (this value should estimate the percentage of each square's width and height not covered by borders/embellishment, and greatly improves character recognition)
+            </div>
+            <div class="section">
+              <input id="ocr-options-confidence-threshold" type="number" value="50" min="0" max="100">0 ≤ Confidence threshold ≤ 100
+              <br>
+              (how much confidence is required for a character to be recognized; the higher, the stricter the character recognition)
+            </div>
+          </div>
           <br>
         </span>
         <span class="initial-hide after-grid">
           <input id="operation-find-crossword" type="button" value="Parse crossword">
-          <input id="operation-find-crossword-clues" type="button" value="Open clues menu">
+          <input id="operation-find-crossword-clues" type="button" value="Open clues dropdown">
           <br>
           <textarea id="crossword-clues-textarea" class="initial-hide" placeholder="Enter clues here"></textarea>
         </span>
@@ -484,6 +512,15 @@
       });
 
       $('#operation-find-grid').on('click', e => {
+        const allowedCharactersOption = $('input:radio[name="ocr-options-allowed-characters"]:checked').val();
+        let allowedCharacters = undefined;
+        if (allowedCharactersOption === 'DIGITS_ONLY') {
+          allowedCharacters = '0123456789';
+        } else if (allowedCharactersOption === 'UPPERCASE_LETTERS_ONLY') {
+          allowedCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        } else if (allowedCharactersOption === 'CUSTOM') {
+          allowedCharacters = $('#ocr-options-allowed-characters-custom').val();
+        }
         postJson({ path: `/documents/${session.document.id}/grid`, body: {
           section: {
             page: session.page,
@@ -493,10 +530,25 @@
           findColors: $('#operation-find-grid-colors').is(':checked'),
           findBorders: $('#operation-find-grid-borders').is(':checked'),
           findTextMode: $('input:radio[name="find-text-mode"]:checked').val(),
-          ocrMode: $('#operation-find-grid-digits-only').is(':checked') ? 'DIGITS_ONLY' : 'DEFAULT',
+          ocrOptions: {
+            allowedCharacters: allowedCharacters,
+            singleCharacter: $('#ocr-options-single-character').is(':checked'),
+            fullness: parseFloat($('#ocr-options-fullness').val()),
+            confidenceThreshold: parseInt($('#ocr-options-confidence-threshold').val()),
+          },
         } }, response => {
           setGrid(response.gridPosition, response.grid);
         });
+      });
+
+      $('#operation-find-grid-ocr-options').on('click', e => {
+        if ($('#ocr-options-section').is(':hidden')) {
+          $('#ocr-options-section').show();
+          $('#operation-find-grid-ocr-options').val('Close OCR options');
+        } else {
+          $('#ocr-options-section').hide();
+          $('#operation-find-grid-ocr-options').val('Open OCR options');
+        }
       });
 
       $('#operation-find-crossword').on('click', e => {
@@ -515,10 +567,10 @@
       $('#operation-find-crossword-clues').on('click', e => {
         if ($('#crossword-clues-textarea').is(':hidden')) {
           $('#crossword-clues-textarea').show();
-          $('#operation-find-crossword-clues').val('Close clues menu');
+          $('#operation-find-crossword-clues').val('Close clues dropdown');
         } else {
           $('#crossword-clues-textarea').hide();
-          $('#operation-find-crossword-clues').val('Open clues menu');
+          $('#operation-find-crossword-clues').val('Open clues dropdown');
         }
       });
       $('#crossword-clues-textarea').on('input', e => {
@@ -560,10 +612,23 @@
 
     input {
       margin-left: 10px;
+      margin-right: 2px;
     }
 
     input[type=number] {
       width: 42px;
+    }
+
+    #ocr-options-section {
+      position: absolute;
+      z-index: 2915;
+      background-color: white;
+      border: 2px solid black;
+      margin-top: 2px;
+    }
+
+    #ocr-options-allowed-characters-custom {
+      width: 200px;
     }
 
     #crossword-clues-textarea {

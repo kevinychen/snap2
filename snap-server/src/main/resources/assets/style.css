@@ -67,3 +67,7 @@
 .parsed {
   font-family: monospace;
 }
+
+.section {
+  margin: 20px;
+}

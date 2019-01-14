@@ -91,14 +91,17 @@ public class OpenCvManager {
         return new Clusters(variance, clusterLabels, clusterCenters);
     }
 
-    public Map<BufferedImage, String> batchFindText(Collection<BufferedImage> images, OcrMode mode) {
+    public Map<BufferedImage, String> batchFindText(Collection<BufferedImage> images, OcrOptions options) {
         try (TessBaseAPI api = new TessBaseAPI()) {
-            String language = mode == OcrMode.DIGITS_ONLY ? "digits" : "eng";
-            api.SetPageSegMode(10);
-            api.SetVariable("load_system_dawg", "0");
-            api.SetVariable("load_freq_dawg", "0");
-            if (api.Init("./data", language) != 0)
+            if (api.Init("./data", "eng") != 0)
                 throw new IllegalStateException("Could not initialize tesseract.");
+            if (options.allowedCharacters != null)
+                api.SetVariable("tessedit_char_whitelist", options.allowedCharacters);
+            if (options.singleCharacter) {
+                api.SetPageSegMode(10);
+                api.SetVariable("load_system_dawg", "0");
+                api.SetVariable("load_freq_dawg", "0");
+            }
             Map<BufferedImage, String> result = new HashMap<>();
             images.forEach(image -> {
                 MatOfByte bytes = new MatOfByte();
@@ -106,9 +109,14 @@ public class OpenCvManager {
                 ByteBuffer buffer = ByteBuffer.wrap(bytes.toArray());
                 try (PIX pix = lept.pixReadMem(buffer, buffer.capacity())) {
                     api.SetImage(pix);
+                    api.SetRectangle(
+                        (int) (image.getWidth() * (1 - options.fullness) / 2),
+                        (int) (image.getHeight() * (1 - options.fullness) / 2),
+                        (int) (image.getWidth() * options.fullness),
+                        (int) (image.getHeight() * options.fullness));
                     try (BytePointer textPtr = api.GetUTF8Text();
                             IntPointer confidencePtr = api.AllWordConfidences()) {
-                        result.put(image, confidencePtr.get(0) > 50 ? textPtr.getString() : "");
+                        result.put(image, confidencePtr.get(0) >= options.confidenceThreshold ? textPtr.getString() : "");
                     }
                 }
             });
@@ -163,9 +171,24 @@ public class OpenCvManager {
         private final List<Tuple> centers;
     }
 
-    public static enum OcrMode {
+    @Data
+    public static class OcrOptions {
 
-        DEFAULT,
-        DIGITS_ONLY,
+        private String allowedCharacters;
+        private boolean singleCharacter = false;
+
+        /**
+         * A number from 0 to 1 representing how much of the image should be searched for
+         * characters. For example, 0.8 represents a sub-image with the same center but with a width
+         * and height 4/5 of the original. This setting is useful to avoid borders, which can be
+         * very detrimental to Tesseract OCR results.
+         */
+        private double fullness = 0.8;
+
+        /**
+         * A number from 0 to 100 representing how confident the OCR result needs to be in order to
+         * accept it. The higher this value, the more confidence is required.
+         */
+        private int confidenceThreshold = 50;
     }
 }

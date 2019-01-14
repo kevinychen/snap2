@@ -20,7 +20,7 @@ import com.kyc.snap.document.Section;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
-import com.kyc.snap.opencv.OpenCvManager.OcrMode;
+import com.kyc.snap.opencv.OpenCvManager.OcrOptions;
 
 import lombok.Data;
 
@@ -103,7 +103,7 @@ public interface DocumentService {
         private boolean findColors = false;
         private boolean findBorders = false;
         private FindTextMode findTextMode = FindTextMode.NONE;
-        private OcrMode ocrMode = OcrMode.DEFAULT;
+        private OcrOptions ocrOptions = new OcrOptions();
 
         public enum FindTextMode {
 

@@ -2,7 +2,7 @@
   <head>
   </head>
   <body>
-    <div>
+    <div class="section">
       Examples:
       <ul>
         <li>
@@ -20,14 +20,14 @@
       </ul>
       Capital letters denote letters you're sure about, lowercase letters denote about 80% confidence, and asterisks represent wildcards.
     </div>
-    <div>
+    <div class="section">
       Letters/parts: <input id="solver-input-parts"><br>
       Space/comma separated word lengths (can be left blank): <input id="solver-input-word-lengths"><br>
       Should rearrange letters/parts: <input id="solver-input-can-rearrange" type="checkbox"><br>
       <input id="solver-input-submit" type="button" value="Solve!">
     </div>
-    <div id="loader" class="initial-hide loader"></div>
-    <div>
+    <div id="loader" class="initial-hide loader section"></div>
+    <div class="section">
       <table id="solver-input-results"></table>
     </div>
   </body>
@@ -75,10 +75,6 @@
 
   <link rel="stylesheet" href="style.css">
   <style>
-    div {
-      margin: 20px;
-    }
-
     #solver-input-parts {
       width: 500px;
     }
