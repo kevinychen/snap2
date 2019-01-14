@@ -1,7 +1,7 @@
 Snap
 ====
 
-Snap provides tooling for puzzle hunts, such as parsing of grids and crosswords and exporting them to Google Sheets. Try Snap at http://167.99.173.63:8080/.
+Snap provides tooling for puzzle hunts, such as parsing of grids and crosswords and exporting them to Google Sheets. Try Snap at [util.in](https://util.in).
 
 Development
 -----------

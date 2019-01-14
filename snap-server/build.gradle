@@ -58,6 +58,8 @@ task downloadWordFiles(type: Download) {
 }
 
 task downloadTesseractFiles(type: Download) {
+    // TODO: This training data is better, but I don't know where I got it from:
+    // https://drive.google.com/file/d/1xm710oVrukK3KdTq3xcJ3D__jkJj5EE6/view?usp=sharing
     src "https://github.com/tesseract-ocr/tessdata/raw/3.04.00/eng.traineddata"
     dest "data/tessdata"
 }
