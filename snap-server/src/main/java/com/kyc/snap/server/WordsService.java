@@ -1,7 +1,6 @@
 package com.kyc.snap.server;
 
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -48,12 +47,13 @@ public interface WordsService {
     public static class SolveWordsearchRequest {
 
         private List<String> grid;
+        private boolean boggle = false;
     }
 
     @Data
     public static class SolveWordsearchResponse {
 
-        private final Set<WordsearchSolver.Result> results;
+        private final List<WordsearchSolver.Result> results;
     }
 
     @POST

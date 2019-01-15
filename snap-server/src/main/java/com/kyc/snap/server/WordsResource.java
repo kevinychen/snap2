@@ -1,7 +1,6 @@
 package com.kyc.snap.server;
 
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.kyc.snap.cromulence.CromulenceSolverResult;
@@ -30,7 +29,7 @@ public class WordsResource implements WordsService {
 
     @Override
     public SolveWordsearchResponse solveWordsearch(SolveWordsearchRequest request) {
-        Set<WordsearchSolver.Result> results = wordsearchSolver.find(request.getGrid());
+        List<WordsearchSolver.Result> results = wordsearchSolver.find(request.getGrid(), request.isBoggle());
         return new SolveWordsearchResponse(results);
     }
 

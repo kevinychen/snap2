@@ -7,6 +7,9 @@
         <div>Enter wordsearch grid:</div>
         <textarea id="wordsearch-textarea"></textarea>
         <br>
+        <input name="direction-mode" type="radio" value="straight" checked>Straight
+        <input name="direction-mode" type="radio" value="boggle">Boggle
+        <br>
         <input id="solve-wordsearch" type="button" value="Solve Wordsearch"><br>
         <div id="loader" class="initial-hide loader"></div>
       </div>
@@ -18,9 +21,6 @@
       </div>
     </div>
     <div class="half">
-      <input name="direction-mode" type="radio" value="straight" checked>Straight
-      <input name="direction-mode" type="radio" value="boggle">Boggle
-      <br>
       <div id="results-list">
       </div>
     </div>
@@ -58,21 +58,6 @@
 
       $('#results-list').empty();
       var results = session.results;
-      if ($('input:radio[name="direction-mode"]:checked').val() === 'straight') {
-        results = results.filter(result => {
-          const steps = new Set();
-          for (var i = 0; i < result.positions.length - 1; i++) {
-            steps.add({
-              x: result.positions[i + 1].x - result.positions[i].x,
-              y: result.positions[i + 1].y - result.positions[i].y,
-            });
-          }
-          return steps.size === 1;
-        });
-      }
-      results.sort(function(result1, result2) {
-        return result2.word.length - result1.word.length;
-      });
       for (const result of results) {
         const resultHtml = document.createElement('input');
         resultHtml.value = result.word;
@@ -99,16 +84,15 @@
       });
 
       $('#solve-wordsearch').click(e => {
-        postJson({ path: '/words/search', body: { grid: getGrid() } }, response => {
+        postJson({ path: '/words/search', body: {
+          grid: getGrid(),
+          boggle: $('input:radio[name="direction-mode"]:checked').val() === 'boggle',
+        } }, response => {
           session.results = response.results;
           setResults();
           $('#edit-mode').hide();
           $('#view-mode').show();
         });
-      });
-
-      $('input[type=radio][name="direction-mode"]').change(() => {
-        setResults();
       });
     });
   </script>
