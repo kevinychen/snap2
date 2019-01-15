@@ -145,7 +145,7 @@ public class GridParser {
         for (DocumentText text : texts) {
             Rectangle r = text.getBounds();
             int x = (int) (r.getX() + r.getWidth() / 2 - region.getX());
-            int y = (int) (r.getY() + r.getHeight() / 2 - region.getY());
+            int y = (int) (r.getY() - r.getHeight() / 2 - region.getY());
             int textRow = -1;
             for (int i = 0; i < pos.getNumRows(); i++) {
                 Row row = pos.getRows().get(i);
