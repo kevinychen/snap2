@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
+
 import lombok.Data;
 
 @Data
@@ -17,19 +19,23 @@ public class WordsearchSolver {
     private final DictionaryManager dictionary;
 
     public List<Result> find(List<String> grid, boolean boggle) {
+        int width = grid.stream().mapToInt(String::length).max().orElse(0);
+        for (int i = 0; i < grid.size(); i++)
+            grid.set(i, Strings.padEnd(grid.get(i), width, '.'));
+
         Set<String> words = dictionary.getWords();
         List<Point> positions = new ArrayList<>();
         List<Result> results = new ArrayList<>();
         if (boggle) {
-            boolean[][] used = new boolean[grid.size()][grid.isEmpty() ? 0 : grid.get(0).length()];
+            boolean[][] used = new boolean[grid.size()][width];
             for (String word : words)
                 for (int i = 0; i < grid.size(); i++)
-                    for (int j = 0; j < grid.get(i).length(); j++)
+                    for (int j = 0; j < width; j++)
                         if (grid.get(i).charAt(j) == word.charAt(0))
                             findBoggleHelper(grid, word, 1, i, j, positions, used, results);
         } else {
             for (int i = 0; i < grid.size(); i++)
-                for (int j = 0; j < grid.get(i).length(); j++)
+                for (int j = 0; j < width; j++)
                     for (int di = -1; di <= 1; di++)
                         for (int dj = -1; dj <= 1; dj++)
                             if (di != 0 || dj != 0) {

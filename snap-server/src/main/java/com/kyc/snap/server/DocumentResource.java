@@ -196,7 +196,7 @@ public class DocumentResource implements DocumentService {
     private static Point getNewMarker(Point marker, int width, List<Integer> colWidths) {
         int col = marker.x;
         while (width > 0) {
-            width -= colWidths.get(col);
+            width -= colWidths.get(Math.min(col, colWidths.size() - 1));
             col++;
         }
         return new Point(col, marker.y);

@@ -30,6 +30,7 @@ import com.google.api.services.sheets.v4.model.ExtendedValue;
 import com.google.api.services.sheets.v4.model.GetSpreadsheetByDataFilterRequest;
 import com.google.api.services.sheets.v4.model.GridData;
 import com.google.api.services.sheets.v4.model.GridRange;
+import com.google.api.services.sheets.v4.model.InsertDimensionRequest;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.RowData;
 import com.google.api.services.sheets.v4.model.Sheet;
@@ -170,6 +171,18 @@ public class SpreadsheetManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void insertRowOrColumns(Dimension dimension, int index, int numRowOrColumns) {
+        executeRequests(
+            new Request()
+                .setInsertDimension(new InsertDimensionRequest()
+                    .setInheritFromBefore(true)
+                    .setRange(new DimensionRange()
+                        .setSheetId(sheetId)
+                        .setDimension(dimension.name())
+                        .setStartIndex(index)
+                        .setEndIndex(index + numRowOrColumns))));
     }
 
     public void setAllRowOrColumnSizes(Dimension dimension, int size) {

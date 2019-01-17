@@ -3,7 +3,12 @@
     <link href="wrench.png" rel="icon">
   </head>
   <body>
-    <a href="index.html" class="home"><img src="wrench.png"></a>
+    <div class="banner">
+      <a href="index.html" class="hsection"><img src="wrench.png"></a>
+      <a href="/document.html" class="linker hsection" enabled>DOCUMENT</a>
+      <a href="/wordsearch.html" class="linker hsection">WORD SEARCH</a>
+      <a href="/solver.html" class="linker hsection">HEAVY-DUTY ANAGRAM SOLVER</a>
+    </div>
     <div class="half">
       <div class="section">
         Upload PDF: <input id="pdf-input" type="file" name="pdf">
@@ -81,6 +86,7 @@
           <span class="hsection">
             <input id="operation-find-grid-ocr-options" type="button" value="Open OCR options" class="initial-hide ocr-options">
           </span>
+          <br>
 
           <div id="ocr-options-section" class="initial-hide ocr-options">
             <div class="section">
@@ -115,6 +121,7 @@
           <input id="operation-find-crossword-clues" type="button" value="Open clues dropdown">
           <br>
           <textarea id="crossword-clues-textarea" class="initial-hide" placeholder="Enter clues here in the form:&#10;Across&#10;1. Across clue 1&#10;2. Across clue 2&#10;...&#10;Down&#10;1. Down clue 1"></textarea>
+          <br>
         </span>
         <span class="initial-hide after-section">
           <input id="export" class="initial-hide after-section" type="button" value="Copy to Google Sheet">
@@ -145,7 +152,7 @@
       spreadsheetId: undefined,
       sheetId: undefined,
     };
-    eps = 10;
+    eps = 25;
 
     function getImageAsDataURL(id, callback) {
       fetch(`/api/files/${id}`, { method: 'GET' })
@@ -392,7 +399,9 @@
 
       $('#url-input').on('input', e => {
         const url = e.target.value;
-        postJson({ path: '/documents/url', body: { url: url } }, setDocument);
+        if (url) {
+          postJson({ path: '/documents/url', body: { url: url } }, setDocument);
+        }
       });
 
       $('#document-page-left').on('click', e => {
