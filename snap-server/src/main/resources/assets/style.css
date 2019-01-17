@@ -1,9 +1,19 @@
 .half {
   height: 100%;
-  width: 48%;
+  width: 47%;
   float: left;
-  margin: 1%;
   position: relative;
+  padding: 10px;
+}
+
+.home {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.hsection {
+  margin-right: 5px;
 }
 
 #image-container {
@@ -14,6 +24,11 @@
   max-height: 100%;
   width: 100%;
   border: 1px black solid;
+}
+
+img[src="wrench.png"] {
+  width: 48px;
+  height: 48px;
 }
 
 .initial-hide {
@@ -69,5 +84,9 @@
 }
 
 .section {
-  margin: 20px;
+  margin-bottom: 20px;
+}
+
+.whole {
+  padding: 10px;
 }

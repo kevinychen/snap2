@@ -1,10 +1,15 @@
 <html>
   <head>
+    <link href="wrench.png" rel="icon">
   </head>
   <body>
+    <a href="index.html" class="home"><img src="wrench.png"></a>
     <div class="half">
       <div id="edit-mode">
-        <div>Enter wordsearch grid:</div>
+        <div>
+          Enter wordsearch grid (spaces/puncuation are ignored):
+          <input id="demo" type="button" value="Demo">
+        </div>
         <textarea id="wordsearch-textarea"></textarea>
         <br>
         <input name="direction-mode" type="radio" value="straight" checked>Straight
@@ -78,6 +83,13 @@
     }
 
     $(document).ready(function() {
+      $('#demo').click(e => {
+        $('#wordsearch-textarea').val(
+          'OHQRECTANGLEP\nDVQIMHESQWRAK\nICAVULQNTHRKO\nOPXLQUOROAINN\n'
+          + 'ZNPPAGIMLCHYO\nERURAABLHREDG\nPYETNUEZEFXSA\nAICGSLCDEHAPT\n'
+          + 'ROLPOINYBEGHN\nTELGRIPHUIOEE\nSURCLATYCONRP\nGALYLMECRJAEK\nMECZHFDIMARYP');
+      });
+
       $('#back-to-edit-mode').click(e => {
         $('#edit-mode').show();
         $('#view-mode').hide();

@@ -1,20 +1,26 @@
 <html>
   <head>
+    <link href="wrench.png" rel="icon">
   </head>
   <body>
+    <a href="index.html" class="home"><img src="wrench.png"></a>
     <div class="half">
-      Upload PDF: <input id="pdf-input" type="file" name="pdf">
-      <br>
-      or upload image: <input id="image-input" type="file" name="image">
-      <br>
-      or paste URL: <input id="url-input" size=80>
-      <br>
-      <div class="initial-hide after-document">
-        <input id="document-page-left" class="nav" type="button" value="&lt;">
-        Page <span id="document-page-current"></span>/<span id="document-page-total"></span>
-        <input id="document-page-right" class="nav" type="button" value="&gt;">
-        <input id="select-all" type="button" value="Select all">
+      <div class="section">
+        Upload PDF: <input id="pdf-input" type="file" name="pdf">
         <br>
+        or upload image: <input id="image-input" type="file" name="image">
+        <br>
+        or paste URL: <input id="url-input" size=80>
+      </div>
+      <div class="section initial-hide after-document">
+        <span class="hsection">
+          <input id="document-page-left" class="nav" type="button" value="&lt;">
+          Page <span id="document-page-current"></span>/<span id="document-page-total"></span>
+          <input id="document-page-right" class="nav" type="button" value="&gt;">
+        </span>
+        <span class="hsection">
+          Drag a region over the image, or <input id="select-all" type="button" value="Select all">
+        </span>
         <div id="image-container">
           <img id="image" alt="" />
           <canvas id="section-canvas" class="overlay-canvas" width="0" height="0"></canvas>
@@ -24,40 +30,59 @@
     </div>
     <div class="half">
       <div id="loader" class="initial-hide loader"></div>
-      <div id="options">
+      <div id="options" class="section">
         <span class="initial-hide after-section">
-          <input id="export" class="initial-hide after-section" type="button" value="Copy to Google Sheet">
-          (at 🍊)
-          <br>
-        </span>
-        <br>
-        <span class="initial-hide after-section">
-          <input id="operation-find-grid-lines" type="button" value="Find grid lines">
-          <span title="Lines are explicitly marked in the image.">
+          <div id="instructions">
+            Instructions
+            <ol>
+              <li>(Optional) If you've selected a grid, click <code>Find grid lines</code>.</li>
+              <li>Click <code>Parse content</code> to parse colors, borders, and text in each grid square, or in the entire region if
+                you skipped the previous step.</li>
+              <li>(Optional) If you've selected a crossword, copy & paste the clues into the <code>clues dropdown</code> and click
+                <code>Parse crossword</code>.</li>
+              <li>Copy & paste the orange emoji (🍊) into the Google sheet where you want to copy the content, and click <code>Copy to Google Sheet</code>.</li>
+            </ol>
+          </div>
+          <span class="hsection">
+            <input id="operation-find-grid-lines" type="button" value="Find grid lines">
+          </span>
+          <span class="hsection" title="Lines are explicitly marked in the image.">
             <input name="find-grid-lines-mode" type="radio" value="EXPLICIT" checked>explicit
           </span>
-          <span title="Lines are not explicitly present in the image, but there is spacing between rows and columns.">
+          <span class="hsection" title="Lines are not explicitly present in the image, but there is spacing between rows and columns.">
             <input name="find-grid-lines-mode" type="radio" value="IMPLICIT">implicit
           </span>
-          <span title="Lines should be evenly spaced, but some lines are missing from the image.">
+          <span class="hsection" title="Lines should be evenly spaced, but some lines are missing from the image.">
             <input id="operation-find-grid-lines-interpolate" type="checkbox">interpolate
           </span>
-          <span title="Approximate size in pixels of a single grid square. Not required, but can be manually tuned for better results.">
+          <span class="hsection" title="Approximate size in pixels of a single grid square. Not required, but can be manually tuned for better results.">
             <input id="operation-find-grid-lines-approx-grid-square-size" type="number" value="64">approx square size
           </span>
           <br>
 
-          <input id="operation-find-grid" type="button" value="Parse content">
-          <input id="operation-find-grid-colors" type="checkbox" checked>colors
-          <input id="operation-find-grid-borders" type="checkbox">borders
-          <input name="find-text-mode" type="radio" value="NONE" checked>no text
-          <span title="Text is present in the document (e.g. textual PDFs).">
+          <span class="hsection">
+            <input id="operation-find-grid" type="button" value="Parse content">
+          </span>
+          <span class="hsection" title="Parse the color of each grid square">
+            <input id="operation-find-grid-colors" type="checkbox" checked>colors
+          </span>
+          <span class="hsection" title="Parse borders between grid squares">
+            <input id="operation-find-grid-borders" type="checkbox">borders
+          </span>
+          <span class="hsection">
+            <input name="find-text-mode" type="radio" value="NONE" checked>no text
+          </span>
+          <span class="hsection" title="Text is present in the document (e.g. textual PDFs).">
             <input name="find-text-mode" type="radio" value="USE_NATIVE">find stored text
           </span>
-          <input name="find-text-mode" type="radio" value="USE_OCR">infer text with OCR
-          <input id="operation-find-grid-ocr-options" type="button" value="Open OCR options">
-          <br>
-          <div id="ocr-options-section" class="initial-hide">
+          <span class="hsection">
+            <input name="find-text-mode" type="radio" value="USE_OCR">infer text with OCR
+          </span>
+          <span class="hsection">
+            <input id="operation-find-grid-ocr-options" type="button" value="Open OCR options" class="initial-hide ocr-options">
+          </span>
+
+          <div id="ocr-options-section" class="initial-hide ocr-options">
             <div class="section">
               <input id="ocr-options-single-character" type="checkbox">Single character per square
             </div>
@@ -84,13 +109,17 @@
               (how much confidence is required for a character to be recognized; the higher, the stricter the character recognition)
             </div>
           </div>
-          <br>
         </span>
         <span class="initial-hide after-grid">
           <input id="operation-find-crossword" type="button" value="Parse crossword">
           <input id="operation-find-crossword-clues" type="button" value="Open clues dropdown">
           <br>
-          <textarea id="crossword-clues-textarea" class="initial-hide" placeholder="Enter clues here"></textarea>
+          <textarea id="crossword-clues-textarea" class="initial-hide" placeholder="Enter clues here in the form:&#10;Across&#10;1. Across clue 1&#10;2. Across clue 2&#10;...&#10;Down&#10;1. Down clue 1"></textarea>
+        </span>
+        <span class="initial-hide after-section">
+          <input id="export" class="initial-hide after-section" type="button" value="Copy to Google Sheet">
+          (at 🍊)
+          <br>
         </span>
         <br>
       </div>
@@ -541,6 +570,15 @@
         });
       });
 
+      $('input:radio[name="find-text-mode"]').on('change', function() {
+        if ($('input:radio[name="find-text-mode"]:checked').val() == 'USE_OCR') {
+          $('.ocr-options').show();
+          $('#operation-find-grid-ocr-options').val('Close OCR options');
+        } else {
+          $('.ocr-options').hide();
+        }
+      })
+
       $('#operation-find-grid-ocr-options').on('click', e => {
         if ($('#ocr-options-section').is(':hidden')) {
           $('#ocr-options-section').show();
@@ -599,8 +637,12 @@
   <link rel="stylesheet" href="style.css">
   <style>
     #options {
-      height: 25%;
-      min-height: 140px;
+      height: 280px;
+    }
+
+    #instructions {
+      max-height: 180px;
+      overflow: hidden;
     }
 
     #sheet-frame {
@@ -611,7 +653,6 @@
     }
 
     input {
-      margin-left: 10px;
       margin-right: 2px;
     }
 
@@ -625,6 +666,7 @@
       background-color: white;
       border: 2px solid black;
       margin-top: 2px;
+      padding: 10px;
     }
 
     #ocr-options-allowed-characters-custom {

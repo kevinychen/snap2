@@ -1,34 +1,40 @@
 <html>
   <head>
+    <link href="wrench.png" rel="icon">
   </head>
   <body>
-    <div class="section">
-      Examples:
-      <ul>
-        <li>
-          A string with some unknown letters: (<span class="parsed">*H*S*nEH**so*E**KNeWN*E*tE*S</span>)
-          <input id="demo1" type="button" value="Demo">
-        </li>
-        <li>
-          A collection of letters to anagram: (<span class="parsed">AADDDEGILNNOORRRRUU</span>)
-          <input id="demo2" type="button" value="Demo">
-        </li>
-        <li>
-          A space/comma separated list of character sequences to rearrange (<span class="parsed">CHA DEB ERO GRA HES ITY LFO MPI ONC REV TIT TOF TOT UDE WEA WIL E</span>)
-          <input id="demo3" type="button" value="Demo">
-        </li>
-      </ul>
-      Capital letters denote letters you're sure about, lowercase letters denote about 80% confidence, and asterisks represent wildcards.
-    </div>
-    <div class="section">
-      Letters/parts: <input id="solver-input-parts"><br>
-      Space/comma separated word lengths (can be left blank): <input id="solver-input-word-lengths"><br>
-      Should rearrange letters/parts: <input id="solver-input-can-rearrange" type="checkbox"><br>
-      <input id="solver-input-submit" type="button" value="Solve!">
-    </div>
-    <div id="loader" class="initial-hide loader section"></div>
-    <div class="section">
-      <table id="solver-input-results"></table>
+    <a href="index.html" class="home"><img src="wrench.png"></a>
+    <div class="whole">
+      <div class="section">
+        Examples:
+        <ul>
+          <li>
+            A string with some unknown letters: (<span class="parsed">*H*S*nEH**so*E**KNeWN*E*tE*S</span>)
+            <input id="demo1" type="button" value="Demo">
+          </li>
+          <li>
+            A collection of letters to anagram: (<span class="parsed">AADDDEGILNNOORRRRUU</span>)
+            <input id="demo2" type="button" value="Demo">
+          </li>
+          <li>
+            A space/comma separated list of character sequences to rearrange (<span class="parsed">CHA DEB ERO GRA HES ITY
+              LFO MPI ONC REV TIT TOF TOT UDE WEA WIL E</span>)
+            <input id="demo3" type="button" value="Demo">
+          </li>
+        </ul>
+        Capital letters denote letters you're sure about, lowercase letters denote about 80% confidence, and asterisks
+        represent wildcards.
+      </div>
+      <div class="section">
+        Letters/parts: <input id="solver-input-parts"><br>
+        Space/comma separated word lengths (can be left blank): <input id="solver-input-word-lengths"><br>
+        Should rearrange letters/parts: <input id="solver-input-can-rearrange" type="checkbox"><br>
+        <input id="solver-input-submit" type="button" value="Solve!">
+      </div>
+      <div id="loader" class="initial-hide loader section"></div>
+      <div class="section">
+        <table id="solver-input-results"></table>
+      </div>
     </div>
   </body>
 
