@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
@@ -78,20 +79,19 @@ public class CrosswordSpreadsheetWrapper {
             }
         }
 
+        Function<PointAndIndex, String> nthCharFormula = answer -> String.format(
+            // the regex expression takes the nth character of a given string, treating (...) as a single character
+            "CONCATENATE(REGEXEXTRACT(%s,\"(?:[^\\(\\)]|\\([^\\)]*\\)){%d}(?:([^\\(\\)])|\\(([^\\)]*)\\))\"))",
+            spreadsheets.getRef(answer.row, answer.col),
+            answer.index);
         Map<Point, String> references = spreadsheets.getReferences(gridToAnswers.keySet());
         for (Point p : gridToAnswers.keySet()) {
             Collection<PointAndIndex> answers = gridToAnswers.get(p);
             String refArray = Joiner.on(";").join(answers.stream()
-                .map(answer -> String.format(
-                    "MID(%s,%d,1)",
-                    spreadsheets.getRef(answer.row, answer.col),
-                    answer.index + 1))
+                .map(nthCharFormula)
                 .collect(Collectors.toList()));
             String filterArray = Joiner.on(";").join(answers.stream()
-                .map(answer -> String.format(
-                    "MID(%s,%d,1)<>\"\"",
-                    spreadsheets.getRef(answer.row, answer.col),
-                    answer.index + 1))
+                .map(answer -> nthCharFormula.apply(answer) + "<>\"\"")
                 .collect(Collectors.toList()));
             String allCharsExpression = String.format(
                 "UNIQUE(FILTER({%s},{%s}))",
