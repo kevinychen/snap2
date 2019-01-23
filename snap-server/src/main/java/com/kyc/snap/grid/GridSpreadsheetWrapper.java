@@ -1,5 +1,6 @@
 package com.kyc.snap.grid;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,19 +11,30 @@ import com.kyc.snap.google.SpreadsheetManager.Dimension;
 import com.kyc.snap.google.SpreadsheetManager.SizedRowOrColumn;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
 import com.kyc.snap.grid.Grid.Square;
+import com.kyc.snap.image.ImageUtils;
 
 import lombok.Data;
 
 @Data
 public class GridSpreadsheetWrapper {
 
-    public static final double DEFAULT_SCALE = 0.75;
+    public static final int AVERAGE_HEIGHT = 25;
+    public static final double IMAGE_OPACITY = 0.4;
+    /**
+     * For some reason, a column of width X pixels is slightly longer than a row of height X pixels.
+     * This value represents the correction ratio.
+     */
+    public static final double WIDTH_CORRECTION = 1.04;
 
     private final SpreadsheetManager spreadsheets;
     private final int rowOffset;
     private final int colOffset;
 
-    public void toSpreadsheet(GridPosition pos, Grid grid, double scale) {
+    public void toSpreadsheet(GridPosition pos, Grid grid, BufferedImage image) {
+        int totalWidth = pos.getCols().stream().mapToInt(GridPosition.Col::getWidth).sum();
+        int totalHeight = pos.getRows().stream().mapToInt(GridPosition.Row::getHeight).sum();
+        double scale = (double) pos.getRows().size() * AVERAGE_HEIGHT / totalHeight;
+
         List<SizedRowOrColumn> rows = new ArrayList<>();
         for (int i = 0; i < pos.getNumRows(); i++)
             rows.add(new SizedRowOrColumn(i + rowOffset, (int) (pos.getRows().get(i).getHeight() * scale)));
@@ -52,5 +64,14 @@ public class GridSpreadsheetWrapper {
         spreadsheets.setBackgroundColors(coloredCells);
         spreadsheets.setValues(valueCells);
         spreadsheets.setBorders(borderedCells);
+
+        image = image.getSubimage(pos.getCols().get(0).getStartX(), pos.getRows().get(0).getStartY(), totalWidth, totalHeight);
+        image = ImageUtils.makeTransparent(image, IMAGE_OPACITY);
+        spreadsheets.insertImage(
+            image,
+            rowOffset,
+            colOffset,
+            (int) Math.round(cols.stream().mapToInt(SizedRowOrColumn::getSize).sum() * WIDTH_CORRECTION),
+            rows.stream().mapToInt(SizedRowOrColumn::getSize).sum());
     }
 }

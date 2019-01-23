@@ -153,7 +153,7 @@ public class ImageResource implements ImageService {
         spreadsheets.clear();
         spreadsheets.setAllRowOrColumnSizes(Dimension.ROWS, DEFAULT_CELL_LENGTH);
         spreadsheets.setAllRowOrColumnSizes(Dimension.COLUMNS, DEFAULT_CELL_LENGTH);
-        gridSpreadsheets.toSpreadsheet(session.getPos(), session.getGrid(), GridSpreadsheetWrapper.DEFAULT_SCALE);
+        gridSpreadsheets.toSpreadsheet(session.getPos(), session.getGrid(), session.getImage());
         return new StringJson(spreadsheets.getUrl());
     }
 

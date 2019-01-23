@@ -81,8 +81,8 @@ public class CrosswordParser {
                 currentClue = "";
                 currentClueNumber = Integer.parseInt(normalizedLine.split("\\D+")[0]);
             }
-            if (!isDirection)
-                currentClue += line + " ";
+            if (!normalizedLine.isEmpty() && !isDirection)
+                currentClue += normalizedLine + " ";
         }
         clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
 

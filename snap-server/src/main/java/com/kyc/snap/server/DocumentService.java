@@ -1,6 +1,5 @@
 package com.kyc.snap.server;
 
-import java.awt.Point;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -66,7 +65,7 @@ public interface DocumentService {
     @POST
     @Path("/sheets/{spreadsheetId}/{sheetId}")
     @Produces(MediaType.APPLICATION_JSON)
-    Point initializeSheet(@PathParam("spreadsheetId") String spreadsheetId, @PathParam("sheetId") int sheetId);
+    void initializeSheet(@PathParam("spreadsheetId") String spreadsheetId, @PathParam("sheetId") int sheetId);
 
     @POST
     @Path("/{documentId}/lines")
@@ -80,7 +79,7 @@ public interface DocumentService {
         private final Section section;
         private FindGridLinesMode findGridLinesMode = FindGridLinesMode.EXPLICIT;
         private boolean interpolate = false;
-        private int approxGridSquareSize = 64;
+        private int approxGridSquareSize = 32;
 
         public enum FindGridLinesMode {
 
@@ -124,7 +123,7 @@ public interface DocumentService {
     @Path("/{documentId}/export/{spreadsheetId}/{sheetId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Point export(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
+    void export(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
             @PathParam("sheetId") int sheetId, ExportRequest request);
 
     @Data

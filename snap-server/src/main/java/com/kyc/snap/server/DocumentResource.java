@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
@@ -99,9 +98,8 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public Point initializeSheet(String spreadsheetId, int sheetId) {
-        SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
-        return findOrAddMarker(spreadsheets, spreadsheets.getSheetData().getContent());
+    public void initializeSheet(String spreadsheetId, int sheetId) {
+        // TODO set up custom functions/add-ons, etc.
     }
 
     @Override
@@ -139,31 +137,23 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public Point export(String documentId, String spreadsheetId, int sheetId, ExportRequest request) {
+    public void export(String documentId, String spreadsheetId, int sheetId, ExportRequest request) {
         SectionImage image = getSectionImage(documentId, request.getSection());
         SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
         SheetData sheetData = spreadsheets.getSheetData();
-        Point marker = findOrAddMarker(spreadsheets, sheetData.getContent());
-        updateMarker(Optional.of(marker), Optional.empty(), spreadsheets);
-        Point newMarker;
+        Point marker = findMarker(spreadsheets, sheetData.getContent());
         if (request.getGridPosition() != null && request.getGrid() != null) {
-            int numCols = request.getGridPosition().getNumCols();
             new GridSpreadsheetWrapper(spreadsheets, marker.y, marker.x)
-                .toSpreadsheet(request.getGridPosition(), request.getGrid(), 1 / image.getScale());
+                .toSpreadsheet(request.getGridPosition(), request.getGrid(), image.getImage());
             if (request.getCrossword() != null && request.getCrosswordClues() != null) {
                 new CrosswordSpreadsheetWrapper(spreadsheets, marker.y, marker.x)
                     .toSpreadsheet(request.getGrid(), request.getCrossword(), request.getCrosswordClues());
-                numCols += 4 * (request.getCrosswordClues().getSections().size() - 1);
             }
-            newMarker = new Point(marker.x + numCols + 1, marker.y);
         } else {
             int newWidth = (int) (image.getImage().getWidth() / image.getScale());
             int newHeight = (int) (image.getImage().getHeight() / image.getScale());
             spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight);
-            newMarker = getNewMarker(marker, newWidth, sheetData.getColWidths());
         }
-        updateMarker(Optional.empty(), Optional.of(newMarker), spreadsheets);
-        return newMarker;
     }
 
     private SectionImage getSectionImage(String documentId, Section section) {
@@ -176,30 +166,14 @@ public class DocumentResource implements DocumentService {
         return new SectionImage(image, page.getScale(), page.getTexts());
     }
 
-    private static Point findOrAddMarker(SpreadsheetManager spreadsheets, List<List<String>> content) {
+    private static Point findMarker(SpreadsheetManager spreadsheets, List<List<String>> content) {
         for (int i = 0; i < content.size(); i++)
             for (int j = 0; j < content.get(i).size(); j++)
-                if (content.get(i).get(j).equals(MARKER))
+                if (content.get(i).get(j).equals(MARKER)) {
+                    spreadsheets.setValues(ImmutableList.of(new ValueCell(i, j, "")));
                     return new Point(j, i);
-        Point marker = new Point(0, content.size() + 1);
-        updateMarker(Optional.empty(), Optional.of(marker), spreadsheets);
-        return marker;
-    }
-
-    private static void updateMarker(Optional<Point> marker, Optional<Point> newMarker, SpreadsheetManager spreadsheets) {
-        List<ValueCell> values = new ArrayList<>();
-        marker.ifPresent(m -> values.add(new ValueCell(m.y, m.x, "")));
-        newMarker.ifPresent(m -> values.add(new ValueCell(m.y, m.x, MARKER)));
-        spreadsheets.setValues(values);
-    }
-
-    private static Point getNewMarker(Point marker, int width, List<Integer> colWidths) {
-        int col = marker.x;
-        while (width > 0) {
-            width -= colWidths.get(Math.min(col, colWidths.size() - 1));
-            col++;
-        }
-        return new Point(col, marker.y);
+                }
+        return new Point(0, content.size() + 1);
     }
 
     @Data

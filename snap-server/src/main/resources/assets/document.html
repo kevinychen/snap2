@@ -61,7 +61,7 @@
             <input id="operation-find-grid-lines-interpolate" type="checkbox">interpolate
           </span>
           <span class="hsection" title="Approximate size in pixels of a single grid square. Not required, but can be manually tuned for better results.">
-            <input id="operation-find-grid-lines-approx-grid-square-size" type="number" value="64">approx square size
+            <input id="operation-find-grid-lines-approx-grid-square-size" type="number" value="32">approx square size
           </span>
           <br>
 
@@ -237,6 +237,7 @@
     function setGrid(gridPosition, grid) {
       session.gridPosition = gridPosition;
       session.grid = grid;
+      setCrossword(undefined);
       drawSectionCanvas();
       if (grid) {
         $('.after-grid').show();

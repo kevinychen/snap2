@@ -169,6 +169,15 @@ public class ImageUtils {
         return blobImage;
     }
 
+    public static BufferedImage makeTransparent(BufferedImage image, double opacity) {
+        BufferedImage transparentImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+        int alphaBits = (int) (opacity * 255);
+        for (int x = 0; x < image.getWidth(); x++)
+            for (int y = 0; y < image.getHeight(); y++)
+                transparentImage.setRGB(x, y, (alphaBits << 24) + (image.getRGB(x, y) & 0xffffff));
+        return transparentImage;
+    }
+
     public static boolean isLight(int rgb) {
         return ((rgb >> 16) & 0xff) + ((rgb >> 8) & 0xff) + ((rgb >> 0) & 0xff) > 3 * 128;
     }
