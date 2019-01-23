@@ -17,6 +17,7 @@ import javax.ws.rs.ForbiddenException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets;
+import com.google.api.services.sheets.v4.model.AddProtectedRangeRequest;
 import com.google.api.services.sheets.v4.model.AutoResizeDimensionsRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.Border;
@@ -31,6 +32,7 @@ import com.google.api.services.sheets.v4.model.GetSpreadsheetByDataFilterRequest
 import com.google.api.services.sheets.v4.model.GridData;
 import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.InsertDimensionRequest;
+import com.google.api.services.sheets.v4.model.ProtectedRange;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.RowData;
 import com.google.api.services.sheets.v4.model.Sheet;
@@ -214,6 +216,19 @@ public class SpreadsheetManager {
                 .setAutoResizeDimensions(new AutoResizeDimensionsRequest()
                     .setDimensions(getRange(dimension, rowOrColumn, rowOrColumn + 1))))
             .collect(Collectors.toList()));
+    }
+
+    public void setProtectedRange(int rowIndex, int numRows, int colIndex, int numCols) {
+        executeRequests(new Request()
+            .setAddProtectedRange(new AddProtectedRangeRequest()
+                .setProtectedRange(new ProtectedRange()
+                    .setRange(new GridRange()
+                        .setSheetId(sheetId)
+                        .setStartRowIndex(rowIndex)
+                        .setEndRowIndex(rowIndex + numRows)
+                        .setStartColumnIndex(colIndex)
+                        .setEndColumnIndex(colIndex + numCols))
+                    .setWarningOnly(true))));
     }
 
     public void setBackgroundColors(List<ColoredCell> cells) {

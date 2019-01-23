@@ -105,6 +105,13 @@ public class CrosswordSpreadsheetWrapper {
                     references.get(p))));
         }
 
+        spreadsheets.setProtectedRange(rowOffset, grid.getNumRows(), colOffset, grid.getNumCols());
+        for (int i = 0; i < clues.getSections().size(); i++) {
+            int numRows = clues.getSections().get(i).getClues().size();
+            if (numRows > 0)
+                spreadsheets.setProtectedRange(0, numRows, directionColumns.get(i), 2);
+        }
+
         spreadsheets.setValues(valueCells);
         spreadsheets.setFormulas(formulaCells);
 
