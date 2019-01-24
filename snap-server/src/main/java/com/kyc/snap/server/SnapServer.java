@@ -43,7 +43,6 @@ public class SnapServer extends Application<SnapConfiguration> {
         environment.jersey().setUrlPattern("/api/*");
 
         environment.jersey().register(new MultiPartFeature());
-        environment.jersey().register(new ImageResource(configuration, googleApi, gridParser, crosswordParser));
         environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser));
