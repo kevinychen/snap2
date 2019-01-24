@@ -65,7 +65,7 @@ public interface DocumentService {
     @POST
     @Path("/sheets/{spreadsheetId}/{sheetId}")
     @Produces(MediaType.APPLICATION_JSON)
-    void initializeSheet(@PathParam("spreadsheetId") String spreadsheetId, @PathParam("sheetId") int sheetId);
+    boolean initializeSheet(@PathParam("spreadsheetId") String spreadsheetId, @PathParam("sheetId") int sheetId);
 
     @POST
     @Path("/{documentId}/lines")
@@ -123,7 +123,7 @@ public interface DocumentService {
     @Path("/{documentId}/export/{spreadsheetId}/{sheetId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    void export(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
+    boolean export(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
             @PathParam("sheetId") int sheetId, ExportRequest request);
 
     @Data

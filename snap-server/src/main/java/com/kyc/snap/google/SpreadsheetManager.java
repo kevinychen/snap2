@@ -12,7 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Response;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -131,6 +132,8 @@ public class SpreadsheetManager {
                 }
 
             return new SheetData(rowHeights, colWidths, content);
+        } catch (GoogleJsonResponseException e) {
+            throw new ClientErrorException(Response.Status.fromStatusCode(e.getStatusCode()), e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -353,9 +356,7 @@ public class SpreadsheetManager {
                 .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(requests))
                 .execute();
         } catch (GoogleJsonResponseException e) {
-            if (e.getStatusCode() == 403)
-                throw new ForbiddenException("No permissions to edit spreadsheet");
-            throw new RuntimeException(e);
+            throw new ClientErrorException(Response.Status.fromStatusCode(e.getStatusCode()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

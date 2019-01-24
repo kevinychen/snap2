@@ -98,8 +98,9 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public void initializeSheet(String spreadsheetId, int sheetId) {
+    public boolean initializeSheet(String spreadsheetId, int sheetId) {
         // TODO set up custom functions/add-ons, etc.
+        return true;
     }
 
     @Override
@@ -137,7 +138,7 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public void export(String documentId, String spreadsheetId, int sheetId, ExportRequest request) {
+    public boolean export(String documentId, String spreadsheetId, int sheetId, ExportRequest request) {
         SectionImage image = getSectionImage(documentId, request.getSection());
         SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
         SheetData sheetData = spreadsheets.getSheetData();
@@ -154,6 +155,7 @@ public class DocumentResource implements DocumentService {
             int newHeight = (int) (image.getImage().getHeight() / image.getScale());
             spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight);
         }
+        return true;
     }
 
     private SectionImage getSectionImage(String documentId, Section section) {

@@ -535,7 +535,10 @@
           grid: session.grid,
           crossword: session.crossword,
           crosswordClues: session.crosswordClues,
-        } });
+        } }, undefined, {
+            403: () => alert('Insufficient permissions. Please grant "sheets-creator@snap-187301.iam.gserviceaccount.com" '
+              + 'edit permissions to your Google Sheet or a parent folder.')
+        });
       });
 
       $('#operation-find-grid-lines').on('click', e => {
