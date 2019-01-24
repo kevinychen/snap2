@@ -32,11 +32,12 @@ dependencies {
     compile "org.apache.httpcomponents:httpmime:4.5.6"
     compile "org.apache.pdfbox:pdfbox:2.0.11"
     compile "org.bytedeco.javacpp-presets:leptonica:1.75.3-1.4.1:$platform"
+    compile "org.bytedeco.javacpp-presets:opencv:3.4.1-1.4.1"
+    compile "org.bytedeco.javacpp-presets:opencv:3.4.1-1.4.1:$platform"
     compile "org.bytedeco.javacpp-presets:tesseract:3.05.01-1.4.1"
     compile "org.bytedeco.javacpp-presets:tesseract:3.05.01-1.4.1:$platform"
     compile "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
     compile "org.jsoup:jsoup:1.10.3"
-    compile "org.openpnp:opencv:3.2.0-1"
     compile "org.projectlombok:lombok:1.18.2"
 
     testCompile "junit:junit:4.12"

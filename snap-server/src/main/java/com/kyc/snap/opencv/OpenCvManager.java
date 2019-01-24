@@ -12,8 +12,10 @@ import java.util.Map;
 
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.IntPointer;
+import org.bytedeco.javacpp.Loader;
 import org.bytedeco.javacpp.lept;
 import org.bytedeco.javacpp.lept.PIX;
+import org.bytedeco.javacpp.opencv_java;
 import org.bytedeco.javacpp.tesseract.TessBaseAPI;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -28,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.kyc.snap.image.ImageUtils;
 
 import lombok.Data;
-import nu.pattern.OpenCV;
 
 public class OpenCvManager {
 
@@ -38,8 +39,7 @@ public class OpenCvManager {
     public static final int DEFAULT_KMEANS_MAX_ITER = 100;
 
     public OpenCvManager() {
-        OpenCV.loadShared();
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        Loader.load(opencv_java.class);
     }
 
     /**
