@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import lombok.Data;
 
@@ -24,7 +25,8 @@ public class NiceCromulenceSolver {
     private final CromulenceSolver solver;
 
     public List<CromulenceSolverResult> solveSlug(String slug) {
-        return solver.solveSlug(toEmissions(slug), defaultEndOfWordProbs(slug.length()));
+        List<Emission> emissions = toEmissions(slug);
+        return solver.solveSlug(emissions, defaultEndOfWordProbs(emissions.size()));
     }
 
     public List<CromulenceSolverResult> solveSlug(String slug, List<Integer> wordLens) {
@@ -43,9 +45,10 @@ public class NiceCromulenceSolver {
     }
 
     public List<CromulenceSolverResult> solveRearrangement(List<String> parts) {
-        return solver.solveRearrangement(parts.stream()
-            .map(str -> toEmissions(str))
-            .collect(Collectors.toList()), defaultEndOfWordProbs(parts.stream().mapToInt(String::length).sum()));
+        List<List<Emission>> emissions = parts.stream()
+                .map(str -> toEmissions(str))
+                .collect(Collectors.toList());
+        return solver.solveRearrangement(emissions, defaultEndOfWordProbs(emissions.stream().mapToInt(List::size).sum()));
     }
 
     public List<CromulenceSolverResult> solveRearrangement(List<String> parts, List<Integer> wordLens) {
@@ -73,25 +76,43 @@ public class NiceCromulenceSolver {
     }
 
     private static List<Emission> toEmissions(String str) {
-        return str.chars()
-            .mapToObj(c -> toEmission((char) c))
-            .collect(Collectors.toList());
+        List<Emission> emissions = new ArrayList<>();
+        for (int index = 0; index < str.length(); index++) {
+            char c = str.charAt(index);
+            if (c == '[') {
+                int endIndex = str.indexOf(']', index);
+                if (endIndex == -1)
+                    endIndex = str.length();
+                emissions.add(toEmission(Lists.charactersOf(str.substring(index + 1, endIndex))));
+                index = endIndex;
+            } else
+                emissions.add(toEmission(ImmutableList.of(c)));
+        }
+        return emissions;
     }
 
-    private static Emission toEmission(char c) {
+    private static Emission toEmission(List<Character> letters) {
+        letters = letters.stream()
+            .filter(c -> c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z')
+            .map(letters.stream().anyMatch(Character::isLowerCase) ? Character::toLowerCase : c -> c)
+            .distinct()
+            .collect(Collectors.toList());
         double[] probs = new double[Emission.SIZE];
-        if (c == '*') {
+        if (letters.isEmpty()) {
             for (int i = 0; i < Emission.NUM_LETTERS; i++)
-                probs[i] = probs[i + Emission.NUM_LETTERS] = 1.0 / Emission.NUM_LETTERS;
-        } else if (Character.isUpperCase(c)) {
-            probs[c - 'A'] = probs[c - 'A' + Emission.NUM_LETTERS] = 1.0;
-        } else if (Character.isLowerCase(c)) {
-            for (int i = 0; i < Emission.NUM_LETTERS; i++)
-                probs[i] = probs[i + Emission.NUM_LETTERS] = 0.2 / (Emission.NUM_LETTERS - 1);
-            probs[c - 'a'] = probs[c - 'a' + Emission.NUM_LETTERS] = 0.8;
+                probs[i] = 1. / Emission.NUM_LETTERS;
+        } else if (Character.isLowerCase(letters.get(0))) {
+            if (letters.size() < Emission.NUM_LETTERS)
+                for (int i = 0; i < Emission.NUM_LETTERS; i++)
+                    probs[i] = 0.2 / (Emission.NUM_LETTERS - letters.size());
+            for (char c : letters)
+                probs[c - 'a'] = 0.8 / letters.size();
         } else {
-            throw new IllegalArgumentException("Invalid emission code: " + c);
+            for (char c : letters)
+                probs[c - 'A'] = 1. / letters.size();
         }
+        for (int i = 0; i < Emission.NUM_LETTERS; i++)
+            probs[i + Emission.NUM_LETTERS] = probs[i];
         return new Emission(probs);
     }
 }

@@ -28,7 +28,7 @@
           </li>
         </ul>
         Capital letters denote letters you're sure about, lowercase letters denote about 80% confidence, and asterisks
-        represent wildcards.
+        represent wildcards. Use square brackets ("[ABC]") to denote one of several possible letters.
       </div>
       <div class="section">
         Letters/parts: <input id="solver-input-parts"><br>
@@ -71,10 +71,28 @@
       });
 
       $('#solver-input-submit').click(e => {
-        const parts = $('#solver-input-parts').val().split(/[^A-Za-z*]+/);
+        var parts = $('#solver-input-parts').val().split(/[^A-Za-z*\[\]]+/);
+        if (parts.length === 1) {
+          // split "AB[CD]" into ["A", "B", "[CD]"]
+          const part = parts[0];
+          const splitParts = [];
+          for (var index = 0; index < part.length; index++) {
+            if (parts[0][index] === '[') {
+              var endIndex = part.indexOf(']', index);
+              if (endIndex == -1) {
+                endIndex = part.length;
+              }
+              splitParts.push(part.substring(index, endIndex + 1))
+              index = endIndex;
+            } else {
+              splitParts.push(part[index]);
+            }
+          }
+          parts = splitParts;
+        }
         const wordLengths = $('#solver-input-word-lengths').val();
         postJson({ path: '/words/cromulence', body: {
-          parts: parts.length == 1 ? parts[0].split('') : parts,
+          parts: parts,
           canRearrange: $('#solver-input-can-rearrange').is(':checked'),
           wordLengths: wordLengths.length > 0 ? wordLengths.split(/[^0-9]+/) : undefined,
         } }, response => {

@@ -27,6 +27,12 @@ public class CromulenceSolverTest {
     }
 
     @Test
+    public void testSolveSlugWithOptions() {
+        CromulenceSolverResult result = cromulence.solveSlug("[AB][MN][RS][VW][DE][op]").get(0);
+        assertThat(result.getWords()).containsExactly("ANSWER");
+    }
+
+    @Test
     public void testSolveSlugWithLengths() {
         CromulenceSolverResult result = cromulence.solveSlug("d*y**k****h***sw**", ImmutableList.of(2, 3, 4, 3, 6)).get(0);
         assertThat(result.getWords()).containsExactly("DO", "YOU", "KNOW", "THE", "ANSWER");
