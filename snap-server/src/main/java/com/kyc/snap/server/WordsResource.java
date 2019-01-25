@@ -3,6 +3,7 @@ package com.kyc.snap.server;
 import java.util.List;
 
 import com.google.common.base.Joiner;
+import com.kyc.snap.api.WordsService;
 import com.kyc.snap.cromulence.CromulenceSolverResult;
 import com.kyc.snap.cromulence.NiceCromulenceSolver;
 import com.kyc.snap.crossword.Crossword;

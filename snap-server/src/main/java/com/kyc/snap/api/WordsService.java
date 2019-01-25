@@ -1,4 +1,4 @@
-package com.kyc.snap.server;
+package com.kyc.snap.api;
 
 import java.util.List;
 

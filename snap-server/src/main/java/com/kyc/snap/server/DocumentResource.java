@@ -13,6 +13,9 @@ import javax.imageio.ImageIO;
 import org.apache.commons.io.IOUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.kyc.snap.api.DocumentService;
+import com.kyc.snap.api.DocumentService.FindGridLinesRequest.FindGridLinesMode;
+import com.kyc.snap.api.DocumentService.FindGridRequest.FindTextMode;
 import com.kyc.snap.crossword.CrosswordSpreadsheetWrapper;
 import com.kyc.snap.document.Document;
 import com.kyc.snap.document.Document.DocumentPage;
@@ -30,8 +33,6 @@ import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageUtils;
-import com.kyc.snap.server.DocumentService.FindGridLinesRequest.FindGridLinesMode;
-import com.kyc.snap.server.DocumentService.FindGridRequest.FindTextMode;
 import com.kyc.snap.store.Store;
 
 import lombok.Data;

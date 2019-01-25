@@ -1,4 +1,4 @@
-package com.kyc.snap.server;
+package com.kyc.snap.api;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
