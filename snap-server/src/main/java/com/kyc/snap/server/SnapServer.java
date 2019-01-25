@@ -47,5 +47,6 @@ public class SnapServer extends Application<Configuration> {
         environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser));
+        environment.jersey().register(new DashboardResource(googleApi));
     }
 }

@@ -50,22 +50,12 @@ public interface DocumentService {
         private final String url;
     }
 
-    @POST
-    @Path("/sheets")
-    @Produces(MediaType.APPLICATION_JSON)
-    CreateSheetResponse createSheet();
-
     @Data
     public static class CreateSheetResponse {
 
         private final String spreadsheetId;
         private final int sheetId;
     }
-
-    @POST
-    @Path("/sheets/{spreadsheetId}/{sheetId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    boolean initializeSheet(@PathParam("spreadsheetId") String spreadsheetId, @PathParam("sheetId") int sheetId);
 
     @POST
     @Path("/{documentId}/lines")

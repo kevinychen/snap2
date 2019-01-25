@@ -27,6 +27,8 @@ import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.Color;
 import com.google.api.services.sheets.v4.model.DataFilter;
+import com.google.api.services.sheets.v4.model.DeveloperMetadata;
+import com.google.api.services.sheets.v4.model.DeveloperMetadataLookup;
 import com.google.api.services.sheets.v4.model.DimensionProperties;
 import com.google.api.services.sheets.v4.model.DimensionRange;
 import com.google.api.services.sheets.v4.model.ExtendedValue;
@@ -41,6 +43,7 @@ import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.UpdateBordersRequest;
 import com.google.api.services.sheets.v4.model.UpdateCellsRequest;
+import com.google.api.services.sheets.v4.model.UpdateDeveloperMetadataRequest;
 import com.google.api.services.sheets.v4.model.UpdateDimensionPropertiesRequest;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -179,6 +182,18 @@ public class SpreadsheetManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void updateSpreadsheetDeveloperMetadata(String key, String value) {
+        executeRequests(
+            new Request()
+                .setUpdateDeveloperMetadata(new UpdateDeveloperMetadataRequest()
+                    .setDataFilters(ImmutableList.of(new DataFilter()
+                        .setDeveloperMetadataLookup(new DeveloperMetadataLookup()
+                            .setMetadataKey(key))))
+                    .setDeveloperMetadata(new DeveloperMetadata()
+                        .setMetadataValue(value))
+                    .setFields("metadataValue")));
     }
 
     public void insertRowOrColumns(Dimension dimension, int index, int numRowOrColumns) {

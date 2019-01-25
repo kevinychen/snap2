@@ -3,6 +3,8 @@ package com.kyc.snap.google;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -18,6 +20,7 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.slides.v1.Slides;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class GoogleAPIManager {
@@ -70,13 +73,30 @@ public class GoogleAPIManager {
         }
     }
 
-    public SpreadsheetManager createSheet(String folderId) {
+    public List<String> getParents(String fileId) {
+        try {
+            return drive.files().get(fileId).setFields("parents").execute().getParents();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void rename(String fileId, String name) {
+        try {
+            drive.files()
+                .update(fileId, new File().setName(name))
+                .execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public SpreadsheetManager createSheet(String name, String folderId) {
         try {
             Spreadsheet spreadsheet = sheets.spreadsheets().create(new Spreadsheet()).execute();
-            File file = drive.files().get(spreadsheet.getSpreadsheetId()).setFields("parents").execute();
-            drive.files().update(spreadsheet.getSpreadsheetId(), null)
+            drive.files().update(spreadsheet.getSpreadsheetId(), new File().setName(name))
                 .setAddParents(folderId)
-                .setRemoveParents(Joiner.on(", ").join(file.getParents()))
+                .setRemoveParents(Joiner.on(", ").join(getParents(spreadsheet.getSpreadsheetId())))
                 .setFields("id, parents")
                 .execute();
             return new SpreadsheetManager(
@@ -86,8 +106,31 @@ public class GoogleAPIManager {
         }
     }
 
+    public SpreadsheetManager copySheet(String fileId, String name, String folderId) {
+        try {
+            File file = drive.files()
+                .copy(fileId, new File().setName(name).setParents(ImmutableList.of(folderId)))
+                .execute();
+            return new SpreadsheetManager(credential, serverScriptUrl, sheets.spreadsheets(), file.getId(), DEFAULT_SHEET_ID);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
         return new SpreadsheetManager(credential, serverScriptUrl, sheets.spreadsheets(), spreadsheetId, sheetId);
+    }
+
+    public Optional<Integer> findSheetId(String spreadsheetId, String sheetName) {
+        try {
+            Spreadsheet spreadsheet = sheets.spreadsheets().get(spreadsheetId).execute();
+            return spreadsheet.getSheets().stream()
+                    .filter(sheet -> sheet.getProperties().getTitle().equals(sheetName))
+                    .findAny()
+                    .map(sheet -> sheet.getProperties().getSheetId());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public PresentationManager getPresentation(String presentationId, String slideId) {
