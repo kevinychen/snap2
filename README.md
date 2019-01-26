@@ -1,45 +1,65 @@
 Snap
 ====
 
-Snap provides tooling for puzzle hunts, such as parsing of grids and crosswords and exporting them to Google Sheets. Try Snap at [util.in](https://util.in).
+Snap provides tooling for puzzle hunts. Try Snap at [util.in](https://util.in).
+
+Features
+--------
+
+### Grid and crossword parser
+
+Given an uploaded image or PDF containing a grid, Snap can determine where the grid lines are, extract the colors, borders, and text of each grid square, and export all of the information directly into a Google Sheet, saving hours of tedious data entry time. In addition, if the grid is a crossword, Snap will hook up the Google Sheet so that filling in one clue answer will automatically fill in the letters in the grid and orthogonal clues.
+
+![Exported crossword](docs/crossword.gif)
+
+### Heavy duty anagram solver
+
+Snap uses a powerful solver engine that takes advantage of English word and bi-word frequencies (inspired on Rob Speer's [cromulence measure](https://github.com/rspeer/solvertools)). This allows it to anagram long phrases and even sentences, which traditional anagramming tools such as [I, Rearrangement Servant](https://wordsmith.org/anagram/) simply cannot do.
+
+![Anagram](docs/anagram.gif)
+
+### Wordsearch solver
+
+Given a grid of letters, Snap shows a simple UI with a list of words that are highlighted in the grid on hover. The tool doesn't require knowing which words to search for. The visual aspect is much clearer than other tools that only show the positions of the words in text format.
+
+![Word Search](docs/wordsearch.gif)
 
 Development
 -----------
 
-Add a `google-api-credentials.json` file with Snap's [service account credentials](https://cloud.google.com/docs/authentication/production#providing_credentials_to_your_application).
+The codebase consists of three top level folders. `snap-server` contains the main Java Dropwizard server, and there are also light helper functions in Python (`snap-python`) and custom functions for Google Sheets (`snap-app-scripts`).
 
-Update the `config.yml` configuration file with the socket address that the Snap server will run at.
+### Snap Server
 
-Update the `gradle.properties` configuration file with your platform.
+To develop on and run the Snap server, you need JDK 8+.
 
-Download data files:
+- Go to the `snap-server` directory.
 
-    cd snap-server
-    ./gradlew downloadFiles
+- Create a Google API [service user](https://cloud.google.com/docs/authentication/production#providing_credentials_to_your_application) and add a `google-api-credentials.json` file with the service user's account credentials.
 
-Run the Snap server (requires JDK 8+):
+- Update the `config.yml` configuration file with the socket address that the Snap server will run at. If you are developing locally, you can leave the default value of `localhost:8080`.
 
-    cd snap-server
-    ./gradlew run
+- Update the `gradle.properties` configuration file with your platform, one of `linux-x86_64`, `macosx-x86_64`, or `windows-x86_64`.
 
-Visit the app at `http://localhost:8080`.
+- Download required files by running `./gradlew downloadFiles`.
 
-Snap server endpoints can also be used through Google Sheet custom functions. In a Google Sheet, click "Tools" and "Script editor", and then copy the contents of the files under `snap-app-scripts`. The menu items and custom functions will be available in the Google Sheet after refreshing the page.
+- Start the Snap server by running `./gradlew run`.
 
-Wikinet
--------
+- Visit the app at `http://localhost:8080`, or whatever address your server is hosted at.
 
-The Wikinet generator stores summaries for all Wikipedia articles and indexes them for quick lookup. To generate the Wikinet:
+You can develop on Snap by running `./gradlew eclipse` and then importing "Existing Projects into Workspace" in Eclipse. Files are in the standard Java project layout, with the entry point at `src/main/java/com/kyc/snap/server/SnapServer.java` and web assets under `src/main/resources/assets`.
 
-    cd snap-server
-    ./gradlew generateWikinet
+### Wikinet
 
-Generating the Wikinet involves downloading about 50 files with a total of about 20GB of data (~150GB uncompressed) from the internet, so may take many hours.
+The Wikinet is an indexed store of all Wikipedia article titles and summaries.
 
-Python
-------
+To generate the Wikinet, go to the `snap-server` directory and run `./gradlew generateWikinet`. Note that this needs to download about 50 files of about 20GB data total (~150GB uncompressed), so may take many hours.
 
-To use the Snap's Python functions, add the following to your `.bashrc`:
+After the Wikinet is generated, the methods in the `Wikinet.java` file and the Python `wikinet` functions can be used.
+
+### Python
+
+To use Snap's Python functions, add the following to your `.bashrc`:
 
     export PYTHONPATH=/path/to/snap2/snap-python
     alias snap='PYTHONSTARTUP=/path/to/snap2/snap-python/bootstrap.py python'
