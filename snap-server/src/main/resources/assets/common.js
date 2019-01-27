@@ -1,15 +1,19 @@
-function post(args, callback, errorCallbacks) {
+function post(args, callback) {
   $('#loader').show();
   fetch('/api' + args.path, { method: 'POST', body: args.body, headers: args.headers })
     .then(response => {
       $('#loader').hide();
-      if (response.ok) {
-        response.json().then(callback);
-      } else if (errorCallbacks && errorCallbacks[response.status]) {
-        errorCallbacks[response.status]();
-      } else {
-        alert('An unknown error occurred.');
-      }
+      response.json().then(body => {
+        if (response.ok) {
+          if (callback) {
+            callback(body);
+          }
+        } else if (body.message) {
+          alert(body.message);
+        } else {
+          alert('An unknown error occurred.');
+        }
+      });
     })
 }
 

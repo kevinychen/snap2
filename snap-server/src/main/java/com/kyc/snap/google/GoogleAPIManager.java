@@ -3,6 +3,7 @@ package com.kyc.snap.google;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Properties;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -22,6 +23,8 @@ import com.google.common.collect.ImmutableSet;
 public class GoogleAPIManager {
 
     public static final String CREDENTIALS_FILE = "./google-api-credentials.json";
+    public static final String SERVER_SCRIPT_CONFIGURATION_FILE = "./google-server-script.properties";
+    public static final String SERVER_SCRIPT_CONFIGURATION_FILE_URL_KEY = "url";
 
     private static final String APPLICATION_NAME = "Snap";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -31,6 +34,7 @@ public class GoogleAPIManager {
     private final Drive drive;
     private final Sheets sheets;
     private final Slides slides;
+    private final String serverScriptUrl;
 
     public GoogleAPIManager() {
         try {
@@ -46,6 +50,10 @@ public class GoogleAPIManager {
             slides = new Slides.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
+
+            Properties props = new Properties();
+            props.load(new FileInputStream(new java.io.File(SERVER_SCRIPT_CONFIGURATION_FILE)));
+            serverScriptUrl = props.getProperty(SERVER_SCRIPT_CONFIGURATION_FILE_URL_KEY);
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -71,14 +79,15 @@ public class GoogleAPIManager {
                 .setRemoveParents(Joiner.on(", ").join(file.getParents()))
                 .setFields("id, parents")
                 .execute();
-            return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheet.getSpreadsheetId(), DEFAULT_SHEET_ID);
+            return new SpreadsheetManager(
+                credential, serverScriptUrl, sheets.spreadsheets(), spreadsheet.getSpreadsheetId(), DEFAULT_SHEET_ID);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
-        return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheetId, sheetId);
+        return new SpreadsheetManager(credential, serverScriptUrl, sheets.spreadsheets(), spreadsheetId, sheetId);
     }
 
     public PresentationManager getPresentation(String presentationId, String slideId) {

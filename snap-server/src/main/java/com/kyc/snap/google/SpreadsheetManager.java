@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.core.Response;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -48,6 +49,7 @@ import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.image.ImageUtils;
 
 import feign.Feign;
+import feign.FeignException;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -59,6 +61,7 @@ import lombok.Data;
 public class SpreadsheetManager {
 
     private final GoogleCredential credential;
+    private final String serverScriptUrl;
     private final Spreadsheets spreadsheets;
     private final String spreadsheetId;
     private final int sheetId;
@@ -133,7 +136,7 @@ public class SpreadsheetManager {
 
             return new SheetData(rowHeights, colWidths, content);
         } catch (GoogleJsonResponseException e) {
-            throw new ClientErrorException(Response.Status.fromStatusCode(e.getStatusCode()), e);
+            throw toClientErrorException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -294,16 +297,17 @@ public class SpreadsheetManager {
     }
 
     /**
-     * Run a published Google Apps Script that adds an image to a sheet. The script is here:
-     * https://script.google.com/home/projects/
-     * 1pIMTaT1S2eJ2raU_fJHladPb9vrqyCyDXZybOZIxf2gAJwxoG7icMVUS
+     * Runs a published Google script that adds an image to a sheet. See the code in snap-apps-script/WebApp.gs.
      */
     public void insertImage(BufferedImage image, int row, int col, int width, int height) {
+        /*
+         * Passing the full URL here with an empty path in the Feign interface declaration doesn't work because there's
+         * an extra ending slash, so we clip off the ending "/exec" and declare it in the Feign interface instead.
+         */
+        String serverScriptBase = serverScriptUrl.replaceAll("/exec$", "");
         WebAppService webApp = Feign.builder()
                 .encoder(new JacksonEncoder())
-                .target(
-                    WebAppService.class,
-                    "https://script.google.com/macros/s/AKfycbyE4Qi9jzGMr_m8Q6T6Ddk0U-a8IfmizMyVJcO3lQ");
+                .target(WebAppService.class, serverScriptBase);
         try {
             String response = webApp.insertImage(getAccessToken(), InsertImageRequest.builder()
                 .spreadsheetId(spreadsheetId)
@@ -318,6 +322,13 @@ public class SpreadsheetManager {
                 .build());
             if (!response.contains("The script completed"))
                 throw new RuntimeException(response);
+        } catch (FeignException e) {
+            throw new ClientErrorException(
+                String.format(
+                    "Failed to execute the script at '%s'. Verify that your Google script is published and supports requests from '%s'.",
+                    serverScriptUrl, credential.getServiceAccountId()),
+                Response.Status.fromStatusCode(e.status()),
+                e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -356,10 +367,21 @@ public class SpreadsheetManager {
                 .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(requests))
                 .execute();
         } catch (GoogleJsonResponseException e) {
-            throw new ClientErrorException(Response.Status.fromStatusCode(e.getStatusCode()));
+            throw toClientErrorException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private ClientErrorException toClientErrorException(GoogleJsonResponseException e) {
+        if (e.getStatusCode() == 403) {
+            return new ForbiddenException(
+                String.format("Insufficient permissions. "
+                        + "Please grant '%s' edit permissions to your Google sheet or a parent folder and try again.",
+                    credential.getServiceAccountId()),
+                e);
+        }
+        return new ClientErrorException(Response.Status.fromStatusCode(e.getStatusCode()), e);
     }
 
     private Spreadsheet getSpreadsheet() {
