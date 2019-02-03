@@ -3,6 +3,7 @@ package com.kyc.snap.google;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 import java.util.Properties;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -70,17 +71,33 @@ public class GoogleAPIManager {
         }
     }
 
-    public SpreadsheetManager createSheet(String folderId) {
+    public List<String> getParents(String fileId) {
+        try {
+            return drive.files().get(fileId).setFields("parents").execute().getParents();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void rename(String fileId, String name) {
+        try {
+            drive.files()
+                .update(fileId, new File().setName(name))
+                .execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public SpreadsheetManager createSheet(String name, String folderId) {
         try {
             Spreadsheet spreadsheet = sheets.spreadsheets().create(new Spreadsheet()).execute();
-            File file = drive.files().get(spreadsheet.getSpreadsheetId()).setFields("parents").execute();
-            drive.files().update(spreadsheet.getSpreadsheetId(), null)
+            drive.files().update(spreadsheet.getSpreadsheetId(), new File().setName(name))
                 .setAddParents(folderId)
-                .setRemoveParents(Joiner.on(", ").join(file.getParents()))
+                .setRemoveParents(Joiner.on(", ").join(getParents(spreadsheet.getSpreadsheetId())))
                 .setFields("id, parents")
                 .execute();
-            return new SpreadsheetManager(
-                credential, serverScriptUrl, sheets.spreadsheets(), spreadsheet.getSpreadsheetId(), DEFAULT_SHEET_ID);
+            return getSheet(spreadsheet.getSpreadsheetId(), DEFAULT_SHEET_ID);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
