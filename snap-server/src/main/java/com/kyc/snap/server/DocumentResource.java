@@ -93,18 +93,6 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public CreateSheetResponse createSheet() {
-        SpreadsheetManager spreadsheets = googleApi.createSheet(DEFAULT_FOLDER_ID);
-        return new CreateSheetResponse(spreadsheets.getSpreadsheetId(), spreadsheets.getSheetId());
-    }
-
-    @Override
-    public boolean initializeSheet(String spreadsheetId, int sheetId) {
-        // TODO set up custom functions/add-ons, etc.
-        return true;
-    }
-
-    @Override
     public GridLines findGridLines(String documentId, FindGridLinesRequest request) {
         BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
         GridLines gridLines;

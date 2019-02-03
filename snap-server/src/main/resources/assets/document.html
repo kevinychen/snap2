@@ -275,7 +275,6 @@
       $('#sheet-frame').attr('src', url);
       session.spreadsheetId = spreadsheetId;
       session.sheetId = sheetId;
-      post({ path: `/documents/sheets/${spreadsheetId}/${sheetId}` });
     }
 
     function drawSectionCanvas() {
