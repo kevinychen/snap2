@@ -34,7 +34,7 @@ public class SnapServer extends Application<Configuration> {
     public void run(Configuration configuration, Environment environment) throws Exception {
         GoogleAPIManager googleApi = new GoogleAPIManager();
         OpenCvManager openCv = new OpenCvManager();
-        GridParser gridParser = new GridParser(openCv, googleApi);
+        GridParser gridParser = new GridParser(openCv);
         CrosswordParser crosswordParser = new CrosswordParser();
         DictionaryManager dictionary = new DictionaryManager();
         WordsearchSolver wordsearchSolver = new WordsearchSolver(dictionary);

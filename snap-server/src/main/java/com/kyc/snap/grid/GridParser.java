@@ -14,7 +14,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Rectangle;
-import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
@@ -39,7 +38,6 @@ public class GridParser {
     public static final double MIN_WIDTH_DIFF_BETWEEN_BORDER_STYLES = 1.5;
 
     private final OpenCvManager openCv;
-    private final GoogleAPIManager googleApi;
 
     public GridLines findGridLines(BufferedImage image, int approxGridSquareSize) {
         List<Line> cardinalLines = openCv.findLines(image, Math.PI / 2, approxGridSquareSize);
