@@ -9,8 +9,8 @@ import com.kyc.snap.cromulence.NiceCromulenceSolver;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordParser;
-import com.kyc.snap.crossword.WordplaysUtil;
-import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
+import com.kyc.snap.crossword.WordplaysManager;
+import com.kyc.snap.crossword.WordplaysManager.ClueSuggestion;
 import com.kyc.snap.words.WordsearchSolver;
 
 import lombok.Data;
@@ -24,7 +24,8 @@ public class WordsResource implements WordsService {
 
     @Override
     public FetchCrosswordClueSuggestionsResponse fetchCrosswordClueSuggestions(FetchCrosswordClueSuggestionsRequest request) {
-        List<ClueSuggestion> suggestions = WordplaysUtil.fetchCrosswordClueSuggestions(request.getClue(), request.getNumLetters());
+        WordplaysManager wordplays = new WordplaysManager(request.getApiKey());
+        List<ClueSuggestion> suggestions = wordplays.fetchCrosswordClueSuggestions(request.getClue(), request.getNumLetters());
         return new FetchCrosswordClueSuggestionsResponse(suggestions);
     }
 

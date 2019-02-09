@@ -11,7 +11,7 @@ import javax.ws.rs.core.MediaType;
 import com.kyc.snap.cromulence.CromulenceSolverResult;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
-import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
+import com.kyc.snap.crossword.WordplaysManager.ClueSuggestion;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.words.WordsearchSolver;
 
@@ -29,6 +29,7 @@ public interface WordsService {
     @Data
     public static class FetchCrosswordClueSuggestionsRequest {
 
+        private final String apiKey;
         private final String clue;
         private final int numLetters;
     }
