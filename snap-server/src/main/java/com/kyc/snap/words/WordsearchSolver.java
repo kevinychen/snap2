@@ -58,17 +58,17 @@ public class WordsearchSolver {
 
     private void findBoggleHelper(List<String> grid, String word, int index, int row, int col, List<Point> positions, boolean[][] used,
             List<Result> results) {
-        if (index == word.length()) {
-            results.add(new Result(word, new ArrayList<>(positions)));
-            return;
-        }
         positions.add(new Point(col, row));
         used[row][col] = true;
-        for (int nrow = row - 1; nrow <= row + 1; nrow++)
-            for (int ncol = col - 1; ncol <= col + 1; ncol++)
-                if (nrow >= 0 && nrow < grid.size() && ncol >= 0 && ncol < grid.get(nrow).length()
-                        && !used[nrow][ncol] && grid.get(nrow).charAt(ncol) == word.charAt(index))
-                    findBoggleHelper(grid, word, index + 1, nrow, ncol, positions, used, results);
+        if (index == word.length()) {
+            results.add(new Result(word, new ArrayList<>(positions)));
+        } else {
+            for (int nrow = row - 1; nrow <= row + 1; nrow++)
+                for (int ncol = col - 1; ncol <= col + 1; ncol++)
+                    if (nrow >= 0 && nrow < grid.size() && ncol >= 0 && ncol < grid.get(nrow).length()
+                    && !used[nrow][ncol] && grid.get(nrow).charAt(ncol) == word.charAt(index))
+                        findBoggleHelper(grid, word, index + 1, nrow, ncol, positions, used, results);
+        }
         positions.remove(positions.size() - 1);
         used[row][col] = false;
     }
