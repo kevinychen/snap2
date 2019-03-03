@@ -2,6 +2,7 @@ package com.kyc.snap.api;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -19,6 +20,7 @@ import com.kyc.snap.document.Section;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
+import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.opencv.OpenCvManager.OcrOptions;
 
 import lombok.Data;
@@ -79,6 +81,19 @@ public interface DocumentService {
     }
 
     @POST
+    @Path("/{documentId}/blobs")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    List<ImageBlob> findBlobs(@PathParam("documentId") String documentId, FindBlobsRequest request);
+
+    @Data
+    public static class FindBlobsRequest {
+
+        private final Section section;
+        private int minBlobSize = 6;
+    }
+
+    @POST
     @Path("/{documentId}/grid")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -124,5 +139,6 @@ public interface DocumentService {
         private Grid grid;
         private Crossword crossword;
         private CrosswordClues crosswordClues;
+        private List<ImageBlob> blobs;
     }
 }

@@ -299,7 +299,7 @@ public class SpreadsheetManager {
     /**
      * Runs a published Google script that adds an image to a sheet. See the code in snap-apps-script/WebApp.gs.
      */
-    public void insertImage(BufferedImage image, int row, int col, int width, int height) {
+    public void insertImage(BufferedImage image, int row, int col, int width, int height, int offsetX, int offsetY) {
         /*
          * Passing the full URL here with an empty path in the Feign interface declaration doesn't work because there's
          * an extra ending slash, so we clip off the ending "/exec" and declare it in the Feign interface instead.
@@ -315,8 +315,8 @@ public class SpreadsheetManager {
                 .url(ImageUtils.toDataURL(image))
                 .column(col + 1)
                 .row(row + 1)
-                .offsetX(0)
-                .offsetY(0)
+                .offsetX(offsetX)
+                .offsetY(offsetY)
                 .width(width)
                 .height(height)
                 .build());

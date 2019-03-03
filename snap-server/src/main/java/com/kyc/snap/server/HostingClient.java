@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 public class HostingClient {
 
-    private final String serverSocketAddress;
+    private final String serverOrigin = ServerProperties.get().getHostingServerOrigin();
 
     /**
      * Hosts a file on the configured public server, and returns the URL to access the file.
@@ -32,6 +32,6 @@ public class HostingClient {
     }
 
     private String getHostingBaseUrl() {
-        return String.format("http://%s/api/files", serverSocketAddress);
+        return String.format("%s/api/files", serverOrigin);
     }
 }

@@ -19,8 +19,6 @@ import javax.imageio.ImageIO;
 
 import com.kyc.snap.grid.Border;
 
-import lombok.Data;
-
 public class ImageUtils {
 
     public static BufferedImage copy(BufferedImage image) {
@@ -124,9 +122,9 @@ public class ImageUtils {
         return border;
     }
 
-    public static List<Blob> findBlobs(BufferedImage image, Predicate<Integer> isBlob) {
+    public static List<ImageBlob> findBlobs(BufferedImage image, Predicate<Integer> isBlob) {
         boolean[][] visited = new boolean[image.getHeight()][image.getWidth()];
-        List<Blob> blobs = new ArrayList<>();
+        List<ImageBlob> blobs = new ArrayList<>();
         for (int x = 0; x < image.getWidth(); x++)
             for (int y = 0; y < image.getHeight(); y++)
                 if (!visited[y][x] && isBlob.test(image.getRGB(x, y))) {
@@ -157,12 +155,12 @@ public class ImageUtils {
                             floodfill.addLast(new Point(p.x, p.y + 1));
                         }
                     }
-                    blobs.add(new Blob(minX, minY, maxX - minX + 1, maxY - minY + 1, points));
+                    blobs.add(new ImageBlob(minX, minY, maxX - minX + 1, maxY - minY + 1, points));
                 }
         return blobs;
     }
 
-    public static BufferedImage getBlobImage(BufferedImage image, Blob blob) {
+    public static BufferedImage getBlobImage(BufferedImage image, ImageBlob blob) {
         BufferedImage blobImage = new BufferedImage(blob.getWidth(), blob.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
         for (Point p : blob.getPoints())
             blobImage.setRGB(p.x - blob.getX(), p.y - blob.getY(), image.getRGB(p.x, p.y));
@@ -187,16 +185,6 @@ public class ImageUtils {
         int greenDiff = ((rgb1 >> 8) & 0xff) - ((rgb2 >> 8) & 0xff);
         int blueDiff = ((rgb1 >> 0) & 0xff) - ((rgb2 >> 0) & 0xff);
         return redDiff * redDiff + greenDiff * greenDiff + blueDiff * blueDiff > 3 * 64 * 64;
-    }
-
-    @Data
-    public static class Blob {
-
-        private final int x;
-        private final int y;
-        private final int width;
-        private final int height;
-        private final List<Point> points;
     }
 
     private ImageUtils() {}

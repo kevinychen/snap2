@@ -18,8 +18,8 @@ import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
+import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
-import com.kyc.snap.image.ImageUtils.Blob;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.opencv.OpenCvManager.Clusters;
 import com.kyc.snap.opencv.OpenCvManager.Line;
@@ -67,7 +67,7 @@ public class GridParser {
     }
 
     public GridLines findImplicitGridLines(BufferedImage image) {
-        List<Blob> blobs = ImageUtils.findBlobs(image, rgb -> !ImageUtils.isLight(rgb));
+        List<ImageBlob> blobs = ImageUtils.findBlobs(image, rgb -> !ImageUtils.isLight(rgb));
         TreeSet<Integer> rows = Utils.findInterpolatedSequence(blobs.stream()
             .map(blob -> blob.getY() + blob.getHeight() / 2)
             .collect(Collectors.toList()));

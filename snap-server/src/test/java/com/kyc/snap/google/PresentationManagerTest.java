@@ -11,13 +11,13 @@ import javax.imageio.ImageIO;
 import org.junit.Test;
 
 import com.kyc.snap.google.PresentationManager.PositionedImage;
+import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
-import com.kyc.snap.image.ImageUtils.Blob;
 import com.kyc.snap.server.HostingClient;
 
 public class PresentationManagerTest {
 
-    HostingClient hosting = new HostingClient("167.99.173.63:8080");
+    HostingClient hosting = new HostingClient();
 
     String presentationId = "1z1Xph_GGr8vg7IQQfoUSCoZq-XuP4df1Bb7Mrm-t0v8";
     String slideId = "p";
@@ -33,12 +33,12 @@ public class PresentationManagerTest {
     public void testAddImagePieces() throws IOException {
         BufferedImage image = ImageIO.read(nationsFile);
         List<PositionedImage> pieces = new ArrayList<>();
-        for (Blob blob : ImageUtils.findBlobs(image, rgb -> rgb != backgroundRgb))
+        for (ImageBlob blob : ImageUtils.findBlobs(image, rgb -> rgb != backgroundRgb))
             if (blob.getX() > 1 && blob.getX() + blob.getWidth() < image.getWidth() - 1
                     && blob.getY() > 1 && blob.getY() + blob.getHeight() < image.getHeight() - 1
                     && blob.getWidth() >= minBlobSize && blob.getHeight() >= minBlobSize) {
                 pieces.add(new PositionedImage(ImageUtils.getBlobImage(image, blob), 0, 0));
             }
-        presentations.addImages(pieces, hosting);
+        presentations.addImages(pieces);
     }
 }

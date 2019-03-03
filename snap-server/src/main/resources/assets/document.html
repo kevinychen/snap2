@@ -66,6 +66,14 @@
           <br>
 
           <span class="hsection">
+            <input id="operation-find-blobs" type="button" value="Find blobs (beta)">
+          </span>
+          <span class="hsection" title="Minimum size of a contiguous region to be considered a blob.">
+            <input id="operation-find-blobs-min-blob-size" type="number" value="6"><span>min blob size</span>
+          </span>
+          <br>
+
+          <span class="hsection">
             <input id="operation-find-grid" type="button" value="Parse content">
           </span>
           <span class="hsection" title="Parse the color of each grid square">
@@ -145,6 +153,7 @@
       page: 0,
       rectangle: undefined,
       gridLines: undefined,
+      blobs: undefined,
       gridPosition: undefined,
       grid: undefined,
       crossword: undefined,
@@ -234,6 +243,16 @@
       }
     }
 
+    function setBlobs(blobs) {
+      session.blobs = blobs;
+      setGrid(undefined);
+      if (blobs) {
+        $('.after-blobs').show();
+      } else {
+        $('.after-blobs').hide();
+      }
+    }
+
     function setGrid(gridPosition, grid) {
       session.gridPosition = gridPosition;
       session.grid = grid;
@@ -309,6 +328,27 @@
           ctx.stroke();
           drawPoint(ctx, offsetX + col, offsetY);
           drawPoint(ctx, offsetX + col, offsetY + session.rectangle.height);
+        }
+      }
+      if (session.blobs) {
+        ctx.lineWidth = 2;
+        for (var i = 0; i < session.blobs.length; i++) {
+          const color = 'hsl(' + (360 * i / session.blobs.length) + ', 100%, 50%)';
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          const blobPoints = new Set();
+          for (const p of session.blobs[i].points) {
+            blobPoints.add(1e9 * p.x + p.y)
+          }
+          for (const p of session.blobs[i].points) {
+            if (!blobPoints.has(1e9 * (p.x - 1) + (p.y - 1))
+              || !blobPoints.has(1e9 * (p.x - 1) + (p.y + 1))
+              || !blobPoints.has(1e9 * (p.x + 1) + (p.y - 1))
+              || !blobPoints.has(1e9 * (p.x + 1) + (p.y + 1))
+            ) {
+              ctx.fillRect(p.x, p.y, 2, 2);
+            }
+          }
         }
       }
       if (session.grid) {
@@ -534,6 +574,7 @@
           grid: session.grid,
           crossword: session.crossword,
           crosswordClues: session.crosswordClues,
+          blobs: session.blobs,
         } });
       });
 
@@ -547,6 +588,16 @@
           interpolate: $('#operation-find-grid-lines-interpolate').is(':checked'),
           approxGridSquareSize: parseInt($('#operation-find-grid-lines-approx-grid-square-size').val()),
         } }, setGridLines);
+      });
+
+      $('#operation-find-blobs').on('click', e => {
+        postJson({ path: `/documents/${session.document.id}/blobs`, body: {
+          section: {
+            page: session.page,
+            rectangle: session.rectangle,
+          },
+          minBlobSize: parseInt($('#operation-find-blobs-min-blob-size').val()),
+        } }, setBlobs);
       });
 
       $('#operation-find-grid').on('click', e => {

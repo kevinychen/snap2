@@ -72,6 +72,8 @@ public class GridSpreadsheetWrapper {
             rowOffset,
             colOffset,
             (int) Math.round(cols.stream().mapToInt(SizedRowOrColumn::getSize).sum() * WIDTH_CORRECTION),
-            rows.stream().mapToInt(SizedRowOrColumn::getSize).sum());
+            rows.stream().mapToInt(SizedRowOrColumn::getSize).sum(),
+            0,
+            0);
     }
 }

@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -32,8 +33,10 @@ import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridSpreadsheetWrapper;
+import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
+import com.kyc.snap.util.Utils;
 
 import lombok.Data;
 import okhttp3.OkHttpClient;
@@ -45,6 +48,7 @@ public class DocumentResource implements DocumentService {
 
     public static String MARKER = "🍊";
     public static String DEFAULT_FOLDER_ID = "1kmRcpAj_O3UYZgnlkclVBHPseB2Swkd-";
+    public static int FIND_BLOBS_BORDER_WIDTH = 10;
 
     private final Store store;
     private final GoogleAPIManager googleApi;
@@ -108,6 +112,24 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
+    public List<ImageBlob> findBlobs(String documentId, FindBlobsRequest request) {
+        BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
+        List<Integer> borderRgbs = new ArrayList<>();
+        for (int x = 0; x < image.getWidth(); x++)
+            for (int y = 0; y < image.getHeight(); y++)
+                if (x < FIND_BLOBS_BORDER_WIDTH || x >= image.getWidth() - FIND_BLOBS_BORDER_WIDTH
+                || y < FIND_BLOBS_BORDER_WIDTH || y >= image.getHeight() - FIND_BLOBS_BORDER_WIDTH) {
+                    borderRgbs.add(image.getRGB(x, y));
+                }
+        int borderRgb = Utils.mode(borderRgbs);
+        return ImageUtils.findBlobs(image, rgb -> rgb != borderRgb).stream()
+            .filter(blob -> blob.getX() > 1 && blob.getX() + blob.getWidth() < image.getWidth() - 1
+                    && blob.getY() > 1 && blob.getY() + blob.getHeight() < image.getHeight() - 1
+                    && blob.getWidth() >= request.getMinBlobSize() && blob.getHeight() >= request.getMinBlobSize())
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public FindGridResponse findGrid(String documentId, FindGridRequest request) {
         GridLines gridLines = request.getGridLines();
         GridPosition gridPosition = gridParser.getGridPosition(gridLines);
@@ -139,10 +161,22 @@ public class DocumentResource implements DocumentService {
                 new CrosswordSpreadsheetWrapper(spreadsheets, marker.y, marker.x)
                     .toSpreadsheet(request.getGrid(), request.getCrossword(), request.getCrosswordClues());
             }
+        } else if (request.getBlobs() != null) {
+            for (ImageBlob blob : request.getBlobs()) {
+                BufferedImage blobImage = ImageUtils.getBlobImage(image.getImage(), blob);
+                spreadsheets.insertImage(
+                    blobImage,
+                    marker.y,
+                    marker.x,
+                    (int) (blob.getWidth() / image.getScale()),
+                    (int) (blob.getHeight() / image.getScale()),
+                    blob.getX(),
+                    blob.getY());
+            }
         } else {
             int newWidth = (int) (image.getImage().getWidth() / image.getScale());
             int newHeight = (int) (image.getImage().getHeight() / image.getScale());
-            spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight);
+            spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight, 0, 0);
         }
         return true;
     }

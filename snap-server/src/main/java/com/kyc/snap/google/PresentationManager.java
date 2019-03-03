@@ -23,7 +23,8 @@ public class PresentationManager {
     private final String presentationId;
     private final String slideId;
 
-    public void addImages(List<PositionedImage> images, HostingClient hosting) {
+    public void addImages(List<PositionedImage> images) {
+        HostingClient hosting = new HostingClient();
         List<HostedImage> hostedImages = new ArrayList<>();
         for (PositionedImage image : images) {
             String url = hosting.hostFile("image/png", ImageUtils.toBytes(image.image));

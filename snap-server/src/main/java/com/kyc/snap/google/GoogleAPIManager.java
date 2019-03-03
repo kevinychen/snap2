@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
-import java.util.Properties;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -20,12 +19,11 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.slides.v1.Slides;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.kyc.snap.server.ServerProperties;
 
 public class GoogleAPIManager {
 
     public static final String CREDENTIALS_FILE = "./google-api-credentials.json";
-    public static final String SERVER_SCRIPT_CONFIGURATION_FILE = "./google-server-script.properties";
-    public static final String SERVER_SCRIPT_CONFIGURATION_FILE_URL_KEY = "url";
 
     private static final String APPLICATION_NAME = "Snap";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -51,10 +49,7 @@ public class GoogleAPIManager {
             slides = new Slides.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-
-            Properties props = new Properties();
-            props.load(new FileInputStream(new java.io.File(SERVER_SCRIPT_CONFIGURATION_FILE)));
-            serverScriptUrl = props.getProperty(SERVER_SCRIPT_CONFIGURATION_FILE_URL_KEY);
+            serverScriptUrl = ServerProperties.get().getGoogleServerScriptUrl();
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
