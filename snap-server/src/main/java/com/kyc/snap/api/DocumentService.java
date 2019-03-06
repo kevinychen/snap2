@@ -125,20 +125,34 @@ public interface DocumentService {
     }
 
     @POST
-    @Path("/{documentId}/export/{spreadsheetId}/{sheetId}")
+    @Path("/{documentId}/export/sheet/{spreadsheetId}/{sheetId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    boolean export(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
-            @PathParam("sheetId") int sheetId, ExportRequest request);
+    boolean exportSheet(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
+            @PathParam("sheetId") int sheetId, ExportSheetRequest request);
 
     @Data
-    public static class ExportRequest {
+    public static class ExportSheetRequest {
 
         private final Section section;
         private GridPosition gridPosition;
         private Grid grid;
         private Crossword crossword;
         private CrosswordClues crosswordClues;
+        private List<ImageBlob> blobs;
+    }
+
+    @POST
+    @Path("/{documentId}/export/slide/{presentationId}/{slideId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    boolean exportSlide(@PathParam("documentId") String documentId, @PathParam("presentationId") String presentationId,
+            @PathParam("slideId") String slideId, ExportSlideRequest request);
+
+    @Data
+    public static class ExportSlideRequest {
+
+        private final Section section;
         private List<ImageBlob> blobs;
     }
 }

@@ -39,6 +39,6 @@ public class PresentationManagerTest {
                     && blob.getWidth() >= minBlobSize && blob.getHeight() >= minBlobSize) {
                 pieces.add(new PositionedImage(ImageUtils.getBlobImage(image, blob), 0, 0));
             }
-        presentations.addImages(pieces);
+        presentations.addImages(pieces, image.getWidth(), image.getHeight());
     }
 }

@@ -25,6 +25,8 @@ import com.kyc.snap.document.Pdf;
 import com.kyc.snap.document.Rectangle;
 import com.kyc.snap.document.Section;
 import com.kyc.snap.google.GoogleAPIManager;
+import com.kyc.snap.google.PresentationManager;
+import com.kyc.snap.google.PresentationManager.PositionedImage;
 import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.SheetData;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
@@ -149,7 +151,7 @@ public class DocumentResource implements DocumentService {
     }
 
     @Override
-    public boolean export(String documentId, String spreadsheetId, int sheetId, ExportRequest request) {
+    public boolean exportSheet(String documentId, String spreadsheetId, int sheetId, ExportSheetRequest request) {
         SectionImage image = getSectionImage(documentId, request.getSection());
         SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
         SheetData sheetData = spreadsheets.getSheetData();
@@ -177,6 +179,26 @@ public class DocumentResource implements DocumentService {
             int newWidth = (int) (image.getImage().getWidth() / image.getScale());
             int newHeight = (int) (image.getImage().getHeight() / image.getScale());
             spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight, 0, 0);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean exportSlide(String documentId, String presentationId, String slideId, ExportSlideRequest request) {
+        SectionImage image = getSectionImage(documentId, request.getSection());
+        PresentationManager presentations = googleApi.getPresentation(presentationId, slideId);
+        if (request.getBlobs() != null) {
+            presentations.addImages(
+                request.getBlobs().stream()
+                    .map(blob -> new PositionedImage(ImageUtils.getBlobImage(image.image, blob), blob.getX(), blob.getY()))
+                    .collect(Collectors.toList()),
+                image.image.getWidth(),
+                image.image.getHeight());
+        } else {
+            presentations.addImages(
+                ImmutableList.of(new PositionedImage(image.image, 0, 0)),
+                image.image.getWidth(),
+                image.image.getHeight());
         }
         return true;
     }

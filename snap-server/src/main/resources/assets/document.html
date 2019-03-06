@@ -160,6 +160,8 @@
       crosswordClues: undefined,
       spreadsheetId: undefined,
       sheetId: undefined,
+      presentationId: undefined,
+      slideId: undefined,
     };
     eps = 25;
 
@@ -289,11 +291,23 @@
         $('#sheet-url').val('Invalid Google Sheet URL');
         return;
       }
-      const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}#gid=${sheetId}`
+      const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}#gid=${sheetId}`;
       $('#sheet-url').val(url);
       $('#sheet-frame').attr('src', url);
       session.spreadsheetId = spreadsheetId;
       session.sheetId = sheetId;
+      session.presentationId = undefined;
+      session.slideId = undefined;
+    }
+
+    function setSlide(presentationId, slideId) {
+      const url = `https://docs.google.com/presentation/d/${presentationId}#slide=id.${slideId}`;
+      $('#sheet-url').val(url);
+      $('#sheet-frame').attr('src', url);
+      session.spreadsheetId = undefined;
+      session.sheetId = undefined;
+      session.presentationId = presentationId;
+      session.slideId = slideId;
     }
 
     function drawSectionCanvas() {
@@ -565,17 +579,31 @@
       })();
 
       $('#export').on('click', e => {
-        postJson({ path: `/documents/${session.document.id}/export/${session.spreadsheetId}/${session.sheetId}`, body: {
-          section: {
-            page: session.page,
-            rectangle: session.rectangle,
-          },
-          gridPosition: session.gridPosition,
-          grid: session.grid,
-          crossword: session.crossword,
-          crosswordClues: session.crosswordClues,
-          blobs: session.blobs,
-        } });
+        if (session.spreadsheetId) {
+          postJson({
+            path: `/documents/${session.document.id}/export/sheet/${session.spreadsheetId}/${session.sheetId}`, body: {
+              section: {
+                page: session.page,
+                rectangle: session.rectangle,
+              },
+              gridPosition: session.gridPosition,
+              grid: session.grid,
+              crossword: session.crossword,
+              crosswordClues: session.crosswordClues,
+              blobs: session.blobs,
+            }
+          });
+        } else if (session.presentationId) {
+          postJson({
+            path: `/documents/${session.document.id}/export/slide/${session.presentationId}/${session.slideId}`, body: {
+              section: {
+                page: session.page,
+                rectangle: session.rectangle,
+              },
+              blobs: session.blobs,
+            }
+          });
+        }
       });
 
       $('#operation-find-grid-lines').on('click', e => {
@@ -677,17 +705,22 @@
 
       $('#sheet-url').on('input', e => {
         const url = e.target.value;
-        const match = url.match(new RegExp('https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+).*(?:gid=([0-9]+))'));
-        if (match) {
-          setSheet(match[1], match[2]);
+        const sheetMatch = url.match(new RegExp('https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+).*(?:gid=([0-9]+))'));
+        const slideMatch = url.match(new RegExp('https://docs\.google\.com/presentation/d/([A-Za-z0-9_-]+).*(?:slide=id\.([A-Za-z0-9_-]+))'));
+        if (sheetMatch) {
+          setSheet(sheetMatch[1], sheetMatch[2]);
+        } else if (slideMatch) {
+          setSlide(slideMatch[1], slideMatch[2])
         } else {
           setSheet(undefined);
         }
       });
 
       var urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('spreadsheetId') && urlParams.has('sheetId')) {
+      if (urlParams.has('spreadsheetId')) {
         setSheet(urlParams.get('spreadsheetId'), urlParams.get('sheetId'));
+      } else if (urlParams.has('presentationId')) {
+        setSlide(urlParams.get('presentationId'), urlParams.get('slideId'));
       } else {
         setSheet('1n2XG8kgi-XZoD1n5jZoW4UbIFI99U2l0Uc_9SQPb8TA', '0');
       }
