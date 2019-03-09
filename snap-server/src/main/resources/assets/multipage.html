@@ -1,0 +1,121 @@
+<html>
+
+<head>
+    <link href="wrench.png" rel="icon">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #sidebar {
+            width: 25%;
+            height: 100%;
+            float: left;
+            margin-right: 10px;
+        }
+
+        #pages-textarea {
+            width: 100%;
+            height: 100%;
+            resize: none;
+        }
+
+        #pages-section {
+            width: 70%;
+            height: 100%;
+            float: left;
+        }
+
+        #pages-section iframe {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="banner">
+        <a href="index.html" class="hsection"><img src="wrench.png"></a>
+        <a href="/document.html" class="linker hsection">DOCUMENT</a>
+        <a href="/wordsearch.html" class="linker hsection" enabled>WORD SEARCH</a>
+        <a href="/solver.html" class="linker hsection">HEAVY-DUTY ANAGRAM SOLVER</a>
+    </div>
+    <div id="sidebar">
+        Enter HTML pages:
+        <textarea id="pages-textarea">
+        </textarea>
+    </div>
+    <div id="pages-section">
+    </div>
+
+    <script src="jquery-3.3.1.min.js"></script>
+    <script src="common.js"></script>
+    <script>
+        session = {
+            pages: [],
+            iframes: [],
+            index: 0,
+            numLoading: 0,
+        }
+
+        function loadNextPage() {
+            var nextIndex = session.index;
+            while (session.iframes[nextIndex] !== undefined) {
+                nextIndex++;
+            }
+            if (nextIndex === session.pages.length) {
+                return;
+            }
+            const iframe = $(`<iframe src="${session.pages[nextIndex]}"></iframe>`);
+            session.numLoading++;
+            iframe[0].onload = () => {
+                loadNextPage();
+                session.numLoading--;
+            };
+            iframe.hide();
+            iframe.appendTo('#pages-section');
+            session.iframes[nextIndex] = iframe;
+        }
+
+        function setPages(pages) {
+            session.pages = pages;
+            session.iframes = new Array(pages.length);
+            session.numLoading = 0;
+            $('#pages-section').empty();
+            setIndex(0);
+        }
+
+        function setIndex(index) {
+            if (session.iframes[session.index] !== undefined) {
+                session.iframes[session.index].hide();
+            }
+            session.index = index;
+            loadNextPage();
+            for (var i = 0; i < 3 && session.numLoading < 3; i++) {
+                loadNextPage();
+            }
+            session.iframes[index].show();
+        }
+
+        $(document).ready(function() {
+            $('#pages-textarea').on('input', e => {
+                const pages = $('#pages-textarea').val().trim().split(/\n+/);
+                setPages(pages);
+            });
+
+            $(document).keydown(e => {
+                if (e.which === 37) { // left arrow
+                    if (session.index > 0) {
+                        setIndex(session.index - 1);
+                    }
+                    e.preventDefault();
+                } else if (e.which === 39) { // right arrow
+                    if (session.index < session.pages.length - 1) {
+                        setIndex(session.index + 1);
+                    }
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>
