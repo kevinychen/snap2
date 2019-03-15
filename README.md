@@ -100,7 +100,7 @@ To create a dashboard:
 
 1. In the "Tools" menu, click "Script editor" to open the "Hunt Dashboard script". If the script doesn't appear, you can copy the contents from [here](snap-apps-script/Dashboard.gs).
 
-1. If you want to enable Slack integration, create a new Slack app [here](https://api.slack.com/apps). In the "OAuth & Permissions" section, add the following permission scopes to your app: `channels:write`, `users:read`, `users:read.email`, and `team:read`. Install the app to your workspace, and copy the "OAuth Access Token" to the `SLACK_TOKEN` field in the Hunt Dashboard script.
+1. If you want to enable Slack integration, create a new Slack app [here](https://api.slack.com/apps). In the "OAuth & Permissions" section, add the following permission scopes to your app: `channels:write`, `users:read`, `users:read.email`, `team:read`, and `chat:write:bot`. Install the app to your workspace, and copy the "OAuth Access Token" to the `SLACK_TOKEN` field in the Hunt Dashboard script.
 
 1. Enter email addresses of any other members that should be invited to each newly created Slack channel in the `SLACK_EMAIL_ADDRESSES` field. Don't include yourself (the person who created the Slack app); you will already be invited to every channel.
 

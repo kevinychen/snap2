@@ -20,6 +20,9 @@ function setup() {
 }
 
 function processEvent(e) {
+  if (SpreadsheetApp.getActiveSheet().getSheetId() != 0) {
+    return;
+  }
   var sheet = SpreadsheetApp.getActiveSpreadsheet();
   var ui = SpreadsheetApp.getUi();
   var range = e.range;
@@ -50,6 +53,9 @@ function processEvent(e) {
       var response = ui.alert("Solve puzzle?", '', ui.ButtonSet.OK_CANCEL);
       if (response == ui.Button.OK) {
         var sheetUrl = getNamedRange('SheetUrls').getCell(row, 1).getValue();
+        if (sheetUrl.substring(sheetUrl.length - 5) === '/edit') {
+          sheetUrl = sheetUrl.substring(0, sheetUrl.length - 5);
+        }
         var sheetId = sheetUrl.match(new RegExp('https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+)(/edit)?'))[1];
         post(
           Utilities.formatString(
