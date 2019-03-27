@@ -7,7 +7,6 @@ import org.jsoup.Jsoup;
 
 import io.github.ejif.chromej.ChromeJ;
 import io.github.ejif.chromej.ConnectedTarget;
-import io.github.ejif.chromej.WsTarget;
 import io.github.ejif.chromej.protocol.WsProtocol;
 import io.github.ejif.chromej.protocol.dom.GetDocumentRequest;
 import io.github.ejif.chromej.protocol.dom.GetOuterHTMLRequest;
@@ -25,12 +24,11 @@ public class ChromeScraper extends Scraper {
 
     @Override
     protected synchronized List<List<Object>> scrape(String rootUrl, ScrapeOperation... operations) {
-        WsTarget target = chromej.getHttpProtocol().newTab();
-        try (ConnectedTarget connectedTarget = ConnectedTarget.initialize(target.getWebSocketDebuggerUrl(), 10_000)) {
-            ws = connectedTarget.getProtocol();
+        try (ConnectedTarget target = chromej.newTab()) {
+            ws = target.getProtocol();
             List<List<Object>> result = super.scrape(rootUrl, operations);
             ws.getTarget().closeTarget(CloseTargetRequest.builder()
-                .targetId(TargetID.of(target.getId()))
+                .targetId(TargetID.of(target.getTarget().getId()))
                 .build());
             return result;
         } catch (Exception e) {
