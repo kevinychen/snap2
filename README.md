@@ -61,6 +61,16 @@ To generate the Wikinet, go to the [snap-server](snap-server) directory and run 
 
 After the Wikinet is generated, the methods in the [Wikinet.java](snap-server/src/main/java/com/kyc/snap/wikinet/Wikinet.java) file and the Python [wikinet](snap-python/wikinet.py) functions can be used.
 
+### Apps Script
+
+To use Snap with Google Sheets, create a new project and copy the `Code.gs` and HTML files in [this directory](snap-apps-script/). Then publish the project and install it:
+
+1. Open the Publish menu and select "Deploy as Sheets add-on..."
+
+1. Fill in the information and click "Update web store draft", then "Publish changes". Wait a few minutes for the changes to propagate.
+
+1. Click "Return to Dashboard" in the resulting screen, click the add-on in your listings, and click "Free" to install. The Snap add-on can now be added to any of your Google Sheets by opening the Add-ons menu and selecting "Manage add-ons...".
+
 ### Python
 
 To use Snap's Python functions, add the following to your `.bashrc`:

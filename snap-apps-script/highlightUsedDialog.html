@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <style>
+      .block {
+        margin: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="block">
+      <h3>Highlight used words</h3>
+    </div>
+    <div class="block form-group">
+      <label for="word-bank-range-input"><b>Cell range of word bank</b></label>
+      <input id="word-bank-range-input" type="text" placeholder="Specify range..." value=""/>
+      <button id="word-bank-range" class="blue" onClick="getSelectedRange(this);">Select current range</button>
+    </div>
+    <div class="block form-group">
+      <label for="used-words-range-input"><b>Cell range of used words</b></label>
+      <input id="used-words-range-input" type="text" placeholder="Specify range..." value=""/>
+      <button id="used-words-range" class="blue" onClick="getSelectedRange(this);">Select current range</button>
+    </div>
+    <div class="block">
+      <button id="highlight-used" class="blue" onClick="highlightUsed()">Highlight used</button>
+    </div>
+    <script>
+      function getSelectedRange(button) {
+        button.innerHTML = 'Choosing range...'
+        button.disabled = true;
+        google.script.run
+          .withSuccessHandler(updateTextField)
+          .withUserObject(button)
+          .getSelectedRange();
+      }
+
+      function updateTextField(range, button) {
+        var textFieldId = button.id + '-input';
+        document.getElementById(textFieldId).value = range;
+        button.innerHTML = 'Select';
+        button.disabled = false;
+      }
+
+      function highlightUsed() {
+        var wordBankRange = document.getElementById('word-bank-range-input').value;
+        var usedWordsRange = document.getElementById('used-words-range-input').value;
+        google.script.run.highlightUsed(wordBankRange, usedWordsRange);
+      }
+    </script>
+  </body>
+</html>
+

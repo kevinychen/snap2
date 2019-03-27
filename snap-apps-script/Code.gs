@@ -1,27 +1,70 @@
-SERVER_SOCKET_ADDRESS = "167.99.173.63:8080";
-SERVICE_USER = "sheets-creator@snap-187301.iam.gserviceaccount.com";
+
+function onInstall() {
+  onOpen();
+}
 
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
-  ui.createMenu('Puzzlehunt Tools')
-      .addItem('Convert background colors to RGB values', 'getBackgroundRGBs')
-      .addItem('Set background colors from RGB values', 'setBackgroundRGBs')
-      .addItem('Make horizontal hexagonal grid', 'makeHorizontalHexagonalGrid')
-      .addItem('Make vertical hexagonal grid', 'makeVerticalHexagonalGrid')
-      .addItem('Configure puzzle bot', 'configureBot')
-      .addToUi();
+  ui.createAddonMenu()
+    .addItem('Highlight used words in a word bank', 'openHighlightUsed')
+    .addItem('Remove blank lines', 'removeBlankLines')
+    .addItem('Convert background colors to RGB values', 'getBackgroundRGBs')
+    .addItem('Set background colors from RGB values', 'setBackgroundRGBs')
+    .addItem('Make horizontal hexagonal grid', 'makeHorizontalHexagonalGrid')
+    .addItem('Make vertical hexagonal grid', 'makeVerticalHexagonalGrid')
+    .addToUi();
 }
 
+/*************************************
+ * HELPER FUNCTIONS USED BY onOpen() *
+ *************************************/
+
+function openHighlightUsed() {
+  var html = HtmlService.createHtmlOutputFromFile('highlightUsedDialog')
+      .setTitle('Snap');
+  SpreadsheetApp.getUi().showSidebar(html);
+}
+
+/**
+ * Shifts lines upwards to remove all empty lines.
+ */
+function removeBlankLines() {
+  var range = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getActiveRange();
+  var newValues = [];
+  for (var i = 0; i < range.getNumRows(); i++) {
+    if (!range.offset(i, 0, 1).isBlank()) {
+      newValues.push(range.offset(i, 0, 1).getValues()[0]);
+    }
+  }
+  var blankLine = [];
+  for (var j = 0; j < range.getNumColumns(); j++) {
+    blankLine.push("");
+  }
+  while (newValues.length < range.getNumRows()) {
+    newValues.push(blankLine);
+  }
+  range.setValues(newValues);
+}
+
+/**
+ * Fills each cell with the text corresponding to the cell's background color (e.g. "#ffffff")
+ */
 function getBackgroundRGBs() {
   var range = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getActiveRange();
   range.setValues(range.getBackgrounds());
 }
 
+/**
+ * Sets the background color of each cell to the value of the text (which must be of the form "#ffffff")
+ */
 function setBackgroundRGBs() {
   var range = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getActiveRange();
   range.setBackgrounds(range.getValues());
 }
 
+/**
+ * Creates a hexagonal grid by merging every other cell with the one to its right, with each row staggered from the ones above and below.
+ */
 function makeHorizontalHexagonalGrid() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var range = sheet.getActiveRange();
@@ -32,6 +75,9 @@ function makeHorizontalHexagonalGrid() {
   }
 }
 
+/**
+ * Creates a hexagonal grid by merging every other cell with the one below it, with each column staggered from the ones beside it.
+ */
 function makeVerticalHexagonalGrid() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var range = sheet.getActiveRange();
@@ -42,29 +88,82 @@ function makeVerticalHexagonalGrid() {
   }
 }
 
-function configureBot() {
-  var spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
-  DriveApp.getFileById(spreadsheetId).addEditor(SERVICE_USER);
+/****************************************
+ * HELPER FUNCTIONS USED BY CLIENT HTML *
+ ****************************************/
 
-  var html = '<html><body><div>This sheet has been shared with the Snap bot. Click the links below for more resources.</div>' +
-    '<div><li><a href="http://' + SERVER_SOCKET_ADDRESS + '/index.html?spreadsheetId=' +
-    spreadsheetId + '" target="blank" onclick="google.script.host.close()">Open grid parser</a></li></div></body></html>';
-  SpreadsheetApp.getUi().showModelessDialog(HtmlService.createHtmlOutput(html), "Shared with Snap bot");
+function getSelectedRange() {
+  return SpreadsheetApp.getActiveSheet().getActiveRange().getA1Notation();
 }
 
 /**
- * Returns all 26 Caesar shifts of the given string.
+ * Given a word bank of words and a range of used words, do the following:
+ * (1) Highlight in gray all words in the word bank that are used (present in the range of used words)
+ * (2) Highlight in red all words in the range of used words that aren't in the word bank.
+ */
+function highlightUsed(wordBankRange, usedWordsRange) {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var rules = sheet.getConditionalFormatRules();
+  var wordBankAbsoluteRange = Utilities.formatString('INDIRECT("%s")', wordBankRange);
+  var usedWordsAbsoluteRange = Utilities.formatString('INDIRECT("%s")', usedWordsRange);
+  var wordBankStart = Utilities.formatString('INDEX(%s, 1, 1)', wordBankRange);
+  var usedWordsStart = Utilities.formatString('INDEX(%s, 1, 1)', usedWordsRange);
+  var wordBankRule = SpreadsheetApp.newConditionalFormatRule()
+    .withCriteria(SpreadsheetApp.BooleanCriteria.CUSTOM_FORMULA, [Utilities.formatString('=AND(COUNTIF(%s, %s) > 0, NOT(ISBLANK(%s)))', usedWordsAbsoluteRange, wordBankStart, wordBankStart)])
+    .setBackground('#D9D9D9')
+    .setRanges([sheet.getRange(wordBankRange)])
+    .build();
+  var usedWordsRules = SpreadsheetApp.newConditionalFormatRule()
+    .withCriteria(SpreadsheetApp.BooleanCriteria.CUSTOM_FORMULA, [Utilities.formatString('=AND(COUNTIF(%s, %s) = 0, NOT(ISBLANK(%s)))', wordBankAbsoluteRange, usedWordsStart, usedWordsStart)])
+    .setBackground('#F4CCCC')
+    .setRanges([sheet.getRange(usedWordsRange)])
+    .build();
+  sheet.setConditionalFormatRules(rules.concat(wordBankRule, usedWordsRules));
+}
+
+/********************
+ * CUSTOM FUNCTIONS *
+ ********************/
+
+/**
+ * Converts a string to uppercase and removes all non-letters.
  *
- * @param {string} string The starting string.
- * @return 26 rows consisting of all Caesar shifts of the string, one per row.
+ * @param {string} input string to convert
+ * @return {string} converted input
  * @customfunction
  */
-function CAESAR(string) {
-  var shifts = [];
-  for (var i = 0; i < 26; i++) {
-    shifts.push(SHIFT(string, i))
+function ANSWERIZE(input) {
+  if (input.map) {
+    return input.map(SLUG);
   }
-  return shifts;
+  return input.toUpperCase().replace(/[^A-Z]/g, "");
+}
+
+/**
+ * Caesar shifts each letter of the string by the given shift.
+ *
+ * @param {string} string The starting string.
+ * @param {number=} shift the positive integer value to shift by.
+ * @return the shifted string.
+ * @customfunction
+ */
+function CAESAR(string, shift) {
+  if (string.map) {
+    return string.map(function(stringItem, i) {
+      return CAESAR(stringItem, shift.map ? shift[i] : shift);
+    });
+  }
+  var shifted = "";
+  for (var i = 0; i < string.length; i++) {
+    var code = string.charCodeAt(i);
+    if (code >= 65 && code <= 90) {
+      code = 65 + (code - 65 + shift) % 26;
+    } else if (code >= 97 && code <= 122) {
+      code = 97 + (code - 97 + shift) % 26;
+    }
+    shifted += String.fromCharCode(code);
+  }
+  return shifted;
 }
 
 /**
@@ -78,14 +177,14 @@ function CAESAR(string) {
 function REMOVE(string, toRemove) {
   if (string.map) {
     return string.map(function(stringItem, i) {
-      return REMOVE(stringItem, toRemove[i]);
+      return REMOVE(stringItem, toRemove.map ? toRemove[i] : toRemove);
     });
   }
   for (var i = 0; i < toRemove.length; i++) {
     var c = toRemove.charAt(i);
     var index = string.indexOf(c);
     if (index === -1) {
-      return "No (" + c + ")";
+      return 'No (' + c + ')';
     } else {
       string = string.substring(0, index) + string.substring(index + 1);
     }
@@ -94,35 +193,107 @@ function REMOVE(string, toRemove) {
 }
 
 /**
- * Reverses a row or column of cells.
+ * Removes a subsequence of characters from a string. The characters to remove must be in the same order as in the original string, but do not need to be adjacent.
  *
- * @param {array} values The row or column to reverse.
- * @return An array consisting of the row or column in reverse direction.
+ * @param {string} string The starting string.
+ * @param {string} toRemove The characters to remove.
+ * @return A string consisting of the remaining characters in the same order as the starting string.
  * @customfunction
  */
-function REVERSE(values) {
-  return values.reverse();
+function REMOVE_SUBSEQ(string, toRemove) {
+  if (string.map) {
+    return string.map(function(stringItem, i) {
+      return REMOVE_SUBSEQ(stringItem, toRemove.map ? toRemove[i] : toRemove);
+    });
+  }
+  var lastIndex = 0;
+  for (var i = 0; i < toRemove.length; i++) {
+    var c = toRemove.charAt(i);
+    var index = string.indexOf(c, lastIndex);
+    if (index === -1) {
+      return 'No (' + c + ')';
+    } else {
+      string = string.substring(0, index) + string.substring(index + 1);
+      lastIndex = index;
+    }
+  }
+  return string;
 }
 
 /**
- * Shifts the string by the given shift.
+ * Splits a string into an array of its characters.
  *
- * @param {string} string The starting string.
- * @param {number} shift the positive integer value to shift by.
- * @return the shifted string.
+ * @param {string} string The string to split.
+ * @return The list of characters in the string.
  * @customfunction
  */
-function SHIFT(string, shift) {
-  var shifted = "";
-  for (var i = 0; i < string.length; i++) {
-    var code = string.charCodeAt(i);
-    if (code >= 65 && code <= 90) {
-      code = 65 + (code - 65 + shift) % 26;
-    } else if (code >= 97 && code <= 122) {
-      code = 97 + (code - 97 + shift) % 26;
-    }
-    shifted += String.fromCharCode(code);
+function CHARS(string) {
+  if (string.map) {
+    return string.map(CHARS);
   }
-  return shifted;
+  return string.split('');
+}
+
+/**
+ * Flips a range across the Y axis.
+ *
+ * @param {range} range The range to reverse.
+ * @return The flipped range.
+ * @customfunction
+ */
+function FLIP_HORIZ(range) {
+  return range.map(function(row) {
+    return row.reverse();
+  });
+}
+
+/**
+ * Flips a range across the X axis.
+ *
+ * @param {range} range The range to reverse.
+ * @return The flipped range.
+ * @customfunction
+ */
+function FLIP_VERT(range) {
+  return range.reverse();
+}
+
+var ELEMENTS = [
+  'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+  'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd',
+  'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th',
+  'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og'];
+
+/**
+ * Converts an atomic number to the 1/2-letter abbreviation of the corresponding element.
+ *
+ * @param {number=} input the atomic number
+ * @return {string} the element abbreviation
+ * @customfunction
+ */
+function NUM2EL(input) {
+  if (input.map) {
+    return input.map(NUM2EL);
+  }
+  return ELEMENTS[input - 1];
+}
+
+/**
+ * Converts the 1/2-letter abbreviation of an element to its corresponding atomic number. This function is not case sensitive.
+ *
+ * @param {string} the 1/2-letter element abbreviation
+ * @return {number} the atomic number
+ * @customfunction
+ */
+function EL2NUM(input) {
+  if (input.map) {
+    return input.map(EL2NUM);
+  }
+  for (var i = 0; i < ELEMENTS.length; i++) {
+    if (ELEMENTS[i].equalsIgnoreCase(input)) {
+      return i + 1;
+    }
+  }
+  return 'Not an element';
 }
 
