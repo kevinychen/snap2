@@ -1,66 +1,87 @@
+
 package com.kyc.snap.scraper;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
-public abstract class Scraper {
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.kklisura.cdt.protocol.commands.DOM;
+import com.github.kklisura.cdt.protocol.types.runtime.Evaluate;
+import com.github.kklisura.cdt.services.ChromeDevToolsService;
+import com.github.kklisura.cdt.services.ChromeService;
+import com.github.kklisura.cdt.services.impl.ChromeServiceImpl;
+import com.github.kklisura.cdt.services.types.ChromeTab;
 
-    private ScrapeOperation[] operations;
-    private int operationIndex;
-    private List<Object> currentOutput;
-    private List<List<Object>> output;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
-    protected synchronized List<List<Object>> scrape(String rootUrl, ScrapeOperation... operations) {
-        this.operations = operations;
-        this.operationIndex = 0;
-        this.currentOutput = new ArrayList<>();
-        this.output = new ArrayList<>();
-        scrapeHelper(getRootElement(rootUrl));
-        return output;
+public abstract class Scraper implements AutoCloseable {
+
+    private final ChromeService chromeService;
+    private ChromeDevToolsService devToolsService;
+    private DOM dom;
+
+    public Scraper() {
+        chromeService = new ChromeServiceImpl(9222);
     }
 
-    protected final ScrapeOperation select(String selector) {
-        return el -> {
-            for (Element child : el.select(selector))
-                process(child);
-        };
+    void newTab(String url) {
+        initTab(chromeService.createTab());
+        navigate(url);
     }
 
-    protected final ScrapeOperation emit(Function<Element, Object> emitFunction) {
-        return el -> {
-            currentOutput.add(emitFunction.apply(el));
-            process(el);
-            currentOutput.remove(currentOutput.size() - 1);
-        };
+    void useTab(String tabName) {
+        for (ChromeTab tab : chromeService.getTabs()) {
+            if (tab.getTitle().contains(tabName) || tab.getUrl().contains(tabName)) {
+                initTab(tab);
+                return;
+            }
+        }
+        throw new RuntimeException("Tab not found: " + tabName);
     }
 
-    protected final ScrapeOperation emitAll(Function<Element, List<Object>> emitFunction) {
-        return el -> {
-            int prevSize = currentOutput.size();
-            currentOutput.addAll(emitFunction.apply(el));
-            process(el);
-            currentOutput.subList(prevSize, currentOutput.size()).clear();
-        };
+    void navigate(String url) {
+        devToolsService.getPage().navigate(normalizeUrl(url));
     }
 
-    protected final ScrapeOperation followLink() {
-        return el -> {
-            process(getRootElement(el.attr("abs:href")));
-        };
+    Element html() {
+        int documentNodeId = dom.getDocument().getNodeId();
+        return Jsoup.parse(dom.getOuterHTML(documentNodeId, null, null));
     }
 
-    protected final void process(Element el) {
-        operationIndex++;
-        scrapeHelper(el);
-        operationIndex--;
+    Element html(String url) {
+        try {
+            Response response = new OkHttpClient()
+                .newCall(new Request.Builder().url(normalizeUrl(url)).get().build())
+                .execute();
+            return Jsoup.parse(response.body().string());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    protected final void wait(int millis) {
+    void click(String selector) {
+        js(String.format("document.querySelector('%s').click()", StringEscapeUtils.escapeEcmaScript(selector)));
+    }
+
+    Object js(String expression) {
+        Evaluate result = devToolsService.getRuntime().evaluate(expression);
+        if (result.getExceptionDetails() != null) {
+            try {
+                throw new RuntimeException(
+                    new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(result.getExceptionDetails()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return result.getResult().getValue();
+    }
+
+    void sleep(long millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
@@ -68,27 +89,23 @@ public abstract class Scraper {
         }
     }
 
-    private final Element getRootElement(String url) {
-        if (url == null)
-            return null;
-        try {
-            return Jsoup.connect(url).get();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    @Override
+    public void close() {
+        if (devToolsService != null) {
+            devToolsService.close();
         }
     }
 
-    private final void scrapeHelper(Element el) {
-        if (operationIndex == operations.length) {
-            output.add(new ArrayList<>(currentOutput));
-            return;
-        }
-        operations[operationIndex].scrape(el);
+    private void initTab(ChromeTab tab) {
+        close();
+        devToolsService = chromeService.createDevToolsService(tab);
+        dom = devToolsService.getDOM();
     }
 
-    @FunctionalInterface
-    protected interface ScrapeOperation {
-
-        void scrape(Element el);
+    private static String normalizeUrl(String url) {
+        if (!url.startsWith("http")) {
+            url = "https://" + url;
+        }
+        return url;
     }
 }
