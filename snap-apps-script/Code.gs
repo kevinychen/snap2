@@ -167,7 +167,7 @@ function CAESAR(string, shift) {
 }
 
 /**
- * Removes characters from a string. Removing a character will only remove the first occurrence of that character in the string, but the same character can be removed multiple times.
+ * Removes characters from a string. Removing a character will only remove the first occurrence of that character in the string, but the same character can be removed multiple times. To remove a subsequence of characaters in order, use REMOVE_SUBSEQ instead.
  *
  * @param {string} string The starting string.
  * @param {string} toRemove The characters to remove.
@@ -193,7 +193,7 @@ function REMOVE(string, toRemove) {
 }
 
 /**
- * Removes a subsequence of characters from a string. The characters to remove must be in the same order as in the original string, but do not need to be adjacent.
+ * Removes a subsequence of characters from a string. The characters to remove must be in the same order as in the original string, but do not need to be adjacent. To remove some characters in any order, use REMOVE instead.
  *
  * @param {string} string The starting string.
  * @param {string} toRemove The characters to remove.
