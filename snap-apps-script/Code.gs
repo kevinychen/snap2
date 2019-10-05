@@ -1,4 +1,6 @@
 
+CUSTOM_FUNCTION_METADATA_KEY = "SNAP_CUSTOM_FUNCTION";
+
 function onInstall() {
   onOpen();
 }
@@ -7,6 +9,7 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createAddonMenu()
     .addItem('Highlight used words in a word bank', 'openHighlightUsed')
+    .addItem('Define custom function', 'defineCustomFunction')
     .addItem('Remove blank lines', 'removeBlankLines')
     .addItem('Convert background colors to RGB values', 'getBackgroundRGBs')
     .addItem('Set background colors from RGB values', 'setBackgroundRGBs')
@@ -21,6 +24,12 @@ function onOpen() {
 
 function openHighlightUsed() {
   var html = HtmlService.createHtmlOutputFromFile('highlightUsedDialog')
+      .setTitle('Snap');
+  SpreadsheetApp.getUi().showSidebar(html);
+}
+
+function defineCustomFunction() {
+  var html = HtmlService.createHtmlOutputFromFile('customFunctionDialog')
       .setTitle('Snap');
   SpreadsheetApp.getUi().showSidebar(html);
 }
@@ -121,6 +130,29 @@ function highlightUsed(wordBankRange, usedWordsRange) {
   sheet.setConditionalFormatRules(rules.concat(wordBankRule, usedWordsRules));
 }
 
+function getCustomFunctionMetadata() {
+  var customFunctionMetadata = SpreadsheetApp.getActiveSpreadsheet().getDeveloperMetadata().filter(function(metadata) {
+    return metadata.getKey() === CUSTOM_FUNCTION_METADATA_KEY;
+  })[0];
+  return customFunctionMetadata;
+}
+
+function getCustomFunction() {
+  var customFunctionMetadata = getCustomFunctionMetadata();
+  if (customFunctionMetadata) {
+    return customFunctionMetadata.getValue();
+  }
+}
+
+function saveCustomFunction(customFunction) {
+  var customFunctionMetadata = getCustomFunctionMetadata();
+  if (customFunctionMetadata) {
+    customFunctionMetadata.setValue(customFunction);
+  } else {
+    SpreadsheetApp.getActiveSpreadsheet().addDeveloperMetadata(CUSTOM_FUNCTION_METADATA_KEY, customFunction);
+  }
+}
+
 /********************
  * CUSTOM FUNCTIONS *
  ********************/
@@ -167,7 +199,8 @@ function CAESAR(string, shift) {
 }
 
 /**
- * Removes characters from a string. Removing a character will only remove the first occurrence of that character in the string, but the same character can be removed multiple times. To remove a subsequence of characaters in order, use REMOVE_SUBSEQ instead.
+ * Removes characters from a string. Removing a character will only remove the first occurrence of that character in the string, but the same character can be removed multiple times.
+ * To remove a subsequence of characaters in order, use REMOVE_SUBSEQ instead.
  *
  * @param {string} string The starting string.
  * @param {string} toRemove The characters to remove.
@@ -193,7 +226,8 @@ function REMOVE(string, toRemove) {
 }
 
 /**
- * Removes a subsequence of characters from a string. The characters to remove must be in the same order as in the original string, but do not need to be adjacent. To remove some characters in any order, use REMOVE instead.
+ * Removes a subsequence of characters from a string. The characters to remove must be in the same order as in the original string, but do not need to be adjacent.
+ * To remove some characters in any order, use REMOVE instead.
  *
  * @param {string} string The starting string.
  * @param {string} toRemove The characters to remove.
@@ -295,5 +329,19 @@ function EL2NUM(input) {
     }
   }
   return 'Not an element';
+}
+
+/**
+ * Executes the custom function defined in "Snap Functions -> Define custom function".
+ *
+ * @customfunction
+ */
+function CUSTOM() {
+  var customFunction = getCustomFunction();
+  if (customFunction) {
+    eval('var _ = ' + customFunction);
+    return _.apply(null, arguments);
+  }
+  return "Not defined"
 }
 
