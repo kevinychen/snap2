@@ -39,16 +39,16 @@ export class Document extends React.Component {
             <div>
                 <div>
                     <button
-                        className="inline nav"
-                        onClick={() => this.setState({page: page - 1})}
+                        className="inline"
+                        onClick={() => this.setState({ page: page - 1 })}
                         disabled={page == 0}
                     >
                         {"<"}
                     </button>
                     Page {page + 1}/{document.pages.length}
                     <button
-                        className="inline nav"
-                        onClick={() => this.setState({page: page + 1})}
+                        className="inline"
+                        onClick={() => this.setState({ page: page + 1 })}
                         disabled={page == document.pages.length - 1}
                     >
                         {">"}
@@ -59,7 +59,7 @@ export class Document extends React.Component {
                         className="image"
                         src={imageDataUrl}
                         alt=""
-                        onLoad={() => this.setImageSize()}
+                        onLoad={this.setImageSize}
                     />
                     <canvas
                         ref={this.imageRef}
@@ -72,8 +72,7 @@ export class Document extends React.Component {
         );
     }
 
-    setImageSize() {
-        console.log(this.imageRef);
+    setImageSize = () => {
         this.setState({
             imageWidth: this.imageRef.naturalWidth,
             imageHeight: this.imageRef.naturalHeight,

@@ -29,7 +29,7 @@ module.exports = {
                 include: [path.resolve(__dirname, 'src')],
                 loader: 'babel-loader',
                 options: {
-                    plugins: ['syntax-dynamic-import'],
+                    plugins: ['syntax-dynamic-import', '@babel/plugin-proposal-class-properties'],
                     presets: ['@babel/preset-env', '@babel/preset-react'],
                 }
             }

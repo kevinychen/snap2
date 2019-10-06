@@ -5,18 +5,21 @@
     <base target="_top">
     <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
     <style>
-        body {
-            max-width: 700px;
+        #app {
+            width: 700px;
+            height: 100%;
+            float: right;
+        }
+
+        .image-container {
+            position: relative;
+            width: 97%;
         }
 
         .image {
             max-height: 100%;
             width: 100%;
             border: 1px black solid;
-        }
-    
-        .image-container {
-            position: relative;
         }
     
         .overlay-canvas {
@@ -31,6 +34,7 @@
 
 <body>
     <div id="app"></div>
+    <!-- TODO change to production -->
     <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
 </body>
