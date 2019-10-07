@@ -32,7 +32,14 @@ module.exports = {
                     plugins: ['syntax-dynamic-import', '@babel/plugin-proposal-class-properties'],
                     presets: ['@babel/preset-env', '@babel/preset-react'],
                 }
-            }
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    'style-loader',
+                    'css-loader'
+                ],
+            },
         ]
     },
 

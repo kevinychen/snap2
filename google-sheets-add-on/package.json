@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/kevinychen/snap2#readme",
   "dependencies": {
+    "classnames": "^2.2.6",
     "react": "^16.10.2",
     "react-dom": "^16.10.2"
   },

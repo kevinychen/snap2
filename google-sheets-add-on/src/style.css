@@ -1,0 +1,53 @@
+/* TODO remove this block */
+#app {
+    width: 700px;
+    float: right;
+}
+
+.image-container {
+    position: relative;
+    width: 97%;
+}
+
+.image {
+    max-height: 100%;
+    width: 100%;
+    border: 1px black solid;
+}
+
+.overlay-canvas {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+.small-button {
+    min-width: 36px;
+}
+
+.selected {
+    color: #666;
+}
+
+.popup-bar {
+    position: relative;
+    float: right;
+    margin-right: 10px;
+}
+
+.popup {
+    position: absolute;
+    z-index: 99;
+    padding: 10px;
+    background-color: white;
+    border: 2px black solid;
+    right: 0;
+}
+
+.submit-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}

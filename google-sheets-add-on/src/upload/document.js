@@ -1,10 +1,18 @@
+import * as classNames from "classnames";
 import { get } from "../fetch";
+import { DocumentImage } from "./documentImage";
+import { FindGridLinesPopup } from "./findGridLinesPopup";
 
 export class Document extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { page: 0 };
-        this.imageRef = React.createRef();
+        this.state = {
+            page: 0,
+            mode: "select-rectangle",
+            rectangle: undefined,
+            gridLines: undefined,
+            showFindGridLines: false,
+        };
     }
 
     componentDidMount() {
@@ -33,13 +41,12 @@ export class Document extends React.Component {
 
     render() {
         const { document } = this.props;
-        const { imageDataUrl, imageHeight, imageWidth, page } = this.state;
+        const { imageDataUrl, mode, page, rectangle, gridLines, showFindGridLines } = this.state;
 
         return (
-            <div>
-                <div>
+            <div className="block">
+                <div className="block">
                     <button
-                        className="inline"
                         onClick={() => this.setState({ page: page - 1 })}
                         disabled={page == 0}
                     >
@@ -53,29 +60,80 @@ export class Document extends React.Component {
                     >
                         {">"}
                     </button>
+
+                    <button
+                        className={classNames("small-button", { "green": mode === "select-rectangle" })}
+                        title="Select rectangular region"
+                        onClick={() => this.setState({ mode: "select-rectangle" })}
+                    >
+                        {"⬚"}
+                    </button>
+                    <button
+                        className={classNames("small-button", { "green": mode === "edit-grid-lines" })}
+                        title="Add or remove grid lines"
+                        onClick={() => this.setState({ mode: "edit-grid-lines" })}
+                        disabled={rectangle === undefined}
+                    >
+                        {"╋"}
+                    </button>
+                    <button
+                        className={classNames("small-button", { "green": mode === "select-blob" })}
+                        title="Select an arbitrary shape"
+                        onClick={() => this.setState({ mode: "select-blob" })}
+                    >
+                        {"⬯"}
+                    </button>
+
+                    <div className="inline popup-bar">
+                        <button
+                            className={classNames("small-button", { "green": showFindGridLines })}
+                            title="Find grid lines"
+                            onClick={() => this.setState({ showFindGridLines: !showFindGridLines })}
+                            disabled={rectangle === undefined}
+                        >
+                            {"▒"}
+                        </button>
+
+                        {this.maybeRenderFindGridLines()}
+                    </div>
                 </div>
-                <div className="image-container">
-                    <img
-                        className="image"
-                        src={imageDataUrl}
-                        alt=""
-                        onLoad={this.setImageSize}
-                    />
-                    <canvas
-                        ref={this.imageRef}
-                        className="overlay-canvas"
-                        width={imageWidth}
-                        height={imageHeight}
-                    />
-                </div>
+                <DocumentImage
+                    imageDataUrl={imageDataUrl}
+                    mode={mode}
+                    rectangle={rectangle}
+                    gridLines={gridLines}
+                    setRectangle={this.setRectangle}
+                />
             </div>
         );
     }
 
-    setImageSize = () => {
-        this.setState({
-            imageWidth: this.imageRef.naturalWidth,
-            imageHeight: this.imageRef.naturalHeight,
-        })
+    setRectangle = (rectangle) => {
+        if (rectangle) {
+            this.setState({
+                rectangle,
+                gridLines: {
+                    horizontalLines: [0, rectangle.height],
+                    verticalLines: [0, rectangle.width],
+                }
+            });
+        } else {
+            this.setState({ rectangle, gridLines: undefined });
+        }
+    }
+
+    maybeRenderFindGridLines() {
+        const { document } = this.props;
+        const { page, rectangle, showFindGridLines } = this.state;
+        if (showFindGridLines && rectangle) {
+            return (
+                <FindGridLinesPopup
+                    document={document}
+                    page={page}
+                    rectangle={rectangle}
+                    setGridLines={gridLines => this.setState({ gridLines, showFindGridLines: false })}
+                />
+            );
+        }
     }
 }

@@ -5,7 +5,10 @@ export class UploadPage extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = { good: true };
+        this.state = {
+            good: true,
+            document: undefined,
+        };
     }
 
     componentDidMount() {
@@ -28,8 +31,8 @@ export class UploadPage extends React.Component {
     renderPage() {
         const { document } = this.state;
         return (
-            <div>
-                <div>
+            <div className="block">
+                <div className="block">
                     <input
                         className="inline"
                         type="text"
@@ -49,14 +52,14 @@ export class UploadPage extends React.Component {
         );
     }
 
-    setUrl = function (e) {
+    setUrl = e => {
         const url = e.target.value;
         if (url) {
             postJson({ path: '/documents/url', body: { url } }, document => this.setState({ document }));
         }
     }
 
-    setFile = function (e) {
+    setFile = e => {
         const file = e.target.files[0];
         if (file) {
             const formData = new FormData();

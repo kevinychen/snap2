@@ -1,3 +1,4 @@
+import "./style.css"
 import { UploadPage } from "./upload/uploadPage";
 
 class Snap extends React.Component {
