@@ -50,12 +50,13 @@ export class Document extends React.Component {
             <div className="block">
                 <div className="block">
                     <button
+                        className="inline"
                         onClick={() => this.setState({ page: page - 1 })}
                         disabled={page == 0}
                     >
                         {"<"}
                     </button>
-                    Page {page + 1}/{document.pages.length}
+                    <span className="inline">Page {page + 1}/{document.pages.length}</span>
                     <button
                         className="inline"
                         onClick={() => this.setState({ page: page + 1 })}
