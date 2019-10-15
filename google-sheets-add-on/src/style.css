@@ -51,3 +51,11 @@
     bottom: 10px;
     right: 10px;
 }
+
+.grayed-out {
+    opacity: .5;
+}
+
+.hide {
+    display: none;
+}

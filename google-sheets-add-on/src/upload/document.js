@@ -2,6 +2,7 @@ import * as classNames from "classnames";
 import { get } from "../fetch";
 import { DocumentImage } from "./documentImage";
 import { FindGridLinesPopup } from "./findGridLinesPopup";
+import { ParseContentPopup } from "./parseContentPopup";
 
 export class Document extends React.Component {
     constructor(props) {
@@ -11,7 +12,9 @@ export class Document extends React.Component {
             mode: "select-rectangle",
             rectangle: undefined,
             gridLines: undefined,
-            showFindGridLines: false,
+            gridPosition: undefined,
+            grid: undefined,
+            popupMode: undefined,
         };
     }
 
@@ -41,7 +44,7 @@ export class Document extends React.Component {
 
     render() {
         const { document } = this.props;
-        const { imageDataUrl, mode, page, rectangle, gridLines, showFindGridLines } = this.state;
+        const { imageDataUrl, mode, page, rectangle, gridLines, gridPosition, grid, popupMode } = this.state;
 
         return (
             <div className="block">
@@ -86,15 +89,37 @@ export class Document extends React.Component {
 
                     <div className="inline popup-bar">
                         <button
-                            className={classNames("small-button", { "green": showFindGridLines })}
+                            className={classNames("small-button", { "green": popupMode === "find-grid-lines" })}
                             title="Find grid lines"
-                            onClick={() => this.setState({ showFindGridLines: !showFindGridLines })}
+                            onClick={() => this.setState({ popupMode: popupMode === "find-grid-lines" ? undefined : "find-grid-lines" })}
                             disabled={rectangle === undefined}
                         >
                             {"▒"}
                         </button>
+                        <button
+                            className={classNames("small-button", { "green": popupMode === "parse-content" })}
+                            title="Find grid lines"
+                            onClick={() => this.setState({ popupMode: popupMode === "parse-content" ? undefined : "parse-content" })}
+                            disabled={rectangle === undefined}
+                        >
+                            {"🄰"}
+                        </button>
 
-                        {this.maybeRenderFindGridLines()}
+                        <FindGridLinesPopup
+                            isVisible={popupMode === "find-grid-lines" && rectangle}
+                            document={document}
+                            page={page}
+                            rectangle={rectangle}
+                            setGridLines={gridLines => this.setState({ gridLines, grid: undefined, popupMode: undefined })}
+                        />
+                        <ParseContentPopup
+                            isVisible={popupMode === "parse-content" && gridLines}
+                            document={document}
+                            page={page}
+                            rectangle={rectangle}
+                            gridLines={gridLines}
+                            setGrid={({ gridPosition, grid }) => this.setState({ gridPosition, grid, popupMode: undefined })}
+                        />
                     </div>
                 </div>
                 <DocumentImage
@@ -102,6 +127,8 @@ export class Document extends React.Component {
                     mode={mode}
                     rectangle={rectangle}
                     gridLines={gridLines}
+                    gridPosition={gridPosition}
+                    grid={grid}
                     setRectangle={this.setRectangle}
                 />
             </div>
@@ -109,31 +136,13 @@ export class Document extends React.Component {
     }
 
     setRectangle = (rectangle) => {
-        if (rectangle) {
-            this.setState({
-                rectangle,
-                gridLines: {
-                    horizontalLines: [0, rectangle.height],
-                    verticalLines: [0, rectangle.width],
-                }
-            });
-        } else {
-            this.setState({ rectangle, gridLines: undefined });
-        }
-    }
-
-    maybeRenderFindGridLines() {
-        const { document } = this.props;
-        const { page, rectangle, showFindGridLines } = this.state;
-        if (showFindGridLines && rectangle) {
-            return (
-                <FindGridLinesPopup
-                    document={document}
-                    page={page}
-                    rectangle={rectangle}
-                    setGridLines={gridLines => this.setState({ gridLines, showFindGridLines: false })}
-                />
-            );
-        }
+        this.setState({
+            rectangle,
+            gridLines: {
+                horizontalLines: [0, rectangle.height],
+                verticalLines: [0, rectangle.width],
+            },
+            grid: undefined,
+        });
     }
 }

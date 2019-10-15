@@ -15,7 +15,10 @@ export class FindGridLinesPopup extends React.Component {
     render() {
         const { mode, interpolate, approxGridSquareSize } = this.state;
         return (
-            <div className="popup" style={{ width: "250px", height: "120px" }}>
+            <div
+                className={classNames( "popup", {"hide": !this.props.isVisible })}
+                style={{ width: "250px", height: "120px" }}
+            >
                 <div className="block">
                     <button
                         className={classNames({ "green": mode === "EXPLICIT" })}

@@ -10,7 +10,7 @@ export class DocumentImage extends React.Component {
     }
 
     componentDidUpdate() {
-        const { rectangle, gridLines } = this.props;
+        const { rectangle, gridLines, gridPosition, grid } = this.props;
 
         const ctx = this.canvas.getContext('2d');
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -23,28 +23,83 @@ export class DocumentImage extends React.Component {
             ctx.lineWidth = 4;
             ctx.strokeRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 
-            if (gridLines) {
-                ctx.strokeStyle = 'red';
-                ctx.fillStyle = 'red';
-                ctx.lineWidth = 2;
-                for (var row of gridLines.horizontalLines) {
-                    ctx.beginPath();
-                    ctx.moveTo(rectangle.x, rectangle.y + row);
-                    ctx.lineTo(rectangle.x + rectangle.width, rectangle.y + row);
-                    ctx.stroke();
-                    this.drawPoint(ctx, rectangle.x, rectangle.y + row);
-                    this.drawPoint(ctx, rectangle.x + rectangle.width, rectangle.y + row);
-                }
-                for (var col of gridLines.verticalLines) {
-                    ctx.beginPath();
-                    ctx.moveTo(rectangle.x + col, rectangle.y);
-                    ctx.lineTo(rectangle.x + col, rectangle.y + rectangle.height);
-                    ctx.stroke();
-                    this.drawPoint(ctx, rectangle.x + col, rectangle.y);
-                    this.drawPoint(ctx, rectangle.x + col, rectangle.y + rectangle.height);
+            // draw grid lines
+            ctx.strokeStyle = 'red';
+            ctx.fillStyle = 'red';
+            ctx.lineWidth = 2;
+            for (var row of gridLines.horizontalLines) {
+                ctx.beginPath();
+                ctx.moveTo(rectangle.x, rectangle.y + row);
+                ctx.lineTo(rectangle.x + rectangle.width, rectangle.y + row);
+                ctx.stroke();
+                this.drawPoint(ctx, rectangle.x, rectangle.y + row);
+                this.drawPoint(ctx, rectangle.x + rectangle.width, rectangle.y + row);
+            }
+            for (var col of gridLines.verticalLines) {
+                ctx.beginPath();
+                ctx.moveTo(rectangle.x + col, rectangle.y);
+                ctx.lineTo(rectangle.x + col, rectangle.y + rectangle.height);
+                ctx.stroke();
+                this.drawPoint(ctx, rectangle.x + col, rectangle.y);
+                this.drawPoint(ctx, rectangle.x + col, rectangle.y + rectangle.height);
+            }
+
+            if (grid) {
+                for (var i = 0; i < grid.numRows; i++) {
+                    for (var j = 0; j < grid.numCols; j++) {
+                        const row = gridPosition.rows[i];
+                        const col = gridPosition.cols[j];
+                        const square = grid.squares[i][j];
+
+                        ctx.beginPath();
+                        ctx.rect(
+                            rectangle.x + col.startX + col.width / 3,
+                            rectangle.y + row.startY + row.height / 3,
+                            col.width / 3,
+                            row.height / 3);
+                        ctx.fillStyle = this.rgbToStyle(square.rgb);
+                        ctx.fill();
+                        ctx.strokeStyle = 'red';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+
+                        ctx.strokeStyle = 'blue';
+                        ctx.strokeText(square.text,
+                            rectangle.x + col.startX + col.width / 3,
+                            rectangle.y + row.startY + 2 * row.height / 3);
+
+                        ctx.fillStyle = this.rgbToStyle(square.topBorder.rgb);
+                        ctx.fillRect(
+                            rectangle.x + col.startX + col.width / 3,
+                            rectangle.y + row.startY + row.height / 3 - 1,
+                            col.width / 3,
+                            -square.topBorder.width);
+                        ctx.fillStyle = this.rgbToStyle(square.rightBorder.rgb);
+                        ctx.fillRect(
+                            rectangle.x + col.startX + col.width * 2 / 3 + 1,
+                            rectangle.y + row.startY + row.height / 3,
+                            square.rightBorder.width,
+                            row.height / 3);
+                        ctx.fillStyle = this.rgbToStyle(square.bottomBorder.rgb);
+                        ctx.fillRect(
+                            rectangle.x + col.startX + col.width / 3,
+                            rectangle.y + row.startY + row.height * 2 / 3 + 1,
+                            col.width / 3,
+                            square.bottomBorder.width);
+                        ctx.fillStyle = this.rgbToStyle(square.leftBorder.rgb);
+                        ctx.fillRect(
+                            rectangle.x + col.startX + col.width / 3 - 1,
+                            rectangle.y + row.startY + row.height / 3,
+                            -square.leftBorder.width,
+                            row.height / 3);
+                    }
                 }
             }
         }
+    }
+
+    rgbToStyle(rgb) {
+        return 'rgb(' + ((rgb >> 16) & 0xff) + ',' + ((rgb >> 8) & 0xff) + ',' + ((rgb >> 0) & 0xff) + ')';
     }
 
     drawPoint(ctx, x, y) {
@@ -54,7 +109,7 @@ export class DocumentImage extends React.Component {
     }
 
     render() {
-        const { imageDataUrl } = this.props;
+        const { imageDataUrl, setRectangle } = this.props;
         const { imageWidth, imageHeight } = this.state;
         return (
             <div className="block image-container">
@@ -63,7 +118,10 @@ export class DocumentImage extends React.Component {
                     className="image"
                     src={imageDataUrl}
                     alt=""
-                    onLoad={() => this.setState({ imageWidth: this.image.naturalWidth, imageHeight: this.image.naturalHeight })}
+                    onLoad={() => {
+                        this.setState({ imageWidth: this.image.naturalWidth, imageHeight: this.image.naturalHeight });
+                        setRectangle({ x: 0, y: 0, width: this.image.naturalWidth, height: this.image.naturalHeight });
+                    }}
                 />
                 <canvas
                     ref={this.canvasRef}
