@@ -1,0 +1,53 @@
+
+.popup {
+    position: absolute;
+    z-index: 3;
+    padding: 15px;
+    background-color: white;
+    border: 5px black solid;
+    border-radius: 5px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.submit-section {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+}
+
+.grayed-out {
+    opacity: .5;
+}
+
+.hide {
+    display: none;
+}
+
+.small-button {
+    min-width: 36px;
+}
+
+.center {
+    font-size: 18px;
+    margin-bottom: 20px;
+    font-weight: 800;
+}
+
+/* Individual popup features */
+
+.find-grid-lines-popup {
+    width: 250px;
+    height: 175px;
+}
+
+.parse-content-popup {
+    width: 350px;
+    height: 450px;
+}
+
+.export-to-sheet-popup {
+    width: 250px;
+    height: 150px;
+}

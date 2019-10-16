@@ -1,7 +1,8 @@
 import * as classNames from "classnames";
 import { postJson } from "../fetch";
+import { Popup } from "./popup";
 
-export class ParseContentPopup extends React.Component {
+export class ParseContentPopup extends Popup {
     constructor(props) {
         super(props);
         this.state = {
@@ -13,11 +14,14 @@ export class ParseContentPopup extends React.Component {
             ocrSingleCharacter: false,
             ocrFullness: 0.8,
             ocrConfidenceThreshold: 50,
-            awaitingServer: false,
         };
     }
 
-    render() {
+    customClass() {
+        return "parse-content-popup";
+    }
+
+    renderContent() {
         const {
             findColors,
             findBorders,
@@ -30,10 +34,7 @@ export class ParseContentPopup extends React.Component {
         } = this.state;
 
         return (
-            <div
-                className={classNames( "popup", {"hide": !this.props.isVisible })}
-                style={{ width: "350px", height: "450px" }}
-            >
+            <div>
                 <div className="center">Parse content</div>
                 <div className="block">
                     <button
@@ -144,38 +145,11 @@ export class ParseContentPopup extends React.Component {
                         </div>
                     </div>
                 </div>
-
-                <div className="submit-section">
-                    <button onClick={this.cancel}>Cancel</button>
-                    {this.renderSubmitButton()}
-                </div>
             </div>
         );
     }
 
-    renderSubmitButton() {
-        if (this.state.awaitingServer) {
-            return (
-                <button disabled={true}>
-                    Calculating...
-                </button>
-            );
-        } else {
-            return (
-                <button className="blue" onClick={this.parseContent}>
-                    Submit
-                </button>
-            );
-        }
-    }
-
-    cancel = () => {
-        const { cancel } = this.props;
-        this.setState({ awaitingServer: false });
-        cancel();
-    }
-
-    parseContent = () => {
+    submit = () => {
         const { document, page, rectangle, gridLines, setGrid } = this.props;
         const {
             findColors,
@@ -185,7 +159,6 @@ export class ParseContentPopup extends React.Component {
             ocrFullness,
             ocrConfidenceThreshold,
         } = this.state;
-        this.setState({ awaitingServer: true });
         postJson({
             path: `/documents/${document.id}/grid`,
             body: {
@@ -202,8 +175,8 @@ export class ParseContentPopup extends React.Component {
                 },
             }
         }, response => {
-            this.setState({ awaitingServer: false });
             setGrid(response);
+            this.exit();
         });
     }
 

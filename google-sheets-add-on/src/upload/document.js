@@ -3,6 +3,7 @@ import { get } from "../fetch";
 import { DocumentImage } from "./documentImage";
 import { FindGridLinesPopup } from "./findGridLinesPopup";
 import { ParseContentPopup } from "./parseContentPopup";
+import { ExportToSheetPopup } from "./exportToSheetPopup";
 import { DropdownMenu } from "./dropdownMenu";
 
 export class Document extends React.Component {
@@ -106,26 +107,34 @@ export class Document extends React.Component {
                             Grid square content
                         </div>
                     </DropdownMenu>
+                    <DropdownMenu value={this.maybeBold("Export", navBarMode === "EXPORT")}>
+                        <div
+                            className={classNames({"clickable": rectangle !== undefined})}
+                            onClick={() => this.setState({ navBarMode: "EXPORT", popupMode: "EXPORT_TO_SHEET" })}
+                        >
+                            To sheet
+                        </div>
+                    </DropdownMenu>
 
                     <FindGridLinesPopup
                         isVisible={popupMode === "PARSE_GRID_LINES"}
                         document={document}
                         {...this.state}
-                        cancel={this.clearPopupMode}
-                        setGridLines={gridLines => {
-                            this.clearPopupMode();
-                            this.setGridLines(gridLines);
-                        }}
+                        setGridLines={this.setGridLines}
+                        exit={this.clearPopupMode}
                     />
                     <ParseContentPopup
                         isVisible={popupMode === "PARSE_CONTENT"}
                         document={document}
                         {...this.state}
-                        cancel={this.clearPopupMode}
-                        setGrid={({ gridPosition, grid }) => {
-                            this.clearPopupMode();
-                            this.setGrid(gridPosition, grid);
-                        }}
+                        setGrid={({ gridPosition, grid }) => this.setGrid(gridPosition, grid)}
+                        exit={this.clearPopupMode}
+                    />
+                    <ExportToSheetPopup
+                        isVisible={popupMode === "EXPORT_TO_SHEET"}
+                        document={document}
+                        {...this.state}
+                        exit={this.clearPopupMode}
                     />
                 </div>
                 <DocumentImage

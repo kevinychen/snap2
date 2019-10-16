@@ -1,24 +1,25 @@
 import * as classNames from "classnames";
 import { postJson } from "../fetch";
+import { Popup } from "./popup";
 
-export class FindGridLinesPopup extends React.Component {
+export class FindGridLinesPopup extends Popup {
     constructor(props) {
         super(props);
         this.state = {
             mode: "EXPLICIT",
             interpolate: false,
             approxGridSquareSize: 32,
-            awaitingServer: false,
         };
     }
 
-    render() {
+    customClass() {
+        return "find-grid-lines-popup";
+    }
+
+    renderContent() {
         const { mode, interpolate, approxGridSquareSize } = this.state;
         return (
-            <div
-                className={classNames( "popup", {"hide": !this.props.isVisible })}
-                style={{ width: "250px", height: "175px" }}
-            >
+            <div>
                 <div className="center">Find grid lines</div>
                 <div className="block">
                     <button
@@ -54,41 +55,13 @@ export class FindGridLinesPopup extends React.Component {
                         onChange={e => this.setState({ approxGridSquareSize: parseInt(e.target.value) })}
                     />
                 </div>
-
-                <div className="submit-section">
-                    <button onClick={this.cancel}>Cancel</button>
-                    {this.renderSubmitButton()}
-                </div>
             </div>
         );
     }
 
-    renderSubmitButton() {
-        if (this.state.awaitingServer) {
-            return (
-                <button disabled={true}>
-                    Calculating...
-                </button>
-            );
-        } else {
-            return (
-                <button className="blue" onClick={this.findGridLines}>
-                    Submit
-                </button>
-            );
-        }
-    }
-
-    cancel = () => {
-        const { cancel } = this.props;
-        this.setState({ awaitingServer: false });
-        cancel();
-    }
-
-    findGridLines = () => {
+    submit = () => {
         const { document, page, rectangle, setGridLines } = this.props;
         const { mode, interpolate, approxGridSquareSize } = this.state;
-        this.setState({ awaitingServer: true });
         postJson({
             path: `/documents/${document.id}/lines`,
             body: {
@@ -98,8 +71,8 @@ export class FindGridLinesPopup extends React.Component {
                 approxGridSquareSize,
             }
         }, gridLines => {
-            this.setState({ awaitingServer: false });
             setGridLines(gridLines);
+            this.exit();
         });
     }
 }

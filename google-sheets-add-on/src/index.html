@@ -11,6 +11,15 @@
     <!-- TODO change to production -->
     <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+    <script>
+        // Functions that call into Code.js
+
+        function gs_getActiveCell(callback) {
+            google.script.run
+                .withSuccessHandler(callback)
+                .getActiveCell();
+        }
+    </script>
 </body>
 
 </html>
