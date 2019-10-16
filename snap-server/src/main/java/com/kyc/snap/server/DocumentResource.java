@@ -1,6 +1,5 @@
 package com.kyc.snap.server;
 
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -155,12 +154,15 @@ public class DocumentResource implements DocumentService {
         SectionImage image = getSectionImage(documentId, request.getSection());
         SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
         SheetData sheetData = spreadsheets.getSheetData();
-        Point marker = findMarker(spreadsheets, sheetData.getContent());
+        Marker marker = request.getMarker();
+        if (marker == null) {
+            marker = findMarker(spreadsheets, sheetData.getContent());
+        }
         if (request.getGridPosition() != null && request.getGrid() != null) {
-            new GridSpreadsheetWrapper(spreadsheets, marker.y, marker.x)
+            new GridSpreadsheetWrapper(spreadsheets, marker.getRow(), marker.getCol())
                 .toSpreadsheet(request.getGridPosition(), request.getGrid(), image.getImage());
             if (request.getCrossword() != null && request.getCrosswordClues() != null) {
-                new CrosswordSpreadsheetWrapper(spreadsheets, marker.y, marker.x)
+                new CrosswordSpreadsheetWrapper(spreadsheets, marker.getRow(), marker.getCol())
                     .toSpreadsheet(request.getGrid(), request.getCrossword(), request.getCrosswordClues());
             }
         } else if (request.getBlobs() != null) {
@@ -168,8 +170,8 @@ public class DocumentResource implements DocumentService {
                 BufferedImage blobImage = ImageUtils.getBlobImage(image.getImage(), blob);
                 spreadsheets.insertImage(
                     blobImage,
-                    marker.y,
-                    marker.x,
+                    marker.getRow(),
+                    marker.getCol(),
                     (int) (blob.getWidth() / image.getScale()),
                     (int) (blob.getHeight() / image.getScale()),
                     blob.getX(),
@@ -178,7 +180,7 @@ public class DocumentResource implements DocumentService {
         } else {
             int newWidth = (int) (image.getImage().getWidth() / image.getScale());
             int newHeight = (int) (image.getImage().getHeight() / image.getScale());
-            spreadsheets.insertImage(image.getImage(), marker.y, marker.x, newWidth, newHeight, 0, 0);
+            spreadsheets.insertImage(image.getImage(), marker.getRow(), marker.getCol(), newWidth, newHeight, 0, 0);
         }
         return true;
     }
@@ -213,14 +215,14 @@ public class DocumentResource implements DocumentService {
         return new SectionImage(image, page.getScale(), page.getTexts());
     }
 
-    private static Point findMarker(SpreadsheetManager spreadsheets, List<List<String>> content) {
+    private static Marker findMarker(SpreadsheetManager spreadsheets, List<List<String>> content) {
         for (int i = 0; i < content.size(); i++)
             for (int j = 0; j < content.get(i).size(); j++)
                 if (content.get(i).get(j).equals(MARKER)) {
                     spreadsheets.setValues(ImmutableList.of(new ValueCell(i, j, "")));
-                    return new Point(j, i);
+                    return new Marker(i, j);
                 }
-        return new Point(0, content.size() + 1);
+        return new Marker(content.size() + 1, 0);
     }
 
     @Data

@@ -134,12 +134,21 @@ public interface DocumentService {
     @Data
     public static class ExportSheetRequest {
 
+        private Marker marker = null;
+
         private final Section section;
         private GridPosition gridPosition;
         private Grid grid;
         private Crossword crossword;
         private CrosswordClues crosswordClues;
         private List<ImageBlob> blobs;
+    }
+
+    @Data
+    public static class Marker {
+
+        private final int row;
+        private final int col;
     }
 
     @POST
