@@ -3,13 +3,17 @@ import { get } from "../fetch";
 import { DocumentImage } from "./documentImage";
 import { FindGridLinesPopup } from "./findGridLinesPopup";
 import { ParseContentPopup } from "./parseContentPopup";
+import { DropdownMenu } from "./dropdownMenu";
 
 export class Document extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             page: 0,
-            mode: "select-rectangle",
+            imageDataUrl: undefined,
+            navbarMode: undefined,
+            mode: undefined,
+            imageDimensions: { width: 0, height: 0 },
             rectangle: undefined,
             gridLines: undefined,
             gridPosition: undefined,
@@ -44,7 +48,13 @@ export class Document extends React.Component {
 
     render() {
         const { document } = this.props;
-        const { imageDataUrl, mode, page, rectangle, gridLines, gridPosition, grid, popupMode } = this.state;
+        const {
+            navBarMode,
+            page,
+            imageDimensions,
+            rectangle,
+            gridLines,
+            popupMode } = this.state;
 
         return (
             <div className="block">
@@ -65,85 +75,99 @@ export class Document extends React.Component {
                         {">"}
                     </button>
 
-                    <button
-                        className={classNames("small-button", { "green": mode === "select-rectangle" })}
-                        title="Select rectangular region"
-                        onClick={() => this.setState({ mode: "select-rectangle" })}
-                    >
-                        {"⬚"}
-                    </button>
-                    <button
-                        className={classNames("small-button", { "green": mode === "edit-grid-lines" })}
-                        title="Add or remove grid lines"
-                        onClick={() => this.setState({ mode: "edit-grid-lines" })}
-                        disabled={rectangle === undefined}
-                    >
-                        {"╋"}
-                    </button>
-                    <button
-                        className={classNames("small-button", { "green": mode === "select-blob" })}
-                        title="Select an arbitrary shape"
-                        onClick={() => this.setState({ mode: "select-blob" })}
-                    >
-                        {"⬯"}
-                    </button>
-
-                    <div className="inline popup-bar">
-                        <button
-                            className={classNames("small-button", { "green": popupMode === "find-grid-lines" })}
-                            title="Find grid lines"
-                            onClick={() => this.setState({ popupMode: popupMode === "find-grid-lines" ? undefined : "find-grid-lines" })}
-                            disabled={rectangle === undefined}
+                    <DropdownMenu value={this.maybeBold("Select", navBarMode === "SELECT")}>
+                        <div
+                            className="clickable"
+                            onClick={() => this.setState({ navBarMode: "SELECT", mode: "RECTANGLE" })}
                         >
-                            {"▒"}
-                        </button>
-                        <button
-                            className={classNames("small-button", { "green": popupMode === "parse-content" })}
-                            title="Find grid lines"
-                            onClick={() => this.setState({ popupMode: popupMode === "parse-content" ? undefined : "parse-content" })}
-                            disabled={rectangle === undefined}
+                            Rectangular region
+                        </div>
+                        <div
+                            className="clickable"
+                            onClick={() => {
+                                this.setState({ navBarMode: "SELECT" });
+                                this.setRectangle({ x: 0, y: 0, width: imageDimensions.width, height: imageDimensions.height });
+                            }}
                         >
-                            {"🄰"}
-                        </button>
+                            All
+                        </div>
+                    </DropdownMenu>
+                    <DropdownMenu value={this.maybeBold("Parse", navBarMode === "PARSE")}>
+                        <div
+                            className={classNames({"clickable": rectangle !== undefined})}
+                            onClick={() => this.setState({ navBarMode: "PARSE", popupMode: "PARSE_GRID_LINES"})}
+                        >
+                            Grid lines
+                        </div>
+                        <div
+                            className={classNames({"clickable": gridLines !== undefined})}
+                            onClick={() => this.setState({ navBarMode: "PARSE", popupMode: "PARSE_CONTENT"})}
+                        >
+                            Grid square content
+                        </div>
+                    </DropdownMenu>
 
-                        <FindGridLinesPopup
-                            isVisible={popupMode === "find-grid-lines" && rectangle}
-                            document={document}
-                            page={page}
-                            rectangle={rectangle}
-                            setGridLines={gridLines => this.setState({ gridLines, grid: undefined, popupMode: undefined })}
-                        />
-                        <ParseContentPopup
-                            isVisible={popupMode === "parse-content" && gridLines}
-                            document={document}
-                            page={page}
-                            rectangle={rectangle}
-                            gridLines={gridLines}
-                            setGrid={({ gridPosition, grid }) => this.setState({ gridPosition, grid, popupMode: undefined })}
-                        />
-                    </div>
+                    <FindGridLinesPopup
+                        isVisible={popupMode === "PARSE_GRID_LINES"}
+                        document={document}
+                        {...this.state}
+                        cancel={this.clearPopupMode}
+                        setGridLines={gridLines => {
+                            this.clearPopupMode();
+                            this.setGridLines(gridLines);
+                        }}
+                    />
+                    <ParseContentPopup
+                        isVisible={popupMode === "PARSE_CONTENT"}
+                        document={document}
+                        {...this.state}
+                        cancel={this.clearPopupMode}
+                        setGrid={({ gridPosition, grid }) => {
+                            this.clearPopupMode();
+                            this.setGrid(gridPosition, grid);
+                        }}
+                    />
                 </div>
                 <DocumentImage
-                    imageDataUrl={imageDataUrl}
-                    mode={mode}
-                    rectangle={rectangle}
-                    gridLines={gridLines}
-                    gridPosition={gridPosition}
-                    grid={grid}
+                    {...this.state}
+                    setImageDimensions={this.setImageDimensions}
                     setRectangle={this.setRectangle}
                 />
             </div>
         );
     }
 
-    setRectangle = (rectangle) => {
-        this.setState({
-            rectangle,
-            gridLines: {
-                horizontalLines: [0, rectangle.height],
-                verticalLines: [0, rectangle.width],
-            },
-            grid: undefined,
+    maybeBold(value, isBold) {
+        if (isBold) {
+            return <b>{value}</b>
+        } else {
+            return value;
+        }
+    }
+
+    setImageDimensions = imageDimensions => {
+        this.setState({ imageDimensions })
+        this.setRectangle(undefined);
+    }
+
+    setRectangle = rectangle => {
+        this.setState({ rectangle });
+        this.setGridLines(rectangle === undefined ? undefined : {
+            horizontalLines: [0, rectangle.height],
+            verticalLines: [0, rectangle.width],
         });
+    }
+
+    setGridLines = gridLines => {
+        this.setState({ gridLines });
+        this.setGrid(undefined, undefined);
+    }
+
+    setGrid = (gridPosition, grid) => {
+        this.setState({ gridPosition, grid });
+    }
+
+    clearPopupMode = () => {
+        this.setState({ popupMode: undefined });
     }
 }

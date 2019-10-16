@@ -3,10 +3,6 @@ export class DocumentImage extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            imageWidth: 0,
-            imageHeight: 0,
-        };
     }
 
     componentDidUpdate() {
@@ -22,8 +18,9 @@ export class DocumentImage extends React.Component {
             ctx.strokeStyle = 'red';
             ctx.lineWidth = 4;
             ctx.strokeRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        }
 
-            // draw grid lines
+        if (gridLines) {
             ctx.strokeStyle = 'red';
             ctx.fillStyle = 'red';
             ctx.lineWidth = 2;
@@ -43,56 +40,56 @@ export class DocumentImage extends React.Component {
                 this.drawPoint(ctx, rectangle.x + col, rectangle.y);
                 this.drawPoint(ctx, rectangle.x + col, rectangle.y + rectangle.height);
             }
+        }
 
-            if (grid) {
-                for (var i = 0; i < grid.numRows; i++) {
-                    for (var j = 0; j < grid.numCols; j++) {
-                        const row = gridPosition.rows[i];
-                        const col = gridPosition.cols[j];
-                        const square = grid.squares[i][j];
+        if (grid) {
+            for (var i = 0; i < grid.numRows; i++) {
+                for (var j = 0; j < grid.numCols; j++) {
+                    const row = gridPosition.rows[i];
+                    const col = gridPosition.cols[j];
+                    const square = grid.squares[i][j];
 
-                        ctx.beginPath();
-                        ctx.rect(
-                            rectangle.x + col.startX + col.width / 3,
-                            rectangle.y + row.startY + row.height / 3,
-                            col.width / 3,
-                            row.height / 3);
-                        ctx.fillStyle = this.rgbToStyle(square.rgb);
-                        ctx.fill();
-                        ctx.strokeStyle = 'red';
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
+                    ctx.beginPath();
+                    ctx.rect(
+                        rectangle.x + col.startX + col.width / 3,
+                        rectangle.y + row.startY + row.height / 3,
+                        col.width / 3,
+                        row.height / 3);
+                    ctx.fillStyle = this.rgbToStyle(square.rgb);
+                    ctx.fill();
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
 
-                        ctx.strokeStyle = 'blue';
-                        ctx.strokeText(square.text,
-                            rectangle.x + col.startX + col.width / 3,
-                            rectangle.y + row.startY + 2 * row.height / 3);
+                    ctx.strokeStyle = 'blue';
+                    ctx.strokeText(square.text,
+                        rectangle.x + col.startX + col.width / 3,
+                        rectangle.y + row.startY + 2 * row.height / 3);
 
-                        ctx.fillStyle = this.rgbToStyle(square.topBorder.rgb);
-                        ctx.fillRect(
-                            rectangle.x + col.startX + col.width / 3,
-                            rectangle.y + row.startY + row.height / 3 - 1,
-                            col.width / 3,
-                            -square.topBorder.width);
-                        ctx.fillStyle = this.rgbToStyle(square.rightBorder.rgb);
-                        ctx.fillRect(
-                            rectangle.x + col.startX + col.width * 2 / 3 + 1,
-                            rectangle.y + row.startY + row.height / 3,
-                            square.rightBorder.width,
-                            row.height / 3);
-                        ctx.fillStyle = this.rgbToStyle(square.bottomBorder.rgb);
-                        ctx.fillRect(
-                            rectangle.x + col.startX + col.width / 3,
-                            rectangle.y + row.startY + row.height * 2 / 3 + 1,
-                            col.width / 3,
-                            square.bottomBorder.width);
-                        ctx.fillStyle = this.rgbToStyle(square.leftBorder.rgb);
-                        ctx.fillRect(
-                            rectangle.x + col.startX + col.width / 3 - 1,
-                            rectangle.y + row.startY + row.height / 3,
-                            -square.leftBorder.width,
-                            row.height / 3);
-                    }
+                    ctx.fillStyle = this.rgbToStyle(square.topBorder.rgb);
+                    ctx.fillRect(
+                        rectangle.x + col.startX + col.width / 3,
+                        rectangle.y + row.startY + row.height / 3 - 1,
+                        col.width / 3,
+                        -square.topBorder.width);
+                    ctx.fillStyle = this.rgbToStyle(square.rightBorder.rgb);
+                    ctx.fillRect(
+                        rectangle.x + col.startX + col.width * 2 / 3 + 1,
+                        rectangle.y + row.startY + row.height / 3,
+                        square.rightBorder.width,
+                        row.height / 3);
+                    ctx.fillStyle = this.rgbToStyle(square.bottomBorder.rgb);
+                    ctx.fillRect(
+                        rectangle.x + col.startX + col.width / 3,
+                        rectangle.y + row.startY + row.height * 2 / 3 + 1,
+                        col.width / 3,
+                        square.bottomBorder.width);
+                    ctx.fillStyle = this.rgbToStyle(square.leftBorder.rgb);
+                    ctx.fillRect(
+                        rectangle.x + col.startX + col.width / 3 - 1,
+                        rectangle.y + row.startY + row.height / 3,
+                        -square.leftBorder.width,
+                        row.height / 3);
                 }
             }
         }
@@ -109,8 +106,7 @@ export class DocumentImage extends React.Component {
     }
 
     render() {
-        const { imageDataUrl, setRectangle } = this.props;
-        const { imageWidth, imageHeight } = this.state;
+        const { imageDataUrl, imageDimensions, setImageDimensions } = this.props;
         return (
             <div className="block image-container">
                 <img
@@ -118,16 +114,13 @@ export class DocumentImage extends React.Component {
                     className="image"
                     src={imageDataUrl}
                     alt=""
-                    onLoad={() => {
-                        this.setState({ imageWidth: this.image.naturalWidth, imageHeight: this.image.naturalHeight });
-                        setRectangle({ x: 0, y: 0, width: this.image.naturalWidth, height: this.image.naturalHeight });
-                    }}
+                    onLoad={() => setImageDimensions({ width: this.image.naturalWidth, height: this.image.naturalHeight })}
                 />
                 <canvas
                     ref={this.canvasRef}
                     className="overlay-canvas"
-                    width={imageWidth}
-                    height={imageHeight}
+                    width={imageDimensions.width}
+                    height={imageDimensions.height}
                 />
             </div>
         )
@@ -158,37 +151,24 @@ export class DocumentImage extends React.Component {
 
     mouseUp = e => {
         this.updateMouseLoc(e);
-
-        const { mode } = this.props;
-        if (mode === "select-rectangle") {
-            ;
-        } else if (mode === "edit-grid-lines") {
-            // TODO
-        } else if (mode === "select-blob") {
-            // TODO
-        }
         this.mouseDownLoc = this.mouseEndLoc = undefined;
     }
 
     updateMouseLoc = e => {
-        const { mode, setRectangle } = this.props;
+        const { navBarMode, mode, setRectangle } = this.props;
         const xRatio = this.canvas.scrollWidth / this.canvas.width;
         const yRatio = this.canvas.scrollHeight / this.canvas.height;
         this.mouseEndLoc = { x: e.offsetX / xRatio, y: e.offsetY / yRatio };
         if (this.mouseDownLoc === undefined) {
             this.mouseDownLoc = this.mouseEndLoc;
         }
-        if (mode === "select-rectangle") {
+        if (navBarMode === "SELECT" && mode === "RECTANGLE") {
             setRectangle({
                 x: Math.min(this.mouseDownLoc.x, this.mouseEndLoc.x),
                 y: Math.min(this.mouseDownLoc.y, this.mouseEndLoc.y),
                 width: Math.abs(this.mouseDownLoc.x - this.mouseEndLoc.x),
                 height: Math.abs(this.mouseDownLoc.y - this.mouseEndLoc.y),
             });
-        } else if (mode === "edit-grid-lines") {
-            // TODO
-        } else if (mode === "select-blob") {
-            // TODO
         }
     };
 }

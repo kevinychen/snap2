@@ -32,8 +32,9 @@ export class ParseContentPopup extends React.Component {
         return (
             <div
                 className={classNames( "popup", {"hide": !this.props.isVisible })}
-                style={{ width: "350px", height: "400px" }}
+                style={{ width: "350px", height: "450px" }}
             >
+                <div className="center">Parse content</div>
                 <div className="block">
                     <button
                         className={classNames({ "green": findColors })}
@@ -144,7 +145,10 @@ export class ParseContentPopup extends React.Component {
                     </div>
                 </div>
 
-                {this.renderSubmitButton()}
+                <div className="submit-section">
+                    <button onClick={this.cancel}>Cancel</button>
+                    {this.renderSubmitButton()}
+                </div>
             </div>
         );
     }
@@ -152,23 +156,23 @@ export class ParseContentPopup extends React.Component {
     renderSubmitButton() {
         if (this.state.awaitingServer) {
             return (
-                <button
-                    className="submit-button"
-                    disabled={true}
-                >
-                    {"Calculating..."}
+                <button disabled={true}>
+                    Calculating...
                 </button>
             );
         } else {
             return (
-                <button
-                    className={classNames("submit-button", "blue")}
-                    onClick={this.parseContent}
-                >
-                    {"Parse content"}
+                <button className="blue" onClick={this.parseContent}>
+                    Submit
                 </button>
             );
         }
+    }
+
+    cancel = () => {
+        const { cancel } = this.props;
+        this.setState({ awaitingServer: false });
+        cancel();
     }
 
     parseContent = () => {
