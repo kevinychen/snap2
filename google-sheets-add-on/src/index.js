@@ -1,29 +1,38 @@
 import "./style.css"
 import { UploadPage } from "./upload/uploadPage";
+import { WordBankPage } from "./wordBank/wordBankPage";
 
 class Snap extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            route: "upload", // TODO change to "home"
+            route: "home"
         };
     }
 
     render() {
         if (this.state.route === "home") {
             return (
-                <div>
-                    <button
-                        className="block"
-                        onClick={() => this.setState({ route: "upload" })}
-                    >
-                        Upload from document...
+                <div className="main">
+                    <div className="block">
+                        <button
+                            onClick={() => this.setState({ route: "upload" })}
+                        >
+                            Upload from document
                     </button>
+                    </div>
+                    <div className="block">
+                        <button
+                            onClick={() => this.setState({ route: "word-bank" })}
+                        >
+                            Highlight used words in a word bank
+                    </button>
+                    </div>
                 </div>
             );
         } else {
             return (
-                <div>
+                <div className="main">
                     <button
                         className="block"
                         onClick={() => this.setState({ route: "home" })}
@@ -37,8 +46,11 @@ class Snap extends React.Component {
     }
 
     renderPage() {
-        if (this.state.route === "upload") {
+        const { route } = this.state;
+        if (route === "upload") {
             return <UploadPage />;
+        } else if (route === "word-bank") {
+            return <WordBankPage />
         }
     }
 }

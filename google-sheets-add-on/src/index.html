@@ -19,6 +19,17 @@
                 .withSuccessHandler(callback)
                 .getActiveCell();
         }
+
+        function gs_getSelectedRangeA1Notation(callback) {
+            google.script.run
+                .withSuccessHandler(callback)
+                .getSelectedRangeA1Notation();
+        }
+
+        function gs_highlightUsed(wordBankRange, usedWordsRange) {
+            google.script.run
+                .highlightUsed(wordBankRange, usedWordsRange);
+        }
     </script>
 </body>
 

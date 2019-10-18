@@ -1,7 +1,5 @@
-/* TODO remove this block */
-#app {
-    width: 700px;
-    float: right;
+.main {
+    margin: 20px;
 }
 
 .image-container {

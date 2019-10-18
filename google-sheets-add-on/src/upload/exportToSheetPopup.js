@@ -27,7 +27,7 @@ export class ExportToSheetPopup extends Popup {
     }
 
     submit = () => {
-        const { document, page, rectangle, gridPosition, grid } = this.props;
+        const { document, page, rectangle, gridPosition, grid, crossword, crosswordClues } = this.props;
         gs_getActiveCell(({ spreadsheetId, sheetId, row, col }) => {
             postJson({
                 path: `/documents/${document.id}/export/sheet/${spreadsheetId}/${sheetId}`,
@@ -36,6 +36,8 @@ export class ExportToSheetPopup extends Popup {
                     section: { page, rectangle },
                     gridPosition,
                     grid,
+                    crossword,
+                    crosswordClues,
                 },
             }, this.exit);
         });

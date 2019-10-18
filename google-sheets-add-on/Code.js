@@ -9,7 +9,6 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createAddonMenu()
     .addItem('Open sidebar', 'openSidebar')
-    .addItem('Highlight used words in a word bank', 'openHighlightUsed')
     .addItem('Define custom function', 'openDefineCustomFunction')
     .addItem('Remove blank lines', 'removeBlankLines')
     .addItem('Convert background colors to RGB values', 'getBackgroundRGBs')
@@ -25,12 +24,6 @@ function onOpen() {
 
 function openSidebar() {
   var html = HtmlService.createHtmlOutputFromFile('dist/index')
-      .setTitle('Snap');
-  SpreadsheetApp.getUi().showSidebar(html);
-}
-
-function openHighlightUsed() {
-  var html = HtmlService.createHtmlOutputFromFile('highlightUsedDialog')
       .setTitle('Snap');
   SpreadsheetApp.getUi().showSidebar(html);
 }
@@ -108,10 +101,6 @@ function makeVerticalHexagonalGrid() {
  * HELPER FUNCTIONS USED BY CLIENT HTML *
  ****************************************/
 
-function getSelectedRange() {
-  return SpreadsheetApp.getActiveSheet().getActiveRange().getA1Notation();
-}
-
 function getActiveCell() {
   var sheet = SpreadsheetApp.getActiveSheet();
   var cell = sheet.getActiveCell();
@@ -121,6 +110,10 @@ function getActiveCell() {
     row: cell.getRow() - 1,
     col: cell.getColumn() - 1,
   };
+}
+
+function getSelectedRangeA1Notation() {
+  return SpreadsheetApp.getActiveSheet().getActiveRange().getA1Notation();
 }
 
 /**
