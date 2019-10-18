@@ -1,5 +1,8 @@
 package com.kyc.snap.server;
 
+import javax.servlet.FilterRegistration;
+
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import com.kyc.snap.cromulence.CromulenceSolver;
@@ -32,6 +35,12 @@ public class SnapServer extends Application<Configuration> {
 
     @Override
     public void run(Configuration configuration, Environment environment) throws Exception {
+        // Allow CORS - this server doesn't store any personal information
+        FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+        cors.setInitParameter("allowedOrigins", "*");
+        cors.setInitParameter("allowedHeaders", "X-Requested-With,Content-Type,Accept,Origin");
+        cors.setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
+
         GoogleAPIManager googleApi = new GoogleAPIManager();
         OpenCvManager openCv = new OpenCvManager();
         GridParser gridParser = new GridParser(openCv);
