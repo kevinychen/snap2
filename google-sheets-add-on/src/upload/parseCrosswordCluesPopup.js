@@ -22,7 +22,6 @@ export class ParseCrosswordCluesPopup extends Popup {
                 <div className="block">
                     <div className="center">Parse crossword clues</div>
                     <textarea
-                        type="text"
                         style={{ fontFamily: hasLocalChanges ? "auto" : "monospace" }}
                         value={localChanges}
                         onChange={e => this.setState({ hasLocalChanges: true, localChanges: e.target.value })}

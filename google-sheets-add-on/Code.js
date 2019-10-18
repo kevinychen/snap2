@@ -9,7 +9,6 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createAddonMenu()
     .addItem('Open sidebar', 'openSidebar')
-    .addItem('Define custom function', 'openDefineCustomFunction')
     .addItem('Remove blank lines', 'removeBlankLines')
     .addItem('Convert background colors to RGB values', 'getBackgroundRGBs')
     .addItem('Set background colors from RGB values', 'setBackgroundRGBs')
@@ -24,12 +23,6 @@ function onOpen() {
 
 function openSidebar() {
   var html = HtmlService.createHtmlOutputFromFile('dist/index')
-      .setTitle('Snap');
-  SpreadsheetApp.getUi().showSidebar(html);
-}
-
-function openDefineCustomFunction() {
-  var html = HtmlService.createHtmlOutputFromFile('customFunctionDialog')
       .setTitle('Snap');
   SpreadsheetApp.getUi().showSidebar(html);
 }

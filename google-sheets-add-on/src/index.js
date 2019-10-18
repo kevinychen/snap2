@@ -1,6 +1,7 @@
 import "./style.css"
 import { UploadPage } from "./upload/uploadPage";
 import { WordBankPage } from "./wordBank/wordBankPage";
+import { CustomFunctionPage } from "./customFunction/customFunctionPage";
 
 class Snap extends React.Component {
     constructor(props) {
@@ -18,15 +19,22 @@ class Snap extends React.Component {
                         <button
                             onClick={() => this.setState({ route: "upload" })}
                         >
-                            Upload from document
-                    </button>
+                            {"Upload from document"}
+                        </button>
                     </div>
                     <div className="block">
                         <button
                             onClick={() => this.setState({ route: "word-bank" })}
                         >
-                            Highlight used words in a word bank
-                    </button>
+                            {"Highlight used words in a word bank"}
+                        </button>
+                    </div>
+                    <div className="block">
+                        <button
+                            onClick={() => this.setState({ route: "custom-function" })}
+                        >
+                            {"Quick define custom function"}
+                        </button>
                     </div>
                 </div>
             );
@@ -51,6 +59,8 @@ class Snap extends React.Component {
             return <UploadPage />;
         } else if (route === "word-bank") {
             return <WordBankPage />
+        } else if (route === "custom-function") {
+            return <CustomFunctionPage />
         }
     }
 }

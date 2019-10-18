@@ -30,6 +30,17 @@
             google.script.run
                 .highlightUsed(wordBankRange, usedWordsRange);
         }
+
+        function gs_getCustomFunction(callback) {
+            google.script.run
+                .withSuccessHandler(callback)
+                .getCustomFunction();
+        }
+
+        function gs_saveCustomFunction(customFunction) {
+            google.script.run
+                .saveCustomFunction(customFunction);
+        }
     </script>
 </body>
 
