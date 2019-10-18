@@ -37,7 +37,7 @@
 
 /* Individual popup features */
 
-.find-grid-lines-popup {
+.parse-grid-lines-popup {
     width: 250px;
     height: 175px;
 }
@@ -45,6 +45,17 @@
 .parse-content-popup {
     width: 350px;
     height: 450px;
+}
+
+.parse-crossword-clues-popup {
+    width: 350px;
+    height: 450px;
+}
+
+.parse-crossword-clues-popup textarea {
+    width: 100%;
+    height: 350px;
+    resize: none;
 }
 
 .export-to-sheet-popup {

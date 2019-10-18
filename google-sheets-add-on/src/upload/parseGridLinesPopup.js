@@ -2,7 +2,7 @@ import * as classNames from "classnames";
 import { postJson } from "../fetch";
 import { Popup } from "./popup";
 
-export class FindGridLinesPopup extends Popup {
+export class ParseGridLinesPopup extends Popup {
     constructor(props) {
         super(props);
         this.state = {
@@ -13,7 +13,7 @@ export class FindGridLinesPopup extends Popup {
     }
 
     customClass() {
-        return "find-grid-lines-popup";
+        return "parse-grid-lines-popup";
     }
 
     renderContent() {

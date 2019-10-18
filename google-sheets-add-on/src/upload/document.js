@@ -1,8 +1,9 @@
 import * as classNames from "classnames";
-import { get } from "../fetch";
+import { get, postJson } from "../fetch";
 import { DocumentImage } from "./documentImage";
-import { FindGridLinesPopup } from "./findGridLinesPopup";
+import { ParseGridLinesPopup } from "./parseGridLinesPopup";
 import { ParseContentPopup } from "./parseContentPopup";
+import { ParseCrosswordCluesPopup } from "./parseCrosswordCluesPopup";
 import { ExportToSheetPopup } from "./exportToSheetPopup";
 import { DropdownMenu } from "./dropdownMenu";
 
@@ -19,6 +20,8 @@ export class Document extends React.Component {
             gridLines: undefined,
             gridPosition: undefined,
             grid: undefined,
+            crossword: undefined,
+            crosswordClues: undefined,
             popupMode: undefined,
         };
     }
@@ -55,6 +58,7 @@ export class Document extends React.Component {
             imageDimensions,
             rectangle,
             gridLines,
+            grid,
             popupMode } = this.state;
 
         return (
@@ -106,6 +110,24 @@ export class Document extends React.Component {
                         >
                             Grid square content
                         </div>
+                        <div
+                            className={classNames({"clickable": grid !== undefined})}
+                            onClick={() => {
+                                this.setState({ navBarMode: "PARSE" });
+                                postJson({
+                                    path: `/words/findCrossword`,
+                                    body: { grid },
+                                }, response => this.setCrossword(response.crossword));
+                            }}
+                        >
+                            Crossword
+                        </div>
+                        <div
+                            className="clickable"
+                            onClick={() => this.setState({ navBarMode: "PARSE", popupMode: "PARSE_CLUES"})}
+                        >
+                            Crossword clues
+                        </div>
                     </DropdownMenu>
                     <DropdownMenu value={this.maybeBold("Export", navBarMode === "EXPORT")}>
                         <div
@@ -116,7 +138,7 @@ export class Document extends React.Component {
                         </div>
                     </DropdownMenu>
 
-                    <FindGridLinesPopup
+                    <ParseGridLinesPopup
                         isVisible={popupMode === "PARSE_GRID_LINES"}
                         document={document}
                         {...this.state}
@@ -128,6 +150,13 @@ export class Document extends React.Component {
                         document={document}
                         {...this.state}
                         setGrid={({ gridPosition, grid }) => this.setGrid(gridPosition, grid)}
+                        exit={this.clearPopupMode}
+                    />
+                    <ParseCrosswordCluesPopup
+                        isVisible={popupMode === "PARSE_CLUES"}
+                        document={document}
+                        {...this.state}
+                        setCrosswordClues={this.setCrosswordClues}
                         exit={this.clearPopupMode}
                     />
                     <ExportToSheetPopup
@@ -155,25 +184,34 @@ export class Document extends React.Component {
     }
 
     setImageDimensions = imageDimensions => {
-        this.setState({ imageDimensions })
         this.setRectangle(undefined);
+        this.setState({ imageDimensions })
     }
 
     setRectangle = rectangle => {
-        this.setState({ rectangle });
         this.setGridLines(rectangle === undefined ? undefined : {
             horizontalLines: [0, rectangle.height],
             verticalLines: [0, rectangle.width],
         });
+        this.setState({ rectangle });
     }
 
     setGridLines = gridLines => {
-        this.setState({ gridLines });
         this.setGrid(undefined, undefined);
+        this.setState({ gridLines });
     }
 
     setGrid = (gridPosition, grid) => {
+        this.setCrossword(undefined);
         this.setState({ gridPosition, grid });
+    }
+
+    setCrossword = crossword => {
+        this.setState({ crossword });
+    }
+
+    setCrosswordClues = crosswordClues => {
+        this.setState({ crosswordClues });
     }
 
     clearPopupMode = () => {

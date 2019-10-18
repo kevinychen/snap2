@@ -6,7 +6,7 @@ export class DocumentImage extends React.Component {
     }
 
     componentDidUpdate() {
-        const { rectangle, gridLines, gridPosition, grid } = this.props;
+        const { imageDimensions, rectangle, gridLines, gridPosition, grid, crossword } = this.props;
 
         const ctx = this.canvas.getContext('2d');
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -93,6 +93,20 @@ export class DocumentImage extends React.Component {
                 }
             }
         }
+
+        if (crossword) {
+            ctx.font = "18px Helvetica";
+            ctx.strokeStyle = 'blue';
+            const widthRatio = this.canvas.width / imageDimensions.width;
+            const heightRatio = this.canvas.height / imageDimensions.height;
+            for (var entry of crossword.entries) {
+                const row = gridPosition.rows[entry.startRow];
+                const col = gridPosition.cols[entry.startCol];
+                ctx.strokeText(entry.clueNumber,
+                    widthRatio * (col.startX + col.width / 3),
+                    heightRatio * (row.startY + row.height * 2 / 3));
+            }
+        }
     }
 
     rgbToStyle(rgb) {
@@ -127,15 +141,16 @@ export class DocumentImage extends React.Component {
     }
 
     canvasRef = canvas => {
-        this.canvas = canvas;
-        if (canvas) {
-            this.canvas.addEventListener('mousedown', this.mouseDown);
-            this.canvas.addEventListener('mousemove', this.mouseMove);
-            this.canvas.addEventListener('mouseup', this.mouseUp);
-        } else {
+        if (this.canvas) {
             this.canvas.removeEventListener('mousedown', this.mouseDown);
             this.canvas.removeEventListener('mousemove', this.mouseMove);
             this.canvas.removeEventListener('mouseup', this.mouseUp);
+        }
+        this.canvas = canvas;
+        if (this.canvas) {
+            this.canvas.addEventListener('mousedown', this.mouseDown);
+            this.canvas.addEventListener('mousemove', this.mouseMove);
+            this.canvas.addEventListener('mouseup', this.mouseUp);
         }
     }
 

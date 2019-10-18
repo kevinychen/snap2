@@ -22,12 +22,12 @@ export class Popup extends React.Component {
         return (
             <div className="submit-section">
                 <button onClick={this.exit}>Cancel</button>
-                {this.renderSubmitButton()}
+                {this.renderSubmitButton("Submit")}
             </div>
         );
     }
 
-    renderSubmitButton() {
+    renderSubmitButton(text) {
         if (this.state.awaitingServer) {
             return (
                 <button disabled={true}>
@@ -43,7 +43,7 @@ export class Popup extends React.Component {
                         this.submit();
                     }}
                 >
-                    Submit
+                    {text}
                 </button>
             );
         }
@@ -51,7 +51,9 @@ export class Popup extends React.Component {
 
     exit = () => {
         const { exit } = this.props;
-        this.setState({ awaitingServer: false });
+        this.finish();
         exit();
     }
+
+    finish = () => this.setState({ awaitingServer: false });
 }
