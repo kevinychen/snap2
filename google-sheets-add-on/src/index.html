@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+</head>
+
+<body>
+    <div id="app"></div>
+    <!-- TODO change to production -->
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+    <script>
+        // Functions that call into Code.js
+
+        function gs_getActiveCell(callback) {
+            google.script.run
+                .withSuccessHandler(callback)
+                .getActiveCell();
+        }
+
+        function gs_getSelectedRangeA1Notation(callback) {
+            google.script.run
+                .withSuccessHandler(callback)
+                .getSelectedRangeA1Notation();
+        }
+
+        function gs_highlightUsed(wordBankRange, usedWordsRange) {
+            google.script.run
+                .highlightUsed(wordBankRange, usedWordsRange);
+        }
+
+        function gs_getCustomFunction(callback) {
+            google.script.run
+                .withSuccessHandler(callback)
+                .getCustomFunction();
+        }
+
+        function gs_saveCustomFunction(customFunction) {
+            google.script.run
+                .saveCustomFunction(customFunction);
+        }
+    </script>
+</body>
+
+</html>

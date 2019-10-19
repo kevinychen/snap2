@@ -8,8 +8,7 @@ function onInstall() {
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createAddonMenu()
-    .addItem('Highlight used words in a word bank', 'openHighlightUsed')
-    .addItem('Define custom function', 'defineCustomFunction')
+    .addItem('Open sidebar', 'openSidebar')
     .addItem('Remove blank lines', 'removeBlankLines')
     .addItem('Convert background colors to RGB values', 'getBackgroundRGBs')
     .addItem('Set background colors from RGB values', 'setBackgroundRGBs')
@@ -22,14 +21,8 @@ function onOpen() {
  * HELPER FUNCTIONS USED BY onOpen() *
  *************************************/
 
-function openHighlightUsed() {
-  var html = HtmlService.createHtmlOutputFromFile('highlightUsedDialog')
-      .setTitle('Snap');
-  SpreadsheetApp.getUi().showSidebar(html);
-}
-
-function defineCustomFunction() {
-  var html = HtmlService.createHtmlOutputFromFile('customFunctionDialog')
+function openSidebar() {
+  var html = HtmlService.createHtmlOutputFromFile('dist/index')
       .setTitle('Snap');
   SpreadsheetApp.getUi().showSidebar(html);
 }
@@ -101,7 +94,18 @@ function makeVerticalHexagonalGrid() {
  * HELPER FUNCTIONS USED BY CLIENT HTML *
  ****************************************/
 
-function getSelectedRange() {
+function getActiveCell() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var cell = sheet.getActiveCell();
+  return {
+    spreadsheetId: SpreadsheetApp.getActiveSpreadsheet().getId(),
+    sheetId: sheet.getSheetId(),
+    row: cell.getRow() - 1,
+    col: cell.getColumn() - 1,
+  };
+}
+
+function getSelectedRangeA1Notation() {
   return SpreadsheetApp.getActiveSheet().getActiveRange().getA1Notation();
 }
 
