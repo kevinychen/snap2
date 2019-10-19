@@ -189,11 +189,16 @@ export class Document extends React.Component {
     }
 
     setRectangle = rectangle => {
-        this.setGridLines(rectangle === undefined ? undefined : {
-            horizontalLines: [0, rectangle.height],
-            verticalLines: [0, rectangle.width],
-        });
-        this.setState({ rectangle });
+        if (rectangle === undefined) {
+            this.setGridLines(undefined);
+            this.setState({ rectangle });
+        } else {
+            this.setState({ rectangle });
+            this.setGridLines({
+                horizontalLines: [0, rectangle.height],
+                verticalLines: [0, rectangle.width],
+            });
+        }
     }
 
     setGridLines = gridLines => {
