@@ -19,8 +19,7 @@ Development
 
         yarn build
         clasp push
-        clasp version [description]
-        clasp deploy [version] [description]
+        clasp deploy -d <description>
 
 See https://developers.google.com/apps-script/guides/clasp for details.
 
