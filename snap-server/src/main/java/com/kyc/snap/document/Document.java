@@ -14,6 +14,10 @@ public class Document {
     public static class DocumentPage {
 
         private final String imageId;
+
+        // A compressed image to send over the network
+        private final String compressedImageId;
+
         private final double scale;
         private final List<DocumentText> texts;
     }

@@ -48,7 +48,6 @@ import okhttp3.Response;
 public class DocumentResource implements DocumentService {
 
     public static String MARKER = "🍊";
-    public static String DEFAULT_FOLDER_ID = "1kmRcpAj_O3UYZgnlkclVBHPseB2Swkd-";
     public static int FIND_BLOBS_BORDER_WIDTH = 10;
 
     private final Store store;
@@ -61,9 +60,11 @@ public class DocumentResource implements DocumentService {
         List<DocumentPage> pages = new ArrayList<>();
         try (Pdf pdf = new Pdf(IOUtils.toByteArray(pdfStream))) {
             for (int page = 0; page < pdf.getNumPages(); page++) {
-                String imageId = store.storeBlob(ImageUtils.toBytes(pdf.toImage(page)));
+                BufferedImage image = pdf.toImage(page);
+                String imageId = store.storeBlob(ImageUtils.toBytes(image));
+                String compressedImageId = store.storeBlob(ImageUtils.toBytesCompressed(image));
                 List<DocumentText> texts = pdf.getTexts(page);
-                pages.add(new DocumentPage(imageId, Pdf.RENDER_SCALE, texts));
+                pages.add(new DocumentPage(imageId, compressedImageId, Pdf.RENDER_SCALE, texts));
             }
         }
         Document doc = new Document(id, pages);
@@ -74,8 +75,10 @@ public class DocumentResource implements DocumentService {
     @Override
     public Document createDocumentFromImage(InputStream imageStream) throws IOException {
         String id = UUID.randomUUID().toString();
-        String imageId = store.storeBlob(ImageUtils.toBytes(ImageIO.read(imageStream)));
-        Document doc = new Document(id, ImmutableList.of(new DocumentPage(imageId, 1, ImmutableList.of())));
+        BufferedImage image = ImageIO.read(imageStream);
+        String imageId = store.storeBlob(ImageUtils.toBytes(image));
+        String compressedImageId = store.storeBlob(ImageUtils.toBytesCompressed(image));
+        Document doc = new Document(id, ImmutableList.of(new DocumentPage(imageId, compressedImageId, 1, ImmutableList.of())));
         store.updateObject(id, doc);
         return doc;
     }

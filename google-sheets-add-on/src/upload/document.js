@@ -27,19 +27,19 @@ export class Document extends React.Component {
     }
 
     componentDidMount() {
-        this.fetchImage(this.props.document.pages[this.state.page].imageId);
+        this.fetchImage(this.props.document.pages[this.state.page].compressedImageId);
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const { imageId } = this.props.document.pages[this.state.page];
-        const { imageId: prevImageId } = prevProps.document.pages[prevState.page];
-        if (imageId !== prevImageId) {
-            this.fetchImage(imageId);
+        const { compressedImageId } = this.props.document.pages[this.state.page];
+        const { compressedImageId: prevCompressedImageId } = prevProps.document.pages[prevState.page];
+        if (compressedImageId !== prevCompressedImageId) {
+            this.fetchImage(compressedImageId);
         }
     }
 
-    fetchImage(imageId) {
-        get({ path: `/files/${imageId}` }, response => {
+    fetchImage(compressedImageId) {
+        get({ path: `/files/${compressedImageId}` }, response => {
             response.blob().then(blob => {
                 const reader = new FileReader()
                 reader.onloadend = () => {
