@@ -72,19 +72,20 @@ public class ImageUtils {
     }
 
     public static byte[] toBytesCompressed(BufferedImage image) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageOutputStream imageOut = new MemoryCacheImageOutputStream(out);
+        ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+        ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+        jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        jpgWriteParam.setCompressionQuality(0.7f);
+        jpgWriter.setOutput(imageOut);
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ImageOutputStream imageOut = new MemoryCacheImageOutputStream(out);
-            ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
-            ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
-            jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            jpgWriteParam.setCompressionQuality(0.7f);
-            jpgWriter.setOutput(imageOut);
             jpgWriter.write(null, new IIOImage(image, null, null), jpgWriteParam);
-            jpgWriter.dispose();
             return out.toByteArray();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return toBytes(image); // fallback
+        } finally {
+            jpgWriter.dispose();
         }
     }
 
