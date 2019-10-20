@@ -132,7 +132,7 @@ export class Document extends React.Component {
                     <DropdownMenu value={this.maybeBold("Export", navBarMode === "EXPORT")}>
                         <div
                             className={classNames({"clickable": rectangle !== undefined})}
-                            onClick={() => this.setState({ navBarMode: "EXPORT", popupMode: "EXPORT_TO_SHEET" })}
+                            onClick={() => this.setState({ popupMode: "EXPORT_TO_SHEET" })}
                         >
                             To sheet
                         </div>
