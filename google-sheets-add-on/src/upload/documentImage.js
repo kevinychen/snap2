@@ -30,16 +30,12 @@ export class DocumentImage extends React.Component {
                 ctx.moveTo(rectangle.x, rectangle.y + row);
                 ctx.lineTo(rectangle.x + rectangle.width, rectangle.y + row);
                 ctx.stroke();
-                this.drawPoint(ctx, rectangle.x, rectangle.y + row);
-                this.drawPoint(ctx, rectangle.x + rectangle.width, rectangle.y + row);
             }
             for (var col of gridLines.verticalLines) {
                 ctx.beginPath();
                 ctx.moveTo(rectangle.x + col, rectangle.y);
                 ctx.lineTo(rectangle.x + col, rectangle.y + rectangle.height);
                 ctx.stroke();
-                this.drawPoint(ctx, rectangle.x + col, rectangle.y);
-                this.drawPoint(ctx, rectangle.x + col, rectangle.y + rectangle.height);
             }
         }
 
@@ -112,12 +108,6 @@ export class DocumentImage extends React.Component {
 
     rgbToStyle(rgb) {
         return 'rgb(' + ((rgb >> 16) & 0xff) + ',' + ((rgb >> 8) & 0xff) + ',' + ((rgb >> 0) & 0xff) + ')';
-    }
-
-    drawPoint(ctx, x, y) {
-        ctx.beginPath();
-        ctx.arc(x, y, 8, 0, 2 * Math.PI, true);
-        ctx.fill();
     }
 
     render() {
