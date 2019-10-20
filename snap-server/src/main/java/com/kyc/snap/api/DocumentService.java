@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -27,6 +28,11 @@ import lombok.Data;
 
 @Path("/documents")
 public interface DocumentService {
+
+    @GET
+    @Path("/{documentId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    Document getDocument(@PathParam("documentId") String documentId) throws IOException;
 
     @POST
     @Path("/pdf")

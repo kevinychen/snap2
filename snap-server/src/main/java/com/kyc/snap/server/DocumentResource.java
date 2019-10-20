@@ -55,6 +55,11 @@ public class DocumentResource implements DocumentService {
     private final GridParser gridParser;
 
     @Override
+    public Document getDocument(String documentId) {
+        return store.getObject(documentId, Document.class);
+    }
+
+    @Override
     public Document createDocumentFromPdf(InputStream pdfStream) throws IOException {
         String id = UUID.randomUUID().toString();
         List<DocumentPage> pages = new ArrayList<>();
@@ -208,7 +213,7 @@ public class DocumentResource implements DocumentService {
     }
 
     private SectionImage getSectionImage(String documentId, Section section) {
-        Document doc = store.getObject(documentId, Document.class);
+        Document doc = getDocument(documentId);
         DocumentPage page = doc.getPages().get(section.getPage());
         byte[] imageBlob = store.getBlob(page.getImageId());
         Rectangle r = section.getRectangle();
