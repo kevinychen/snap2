@@ -89,7 +89,7 @@ public class ImageUtils {
     }
 
     public static String toDataURL(BufferedImage image) {
-        return "data:image/png;base64," + Base64.getEncoder().encodeToString(toBytes(image));
+        return "data:image/jpg;base64," + Base64.getEncoder().encodeToString(toBytesCompressed(image));
     }
 
     public static int medianRgb(BufferedImage image, int startX, int startY, int width, int height) {

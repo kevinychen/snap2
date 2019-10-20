@@ -181,9 +181,8 @@ public class DocumentResource implements DocumentService {
                     blob.getY());
             }
         } else {
-            int newWidth = (int) (image.getImage().getWidth() / image.getScale());
-            int newHeight = (int) (image.getImage().getHeight() / image.getScale());
-            spreadsheets.insertImage(image.getImage(), marker.getRow(), marker.getCol(), newWidth, newHeight, 0, 0);
+            BufferedImage scaledImage = ImageUtils.scale(image.getImage(), 1. / image.getScale());
+            spreadsheets.insertImage(scaledImage, marker.getRow(), marker.getCol(), scaledImage.getWidth(), scaledImage.getHeight(), 0, 0);
         }
         return true;
     }
