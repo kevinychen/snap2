@@ -8,8 +8,17 @@ function fetchBackend(path, args, onSuccess, onError) {
     });
 }
 
-exports.get = function (args, onSuccess, onError) {
+function get(args, onSuccess, onError) {
     fetchBackend(args.path, { method: 'GET' }, onSuccess, onError);
+}
+exports.get = get;
+
+exports.getJson = function ( args, onSuccess, onError) {
+    get({ path: args.path }, response => {
+        response.json().then(body => {
+            onSuccess && onSuccess(body);
+        });
+    }, onError);
 }
 
 function post(args, onSuccess, onError) {

@@ -1,6 +1,7 @@
 .image-container {
     position: relative;
     width: 97%;
+    -webkit-user-select: none;
 }
 
 .image {

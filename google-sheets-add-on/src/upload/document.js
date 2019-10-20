@@ -129,6 +129,14 @@ export class Document extends React.Component {
                             Crossword clues
                         </div>
                     </DropdownMenu>
+                    <DropdownMenu value={this.maybeBold("Edit", navBarMode === "EDIT")}>
+                        <div
+                            className={classNames({"clickable": gridLines !== undefined})}
+                            onClick={() => this.setState({ navBarMode: "EDIT", mode: "GRID_LINES" })}
+                        >
+                            Grid lines
+                        </div>
+                    </DropdownMenu>
                     <DropdownMenu value={this.maybeBold("Export", navBarMode === "EXPORT")}>
                         <div
                             className={classNames({"clickable": rectangle !== undefined})}
@@ -170,6 +178,7 @@ export class Document extends React.Component {
                     {...this.state}
                     setImageDimensions={this.setImageDimensions}
                     setRectangle={this.setRectangle}
+                    setGridLines={this.setGridLines}
                 />
             </div>
         );
