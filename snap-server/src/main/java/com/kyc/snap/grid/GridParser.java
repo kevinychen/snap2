@@ -67,7 +67,7 @@ public class GridParser {
     }
 
     public GridLines findImplicitGridLines(BufferedImage image) {
-        List<ImageBlob> blobs = ImageUtils.findBlobs(image, rgb -> !ImageUtils.isLight(rgb));
+        List<ImageBlob> blobs = ImageUtils.findBlobs(image);
         TreeSet<Integer> rows = Utils.findInterpolatedSequence(blobs.stream()
             .map(blob -> blob.getY() + blob.getHeight() / 2)
             .collect(Collectors.toList()));

@@ -10,9 +10,6 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-
 public class Utils {
 
     /**
@@ -99,13 +96,6 @@ public class Utils {
             if (mark > sequence.first() && mark < sequence.last())
                 sequence.add(mark);
         return sequence;
-    }
-
-    public static <T> T mode(Collection<T> items) {
-        Multiset<T> itemsSet = HashMultiset.create(items);
-        return itemsSet.stream()
-            .max(Comparator.comparing(itemsSet::count))
-            .get();
     }
 
     private Utils() {

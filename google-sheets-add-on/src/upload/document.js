@@ -1,6 +1,7 @@
 import * as classNames from "classnames";
 import { get, postJson } from "../fetch";
 import { DocumentImage } from "./documentImage";
+import { ParseBlobsPopup } from "./parseBlobsPopup";
 import { ParseGridLinesPopup } from "./parseGridLinesPopup";
 import { ParseContentPopup } from "./parseContentPopup";
 import { ParseCrosswordCluesPopup } from "./parseCrosswordCluesPopup";
@@ -17,6 +18,7 @@ export class Document extends React.Component {
             mode: undefined,
             imageDimensions: { width: 0, height: 0 },
             rectangle: undefined,
+            blobs: undefined,
             gridLines: undefined,
             gridPosition: undefined,
             grid: undefined,
@@ -100,6 +102,12 @@ export class Document extends React.Component {
                     <DropdownMenu value={this.maybeBold("Parse", navBarMode === "PARSE")}>
                         <div
                             className={classNames({"clickable": rectangle !== undefined})}
+                            onClick={() => this.setState({ navBarMode: "PARSE", popupMode: "PARSE_BLOBS"})}
+                        >
+                            Blobs
+                        </div>
+                        <div
+                            className={classNames({"clickable": rectangle !== undefined})}
                             onClick={() => this.setState({ navBarMode: "PARSE", popupMode: "PARSE_GRID_LINES"})}
                         >
                             Grid lines
@@ -146,6 +154,13 @@ export class Document extends React.Component {
                         </div>
                     </DropdownMenu>
 
+                    <ParseBlobsPopup
+                        isVisible={popupMode === "PARSE_BLOBS"}
+                        document={document}
+                        {...this.state}
+                        setBlobs={this.setBlobs}
+                        exit={this.clearPopupMode}
+                    />
                     <ParseGridLinesPopup
                         isVisible={popupMode === "PARSE_GRID_LINES"}
                         document={document}
@@ -210,7 +225,17 @@ export class Document extends React.Component {
         }
     }
 
+    setBlobs = blobs => {
+        if (blobs) {
+            this.setGridLines(undefined);
+        }
+        this.setState({ blobs });
+    }
+
     setGridLines = gridLines => {
+        if (gridLines) {
+            this.setBlobs(undefined);
+        }
         this.setGrid(undefined, undefined);
         this.setState({ gridLines });
     }

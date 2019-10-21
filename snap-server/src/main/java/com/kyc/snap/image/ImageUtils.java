@@ -12,8 +12,9 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Set;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -22,6 +23,7 @@ import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 
+import com.google.common.collect.ImmutableList;
 import com.kyc.snap.grid.Border;
 
 public class ImageUtils {
@@ -45,7 +47,7 @@ public class ImageUtils {
     public static BufferedImage scale(BufferedImage image, double scale) {
         int newWidth = (int) (image.getWidth() * scale);
         int newHeight = (int) (image.getHeight() * scale);
-        BufferedImage newImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_3BYTE_BGR);
+        BufferedImage newImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics2D g = newImage.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g.drawImage(image, 0, 0, newWidth, newHeight, null);
@@ -145,23 +147,37 @@ public class ImageUtils {
         return border;
     }
 
-    public static List<ImageBlob> findBlobs(BufferedImage image, Predicate<Integer> isBlob) {
+    public static List<ImageBlob> findBlobs(BufferedImage image) {
         boolean[][] visited = new boolean[image.getHeight()][image.getWidth()];
+        for (int x = 0; x < image.getWidth(); x++)
+            for (int y = 0; y < image.getHeight(); y++)
+                if (isBorder(image, x, y) && !visited[y][x]) {
+                    Deque<Point> floodfill = new ArrayDeque<>();
+                    floodfill.add(new Point(x, y));
+                    while (!floodfill.isEmpty()) {
+                        Point p = floodfill.removeFirst();
+                        if (inBounds(image, p.x, p.y) && !visited[p.y][p.x] && !isDifferent(image.getRGB(x, y), image.getRGB(p.x, p.y))) {
+                            visited[p.y][p.x] = true;
+                            for (Point borderingPoint : borderingPoints(p))
+                                floodfill.addLast(borderingPoint);
+                        }
+                    }
+                }
+
         List<ImageBlob> blobs = new ArrayList<>();
         for (int x = 0; x < image.getWidth(); x++)
             for (int y = 0; y < image.getHeight(); y++)
-                if (!visited[y][x] && isBlob.test(image.getRGB(x, y))) {
+                if (!visited[y][x]) {
                     int minX = Integer.MAX_VALUE;
                     int minY = Integer.MAX_VALUE;
                     int maxX = Integer.MIN_VALUE;
                     int maxY = Integer.MIN_VALUE;
                     Deque<Point> floodfill = new ArrayDeque<>();
                     floodfill.add(new Point(x, y));
-                    List<Point> points = new ArrayList<>();
+                    Set<Point> innerPoints = new HashSet<>();
                     while (!floodfill.isEmpty()) {
                         Point p = floodfill.removeFirst();
-                        if (p.x >= 0 && p.x < image.getWidth() && p.y >= 0 && p.y < image.getHeight() && !visited[p.y][p.x]
-                                && isBlob.test(image.getRGB(p.x, p.y))) {
+                        if (inBounds(image, p.x, p.y) && !visited[p.y][p.x]) {
                             visited[p.y][p.x] = true;
                             if (p.x < minX)
                                 minX = p.x;
@@ -171,22 +187,35 @@ public class ImageUtils {
                                 maxX = p.x;
                             if (p.y > maxY)
                                 maxY = p.y;
-                            points.add(p);
-                            floodfill.addLast(new Point(p.x - 1, p.y));
-                            floodfill.addLast(new Point(p.x + 1, p.y));
-                            floodfill.addLast(new Point(p.x, p.y - 1));
-                            floodfill.addLast(new Point(p.x, p.y + 1));
+                            innerPoints.add(p);
+                            for (Point borderingPoint : borderingPoints(p))
+                                floodfill.addLast(borderingPoint);
                         }
                     }
-                    blobs.add(new ImageBlob(minX, minY, maxX - minX + 1, maxY - minY + 1, points));
+                    Set<Point> fencePoints = new HashSet<>();
+                    for (Point innerPoint : innerPoints)
+                        for (Point borderingPoint : borderingPoints(innerPoint))
+                            if (!innerPoints.contains(borderingPoint))
+                                fencePoints.add(borderingPoint);
+                    blobs.add(new ImageBlob(minX, minY, maxX - minX + 1, maxY - minY + 1, fencePoints, innerPoints.iterator().next()));
                 }
         return blobs;
     }
 
     public static BufferedImage getBlobImage(BufferedImage image, ImageBlob blob) {
         BufferedImage blobImage = new BufferedImage(blob.getWidth(), blob.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-        for (Point p : blob.getPoints())
-            blobImage.setRGB(p.x - blob.getX(), p.y - blob.getY(), image.getRGB(p.x, p.y));
+        boolean[][] visited = new boolean[image.getHeight()][image.getWidth()];
+        Deque<Point> floodfill = new ArrayDeque<>();
+        floodfill.add(blob.getInnerPoint());
+        while (!floodfill.isEmpty()) {
+            Point p = floodfill.removeFirst();
+            if (inBounds(image, p.x, p.y) && !visited[p.y][p.x] && !blob.getFencePoints().contains(p)) {
+                visited[p.y][p.x] = true;
+                blobImage.setRGB(p.x - blob.getX(), p.y - blob.getY(), image.getRGB(p.x, p.y));
+                for (Point borderingPoint : borderingPoints(p))
+                    floodfill.addLast(borderingPoint);
+            }
+        }
         return blobImage;
     }
 
@@ -208,6 +237,18 @@ public class ImageUtils {
         int greenDiff = ((rgb1 >> 8) & 0xff) - ((rgb2 >> 8) & 0xff);
         int blueDiff = ((rgb1 >> 0) & 0xff) - ((rgb2 >> 0) & 0xff);
         return redDiff * redDiff + greenDiff * greenDiff + blueDiff * blueDiff > 3 * 64 * 64;
+    }
+
+    public static boolean inBounds(BufferedImage image, int x, int y) {
+        return x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight();
+    }
+
+    public static boolean isBorder(BufferedImage image, int x, int y) {
+        return x == 0 || x == image.getWidth() - 1 || y == 0 || y == image.getHeight() - 1;
+    }
+
+    public static List<Point> borderingPoints(Point p) {
+        return ImmutableList.of(new Point(p.x - 1, p.y), new Point(p.x + 1, p.y), new Point(p.x, p.y - 1), new Point(p.x, p.y + 1));
     }
 
     private ImageUtils() {}

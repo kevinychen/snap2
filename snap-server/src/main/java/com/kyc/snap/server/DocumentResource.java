@@ -37,7 +37,6 @@ import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
-import com.kyc.snap.util.Utils;
 
 import lombok.Data;
 import okhttp3.OkHttpClient;
@@ -48,7 +47,6 @@ import okhttp3.Response;
 public class DocumentResource implements DocumentService {
 
     public static String MARKER = "🍊";
-    public static int FIND_BLOBS_BORDER_WIDTH = 10;
 
     private final Store store;
     private final GoogleAPIManager googleApi;
@@ -123,18 +121,8 @@ public class DocumentResource implements DocumentService {
     @Override
     public List<ImageBlob> findBlobs(String documentId, FindBlobsRequest request) {
         BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
-        List<Integer> borderRgbs = new ArrayList<>();
-        for (int x = 0; x < image.getWidth(); x++)
-            for (int y = 0; y < image.getHeight(); y++)
-                if (x < FIND_BLOBS_BORDER_WIDTH || x >= image.getWidth() - FIND_BLOBS_BORDER_WIDTH
-                || y < FIND_BLOBS_BORDER_WIDTH || y >= image.getHeight() - FIND_BLOBS_BORDER_WIDTH) {
-                    borderRgbs.add(image.getRGB(x, y));
-                }
-        int borderRgb = Utils.mode(borderRgbs);
-        return ImageUtils.findBlobs(image, rgb -> rgb != borderRgb).stream()
-            .filter(blob -> blob.getX() > 1 && blob.getX() + blob.getWidth() < image.getWidth() - 1
-                    && blob.getY() > 1 && blob.getY() + blob.getHeight() < image.getHeight() - 1
-                    && blob.getWidth() >= request.getMinBlobSize() && blob.getHeight() >= request.getMinBlobSize())
+        return ImageUtils.findBlobs(image).stream()
+            .filter(blob -> blob.getWidth() >= request.getMinBlobSize() && blob.getHeight() >= request.getMinBlobSize())
             .collect(Collectors.toList());
     }
 
@@ -162,10 +150,7 @@ public class DocumentResource implements DocumentService {
         SectionImage image = getSectionImage(documentId, request.getSection());
         SpreadsheetManager spreadsheets = googleApi.getSheet(spreadsheetId, sheetId);
         SheetData sheetData = spreadsheets.getSheetData();
-        Marker marker = request.getMarker();
-        if (marker == null) {
-            marker = findMarker(spreadsheets, sheetData.getContent());
-        }
+        Marker marker = request.getMarker() != null ? request.getMarker() : findMarker(spreadsheets, sheetData.getContent());
         if (request.getGridPosition() != null && request.getGrid() != null) {
             new GridSpreadsheetWrapper(spreadsheets, marker.getRow(), marker.getCol())
                 .toSpreadsheet(request.getGridPosition(), request.getGrid(), image.getImage());
@@ -174,17 +159,18 @@ public class DocumentResource implements DocumentService {
                     .toSpreadsheet(request.getGrid(), request.getCrossword(), request.getCrosswordClues());
             }
         } else if (request.getBlobs() != null) {
-            for (ImageBlob blob : request.getBlobs()) {
+            request.getBlobs().parallelStream().forEach(blob -> {
                 BufferedImage blobImage = ImageUtils.getBlobImage(image.getImage(), blob);
+                BufferedImage scaledImage = ImageUtils.scale(blobImage, 1. / image.getScale());
                 spreadsheets.insertImage(
-                    blobImage,
+                    scaledImage,
                     marker.getRow(),
                     marker.getCol(),
-                    (int) (blob.getWidth() / image.getScale()),
-                    (int) (blob.getHeight() / image.getScale()),
+                    scaledImage.getWidth(),
+                    scaledImage.getHeight(),
                     blob.getX(),
                     blob.getY());
-            }
+            });
         } else {
             BufferedImage scaledImage = ImageUtils.scale(image.getImage(), 1. / image.getScale());
             spreadsheets.insertImage(scaledImage, marker.getRow(), marker.getCol(), scaledImage.getWidth(), scaledImage.getHeight(), 0, 0);

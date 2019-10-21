@@ -37,6 +37,11 @@
 
 /* Individual popup features */
 
+.parse-blobs-popup {
+    width: 225px;
+    height: 125px;
+}
+
 .parse-grid-lines-popup {
     width: 250px;
     height: 175px;

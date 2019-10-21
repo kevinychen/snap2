@@ -13,7 +13,7 @@ export class DocumentImage extends React.Component {
     }
 
     componentDidUpdate() {
-        const { imageDimensions, rectangle, gridLines, gridPosition, grid, crossword } = this.props;
+        const { imageDimensions, rectangle, blobs, gridLines, gridPosition, grid, crossword } = this.props;
         const { editGridLinesHoveredOver } = this.state;
 
         const ctx = this.canvas.getContext('2d');
@@ -26,6 +26,17 @@ export class DocumentImage extends React.Component {
             ctx.strokeStyle = 'black';
             ctx.lineWidth = 4;
             ctx.strokeRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        }
+
+        if (blobs) {
+            for (var i = 0; i < blobs.length; i++) {
+                const color = 'hsl(' + (360 * i / blobs.length) + ', 100%, 50%)';
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                for (const p of blobs[i].fencePoints) {
+                    ctx.fillRect(p.x, p.y, 2, 2);
+                }
+            }
         }
 
         if (gridLines) {

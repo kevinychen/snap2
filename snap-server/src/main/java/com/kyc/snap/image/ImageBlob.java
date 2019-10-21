@@ -1,7 +1,7 @@
 package com.kyc.snap.image;
 
 import java.awt.Point;
-import java.util.List;
+import java.util.Set;
 
 import lombok.Data;
 
@@ -12,5 +12,10 @@ public class ImageBlob {
     private final int y;
     private final int width;
     private final int height;
-    private final List<Point> points;
+
+    // Points right outside the boundary of this blob, but not part of the blob.
+    private final Set<Point> fencePoints;
+
+    // A point that when flood-filled inside the fence points, gives the entire blob.
+    private final Point innerPoint;
 }
