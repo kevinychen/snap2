@@ -4,13 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.opencv.OpenCvManager.OcrOptions;
@@ -22,7 +22,7 @@ public class PdfTest {
 
     @Test
     public void test() throws IOException {
-        try (Pdf pdf = new Pdf(Files.toByteArray(pdfFile))) {
+        try (Pdf pdf = new Pdf(new FileInputStream(pdfFile))) {
             assertThat(pdf.getNumPages()).isEqualTo(1);
 
             List<DocumentText> texts = pdf.getTexts(0);

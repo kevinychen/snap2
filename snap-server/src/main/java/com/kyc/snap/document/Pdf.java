@@ -3,6 +3,7 @@ package com.kyc.snap.document;
 import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class Pdf implements Closeable {
     private final PDDocument doc;
     private final PDFRenderer renderer;
 
-    public Pdf(byte[] pdf) {
+    public Pdf(InputStream pdf) {
         try {
             doc = PDDocument.load(pdf);
             renderer = new PDFRenderer(doc);

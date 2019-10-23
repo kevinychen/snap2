@@ -50,7 +50,7 @@ public interface DocumentService {
     @Path("/url")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Document createDocumentFromUrl(CreateDocumentFromUrlRequest request) throws IOException;
+    Document createDocumentFromUrl(CreateDocumentFromUrlRequest request) throws Exception;
 
     @Data
     public static class CreateDocumentFromUrlRequest {
