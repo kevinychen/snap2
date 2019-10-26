@@ -9,6 +9,8 @@ export class DocumentImage extends React.Component {
         this.state = {
             editGridLinesDirection: "COL",
             editGridLinesHoveredOver: undefined,
+            editCrosswordHoveredOverGridRow: undefined,
+            editCrosswordHoveredOverGridCol: undefined,
         };
     }
 
@@ -207,6 +209,8 @@ export class DocumentImage extends React.Component {
             } else {
                 this.updateGridLine(e);
             }
+        } else if (navBarMode === "EDIT" && mode === "CROSSWORD") {
+            this.updateCrossword(e);
         }
     };
 
@@ -248,7 +252,12 @@ export class DocumentImage extends React.Component {
     updateMouse = e => {
         const { navBarMode, mode } = this.props;
         if (navBarMode === "EDIT" && mode === "GRID_LINES") {
-            this.setState({ editGridLinesHoveredOver: this.findHoveredOver(e) });
+            this.setState({ editGridLinesHoveredOver: this.findHoveredOverGridLine(e) });
+        } else if (navBarMode === "EDIT" && mode === "CROSSWORD") {
+            this.setState({
+                editCrosswordHoveredOverGridRow: this.findHoveredOverGridRow(e),
+                editCrosswordHoveredOverGridCol: this.findHoveredOverGridCol(e),
+            });
         }
     };
 
@@ -278,7 +287,25 @@ export class DocumentImage extends React.Component {
         setGridLines(copiedGridLines);
     };
 
-    findHoveredOver = e => {
+    updateCrossword = e => {
+        const { crossword, setCrossword } = this.props;
+        const { editCrosswordHoveredOverGridRow, editCrosswordHoveredOverGridCol } = this.state;
+        const newEntries = [];
+        for (const entry of crossword.entries) {
+            if (entry.startRow > editCrosswordHoveredOverGridRow) {
+                newEntries.push({ ...entry, clueNumber: entry.clueNumber - 1 });
+            } else if (entry.startRow < editCrosswordHoveredOverGridRow) {
+                newEntries.push(entry);
+            } else if (entry.startCol > editCrosswordHoveredOverGridCol) {
+                newEntries.push({ ...entry, clueNumber: entry.clueNumber - 1 });
+            } else if (entry.startCol < editCrosswordHoveredOverGridCol) {
+                newEntries.push(entry);
+            }
+        }
+        setCrossword({ ...crossword, entries: newEntries });
+    };
+
+    findHoveredOverGridLine = e => {
         if (!this.canvas) {
             return;
         }
@@ -293,6 +320,32 @@ export class DocumentImage extends React.Component {
         for (var col of gridLines.verticalLines) {
             if (Math.abs(e.offsetX - xRatio * (rectangle.x + col)) < DocumentImage.EDIT_GRID_LINE_BUFFER) {
                 return { type: "COL", value: col };
+            }
+        }
+    };
+
+    findHoveredOverGridRow = e => {
+        if (!this.canvas) {
+            return;
+        }
+        const { gridPosition } = this.props;
+        const yRatio = this.canvas.scrollHeight / this.canvas.height;
+        for (var [i, row] of gridPosition.rows.entries()) {
+            if (e.offsetY / yRatio >= row.startY && e.offsetY / yRatio < row.startY + row.height) {
+                return i;
+            }
+        }
+    };
+
+    findHoveredOverGridCol = e => {
+        if (!this.canvas) {
+            return;
+        }
+        const { gridPosition } = this.props;
+        const xRatio = this.canvas.scrollWidth / this.canvas.width;
+        for (var [i, col] of gridPosition.cols.entries()) {
+            if (e.offsetX / xRatio >= col.startX && e.offsetX / xRatio < col.startX + col.width) {
+                return i;
             }
         }
     };

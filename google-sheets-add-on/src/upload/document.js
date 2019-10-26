@@ -61,7 +61,9 @@ export class Document extends React.Component {
             rectangle,
             gridLines,
             grid,
-            popupMode } = this.state;
+            crossword,
+            popupMode,
+        } = this.state;
 
         return (
             <div className="block">
@@ -144,6 +146,12 @@ export class Document extends React.Component {
                         >
                             Grid lines
                         </div>
+                        <div
+                            className={classNames({"clickable": crossword !== undefined})}
+                            onClick={() => this.setState({ navBarMode: "EDIT", mode: "CROSSWORD" })}
+                        >
+                            Crossword numbers
+                        </div>
                     </DropdownMenu>
                     <DropdownMenu value={this.maybeBold("Export", navBarMode === "EXPORT")}>
                         <div
@@ -194,6 +202,7 @@ export class Document extends React.Component {
                     setImageDimensions={this.setImageDimensions}
                     setRectangle={this.setRectangle}
                     setGridLines={this.setGridLines}
+                    setCrossword={this.setCrossword}
                 />
             </div>
         );
