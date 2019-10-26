@@ -37,86 +37,141 @@ export class ParseContentPopup extends Popup {
             <div>
                 <div className="center">Parse content</div>
                 <div className="block">
-                    <button
-                        className={classNames({ "green": findColors })}
-                        title="Parse the color of each grid square"
-                        onClick={() => this.setState({ findColors: !findColors })}
-                    >
-                        {"Colors"}
-                    </button>
-                    <button
-                        className={classNames({ "green": findBorders })}
-                        title="Parse borders between grid squares"
-                        onClick={() => this.setState({ findBorders: !findBorders })}
-                    >
-                        {"Borders"}
-                    </button>
+                    <div className="inline">
+                        <input
+                            id="colors-setting"
+                            type="checkbox"
+                            checked={findColors}
+                            onChange={() => this.setState({ findColors: !findColors })}
+                        />
+                        <label
+                            htmlFor="colors-setting"
+                            title="Parse the color of each grid square"
+                        >
+                            {"Colors"}
+                        </label>
+                    </div>
+                    <div className="inline">
+                        <input
+                            id="borders-setting"
+                            type="checkbox"
+                            checked={findBorders}
+                            onChange={() => this.setState({ findBorders: !findBorders })}
+                        />
+                        <label
+                            htmlFor="borders-setting"
+                            title="Parse borders between grid squares"
+                        >
+                            {"Borders"}
+                        </label>
+                    </div>
                 </div>
 
                 <div className="block">
-                    <button
-                        className={classNames({ "green": findTextMode === "NONE" })}
-                        onClick={() => this.setState({ findTextMode: "NONE" })}
-                    >
-                        {"No text"}
-                    </button>
-                    <button
-                        className={classNames({ "green": findTextMode === "USE_NATIVE" })}
-                        title="Text is present in the document (e.g. textual PDFs)"
-                        onClick={() => this.setState({ findTextMode: "USE_NATIVE" })}
-                    >
-                        {"Stored text"}
-                    </button>
-                    <button
-                        className={classNames({ "green": findTextMode === "USE_OCR" })}
-                        onClick={() => this.setState({ findTextMode: "USE_OCR" })}
-                    >
-                        {"Infer text with OCR"}
-                    </button>
+                    <div className="inline">
+                        <input
+                            id="no-text-mode"
+                            type="radio"
+                            checked={findTextMode === "NONE"}
+                            onChange={() => this.setState({ findTextMode: "NONE" })}
+                        />
+                        <label htmlFor="no-text-mode">
+                            {"No text"}
+                        </label>
+                    </div>
+                    <div className="inline">
+                        <input
+                            id="native-text-mode"
+                            type="radio"
+                            checked={findTextMode === "USE_NATIVE"}
+                            onChange={() => this.setState({ findTextMode: "USE_NATIVE" })}
+                        />
+                        <label htmlFor="native-text-mode">
+                            {"Stored text"}
+                        </label>
+                    </div>
+                    <div className="inline">
+                        <input
+                            id="ocr-text-mode"
+                            type="radio"
+                            checked={findTextMode === "USE_OCR"}
+                            onChange={() => this.setState({ findTextMode: "USE_OCR" })}
+                        />
+                        <label htmlFor="ocr-text-mode">
+                            {"Infer text with OCR"}
+                        </label>
+                    </div>
                 </div>
 
                 <div className={classNames("block", { "grayed-out": findTextMode !== "USE_OCR" })}>
                     <div className="block">
-                        <button
-                            className={classNames({ "green": ocrSingleCharacter })}
-                            onClick={() => this.setState({ ocrSingleCharacter: !ocrSingleCharacter })}
-                        >
-                            {"Single character per square"}
-                        </button>
+                        <div className="inline">
+                            <input
+                                id="ocr-single-character-setting"
+                                type="checkbox"
+                                checked={ocrSingleCharacter}
+                                onChange={() => this.setState({ ocrSingleCharacter: !ocrSingleCharacter })}
+                            />
+                            <label htmlFor="ocr-single-character-setting">
+                                {"Single character per square"}
+                            </label>
+                        </div>
                     </div>
                     <div className="block">
                         <div>Allowed characters</div>
-                        <button
-                            className={classNames("small-button", { "green": ocrAllowedCharactersMode === "NONE" })}
-                            onClick={() => this.setState({ ocrAllowedCharactersMode: "NONE" })}
-                        >
-                            {"All"}
-                        </button>
-                        <button
-                            className={classNames("small-button", { "green": ocrAllowedCharactersMode === "DIGITS" })}
-                            onClick={() => this.setState({ ocrAllowedCharactersMode: "DIGITS" })}
-                        >
-                            {"123"}
-                        </button>
-                        <button
-                            className={classNames("small-button", { "green": ocrAllowedCharactersMode === "UPPERCASE" })}
-                            onClick={() => this.setState({ ocrAllowedCharactersMode: "UPPERCASE" })}
-                        >
-                            {"ABC"}
-                        </button>
-                        <button
-                            className={classNames({ "green": ocrAllowedCharactersMode === "CUSTOM" })}
-                            onClick={() => this.setState({ ocrAllowedCharactersMode: "CUSTOM" })}
-                        >
-                            {"Custom"}
-                        </button>
-                        <input
-                            className={classNames("inline", { "grayed-out": ocrAllowedCharactersMode !== "CUSTOM" })}
-                            type="text"
-                            style={{ width: "120px" }}
-                            value={ocrAllowedCharacters}
-                            onChange={e => this.setState({ ocrAllowedCharacters: e.target.value })}
-                        />
+                        <div>
+                            <div className="inline">
+                                <input
+                                    id="ocr-no-allowed-characters-mode"
+                                    type="radio"
+                                    checked={ocrAllowedCharactersMode === "NONE"}
+                                    onChange={() => this.setState({ ocrAllowedCharactersMode: "NONE" })}
+                                />
+                                <label htmlFor="ocr-no-allowed-characters-mode">
+                                    {"All"}
+                                </label>
+                            </div>
+                            <div className="inline">
+                                <input
+                                    id="ocr-digits-allowed-characters-mode"
+                                    type="radio"
+                                    checked={ocrAllowedCharactersMode === "DIGITS"}
+                                    onChange={() => this.setState({ ocrAllowedCharactersMode: "DIGITS" })}
+                                />
+                                <label htmlFor="ocr-digits-allowed-characters-mode">
+                                    {"123"}
+                                </label>
+                            </div>
+                            <div className="inline">
+                                <input
+                                    id="ocr-uppercase-allowed-characters-mode"
+                                    type="radio"
+                                    checked={ocrAllowedCharactersMode === "UPPERCASE"}
+                                    onChange={() => this.setState({ ocrAllowedCharactersMode: "UPPERCASE" })}
+                                />
+                                <label htmlFor="ocr-uppercase-allowed-characters-mode">
+                                    {"ABC"}
+                                </label>
+                            </div>
+                            <div className="inline">
+                                <input
+                                    id="ocr-custom-allowed-characters-mode"
+                                    type="radio"
+                                    checked={ocrAllowedCharactersMode === "CUSTOM"}
+                                    onChange={() => this.setState({ ocrAllowedCharactersMode: "CUSTOM" })}
+                                />
+                                <label htmlFor="ocr-custom-allowed-characters-mode">
+                                    {"Custom:"}
+                                </label>
+                            </div>
+                            <input
+                                className={classNames("inline", { "grayed-out": ocrAllowedCharactersMode !== "CUSTOM" })}
+                                type="text"
+                                style={{ width: "120px" }}
+                                value={ocrAllowedCharacters}
+                                onChange={e => this.setState({ ocrAllowedCharacters: e.target.value })}
+                            />
+                        </div>
                     </div>
                     <div className="block">
                         <input

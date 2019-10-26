@@ -22,27 +22,51 @@ export class ParseGridLinesPopup extends Popup {
             <div>
                 <div className="center">Find grid lines</div>
                 <div className="block">
-                    <button
-                        className={classNames({ "green": mode === "EXPLICIT" })}
-                        title="Look for explicit lines in the image"
-                        onClick={() => this.setState({ mode: "EXPLICIT" })}
-                    >
-                        {"Explicit"}
-                    </button>
-                    <button
-                        className={classNames({ "green": mode === "IMPLICIT" })}
-                        title="Look for whitespace in the image as implicit lines"
-                        onClick={() => this.setState({ mode: "IMPLICIT" })}
-                    >
-                        {"Implicit"}
-                    </button>
-                    <button
-                        className={classNames({ "green": interpolate })}
-                        title="Ensure that all grid lines are evenly spaced"
-                        onClick={() => this.setState({ interpolate: !interpolate })}
-                    >
-                        {"Interpolate"}
-                    </button>
+                    <div className="inline">
+                        <input
+                            id="explicit-mode"
+                            type="radio"
+                            checked={mode === "EXPLICIT"}
+                            onChange={() => this.setState({ mode: "EXPLICIT" })}
+                        />
+                        <label
+                            htmlFor="explicit-mode"
+                            title="Look for explicit lines in the image"
+                        >
+                            {"Explicit"}
+                        </label>
+                    </div>
+                    <div className="inline">
+                        <input
+                            id="implicit-mode"
+                            type="radio"
+                            checked={mode === "IMPLICIT"}
+                            onChange={() => this.setState({ mode: "IMPLICIT" })}
+                        />
+                        <label
+                            htmlFor="implicit-mode"
+                            title="Look for whitespace in the image as implicit lines"
+                        >
+                            {"Implicit"}
+                        </label>
+                    </div>
+                </div>
+
+                <div className="block">
+                    <div className="inline">
+                        <input
+                            id="interpolate-setting"
+                            type="checkbox"
+                            checked={interpolate}
+                            onChange={() => this.setState({ interpolate: !interpolate })}
+                        />
+                        <label
+                            htmlFor="interpolate-setting"
+                            title="Ensure that all grid lines are evenly spaced"
+                        >
+                            {"Interpolate"}
+                        </label>
+                    </div>
                 </div>
 
                 <div className="block">
