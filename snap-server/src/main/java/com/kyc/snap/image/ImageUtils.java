@@ -15,6 +15,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -147,7 +148,8 @@ public class ImageUtils {
         return border;
     }
 
-    public static List<ImageBlob> findBlobs(BufferedImage image) {
+    public static List<ImageBlob> findBlobs(BufferedImage image, boolean exact) {
+        BiFunction<Integer, Integer, Boolean> similar = (rgb1, rgb2) -> exact ? rgb1 == rgb2 : !isDifferent(rgb1, rgb2);
         boolean[][] visited = new boolean[image.getHeight()][image.getWidth()];
         for (int x = 0; x < image.getWidth(); x++)
             for (int y = 0; y < image.getHeight(); y++)
@@ -156,7 +158,7 @@ public class ImageUtils {
                     floodfill.add(new Point(x, y));
                     while (!floodfill.isEmpty()) {
                         Point p = floodfill.removeFirst();
-                        if (inBounds(image, p.x, p.y) && !visited[p.y][p.x] && !isDifferent(image.getRGB(x, y), image.getRGB(p.x, p.y))) {
+                        if (inBounds(image, p.x, p.y) && !visited[p.y][p.x] && similar.apply(image.getRGB(x, y), image.getRGB(p.x, p.y))) {
                             visited[p.y][p.x] = true;
                             for (Point borderingPoint : borderingPoints(p))
                                 floodfill.addLast(borderingPoint);

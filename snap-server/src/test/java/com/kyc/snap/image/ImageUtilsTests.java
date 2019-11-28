@@ -15,6 +15,6 @@ public class ImageUtilsTests {
     @Test
     public void testFindBlobs() throws IOException {
         BufferedImage image = ImageIO.read(new File("./src/test/resources/mats.png"));
-        assertThat(ImageUtils.findBlobs(image)).hasSize(19);
+        assertThat(ImageUtils.findBlobs(image, true)).hasSize(19);
     }
 }

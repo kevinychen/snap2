@@ -97,6 +97,7 @@ public interface DocumentService {
 
         private final Section section;
         private int minBlobSize = 6;
+        private boolean exact = true;
     }
 
     @POST

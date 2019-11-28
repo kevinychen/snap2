@@ -141,7 +141,7 @@ public class DocumentResource implements DocumentService {
     @Override
     public List<ImageBlob> findBlobs(String documentId, FindBlobsRequest request) {
         BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
-        return ImageUtils.findBlobs(image).stream()
+        return ImageUtils.findBlobs(image, request.isExact()).stream()
             .filter(blob -> blob.getWidth() >= request.getMinBlobSize() && blob.getHeight() >= request.getMinBlobSize())
             .collect(Collectors.toList());
     }
