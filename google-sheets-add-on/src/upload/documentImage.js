@@ -41,7 +41,7 @@ export class DocumentImage extends React.Component {
             }
         }
 
-        if (gridLines) {
+        if (rectangle && gridLines) {
             ctx.strokeStyle = 'red';
             ctx.fillStyle = 'red';
             ctx.lineWidth = 2;
