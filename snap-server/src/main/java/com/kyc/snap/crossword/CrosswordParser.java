@@ -70,7 +70,7 @@ public class CrosswordParser {
             String normalizedLine = line.trim().toUpperCase();
             boolean isDirection = false;
             for (ClueDirection direction : DIRECTIONS)
-                if (normalizedLine.startsWith(direction.toString())) {
+                if (normalizedLine.replaceAll("[^A-Z]", "").equals(direction.toString())) {
                     clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
                     currentDirection = direction;
                     currentClue = "";
