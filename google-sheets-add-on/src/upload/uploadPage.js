@@ -14,10 +14,6 @@ export class UploadPage extends React.Component {
     componentDidMount() {
         this.checkGood();
         window.addEventListener("resize", this.checkGood);
-
-        // TODO temporary for testing
-        const documentId = "73453f56-0590-44ce-93be-47fc06f4b014";
-        getJson({ path: `/documents/${documentId}` }, document => this.setState({ document }));
     }
 
     componentWillUnmount() {
