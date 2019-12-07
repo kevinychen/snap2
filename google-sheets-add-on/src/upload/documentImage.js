@@ -36,7 +36,7 @@ export class DocumentImage extends React.Component {
                 ctx.strokeStyle = color;
                 ctx.fillStyle = color;
                 for (const p of blobs[i].fencePoints) {
-                    ctx.fillRect(p.x, p.y, 2, 2);
+                    ctx.fillRect(rectangle.x + p.x, rectangle.y + p.y, 2, 2);
                 }
             }
         }

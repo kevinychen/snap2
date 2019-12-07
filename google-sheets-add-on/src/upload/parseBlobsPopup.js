@@ -7,6 +7,7 @@ export class ParseBlobsPopup extends Popup {
         super(props);
         this.state = {
             minBlobSize: 6,
+            exact: true,
         };
     }
 
@@ -15,7 +16,7 @@ export class ParseBlobsPopup extends Popup {
     }
 
     renderContent() {
-        const { minBlobSize } = this.state;
+        const { minBlobSize, exact } = this.state;
         return (
             <div>
                 <div className="center">Parse blobs</div>
@@ -35,18 +36,35 @@ export class ParseBlobsPopup extends Popup {
                         onChange={e => this.setState({ minBlobSize: parseInt(e.target.value) })}
                     />
                 </div>
+                <div className="block">
+                    <div className="inline">
+                        <input
+                            id="exact-setting"
+                            type="checkbox"
+                            checked={!exact}
+                            onChange={() => this.setState({ exact: !exact })}
+                        />
+                        <label
+                            htmlFor="exact-setting"
+                            title="Only consider very dissimilar pixels as blobs"
+                        >
+                            {"Find approximate blobs only"}
+                        </label>
+                    </div>
+                </div>
             </div>
         );
     }
 
     submit = () => {
         const { document, page, rectangle, setBlobs } = this.props;
-        const { minBlobSize } = this.state;
+        const { minBlobSize, exact } = this.state;
         postJson({
             path: `/documents/${document.id}/blobs`,
             body: {
                 section: { page, rectangle },
                 minBlobSize,
+                exact,
             },
         }, blobs => {
             setBlobs(blobs);
