@@ -59,11 +59,42 @@ public class StringUtil {
 
     /**
      * Returns the string with the specified character removed. If the string contains multiple
-     * occurrences of the character, only the first occurrence is removed.
+     * occurrences of the character, only the first occurrence is removed. If the character doesn't
+     * exist, returns null.
      */
     public static String remove(String string, char toRemove) {
         int index = string.indexOf(toRemove);
+        if (index == -1)
+            return null;
         return string.substring(0, index) + string.substring(index + 1);
+    }
+
+    /**
+     * Returns the string with all characters of toRemove removed. If not all characters in toRemove
+     * are present, returns null.
+     */
+    public static String remove(String string, String toRemove) {
+        for (char c : toRemove.toCharArray()) {
+            string = remove(string, c);
+            if (string == null)
+                return null;
+        }
+        return string;
+    }
+
+    /**
+     * Returns the string with all characters of subsequence removed in the given order. If not all
+     * characters in subsequence are present, returns null.
+     */
+    public static String removeSubseq(String string, String subsequence) {
+        int index = 0;
+        for (char c : subsequence.toCharArray()) {
+            index = string.indexOf(c, index);
+            if (index == -1)
+                return null;
+            string = string.substring(0, index) + string.substring(index + 1);
+        }
+        return string;
     }
 
     /**

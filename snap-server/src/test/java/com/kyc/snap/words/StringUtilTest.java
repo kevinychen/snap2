@@ -46,6 +46,16 @@ public class StringUtilTest {
         assertThat(StringUtil.remove("abc", 'b')).isEqualTo("ac");
         assertThat(StringUtil.remove("abc", 'c')).isEqualTo("ab");
         assertThat(StringUtil.remove("abcabc", 'c')).isEqualTo("ababc");
+        assertThat(StringUtil.remove("abc", 'x')).isNull();
+        assertThat(StringUtil.remove("abcabc", "cba")).isEqualTo("abc");
+        assertThat(StringUtil.remove("abc", "x")).isNull();
+    }
+
+    @Test
+    public void testRemoveSubseq() {
+        assertThat(StringUtil.removeSubseq("abc", "ab")).isEqualTo("c");
+        assertThat(StringUtil.removeSubseq("abcabc", "ca")).isEqualTo("abbc");
+        assertThat(StringUtil.removeSubseq("abc", "ca")).isNull();
     }
 
     @Test
