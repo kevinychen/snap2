@@ -2,6 +2,7 @@ import "./style.css"
 import { UploadPage } from "./upload/uploadPage";
 import { WordBankPage } from "./wordBank/wordBankPage";
 import { CustomFunctionPage } from "./customFunction/customFunctionPage";
+import { AutoMatchPage } from "./autoSort/autoMatchPage";
 
 class Snap extends React.Component {
     constructor(props) {
@@ -36,6 +37,13 @@ class Snap extends React.Component {
                             {"Quick define custom function"}
                         </button>
                     </div>
+                    <div className="block">
+                        <button
+                            onClick={() => this.setState({ route: "auto-match" })}
+                        >
+                            {"Auto reorder rows to match a reference column"}
+                        </button>
+                    </div>
                 </div>
             );
         } else {
@@ -61,6 +69,8 @@ class Snap extends React.Component {
             return <WordBankPage />
         } else if (route === "custom-function") {
             return <CustomFunctionPage />
+        } else if (route === "auto-match") {
+            return <AutoMatchPage />
         }
     }
 }

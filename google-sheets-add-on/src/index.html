@@ -41,6 +41,11 @@
             google.script.run
                 .saveCustomFunction(customFunction);
         }
+
+        function gs_autoMatch(referenceRange, matchRange) {
+            google.script.run
+                .autoMatch(referenceRange, matchRange);
+        }
     </script>
 </body>
 

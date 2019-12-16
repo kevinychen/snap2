@@ -1,62 +1,63 @@
 
-export class WordBankPage extends React.Component {
+export class AutoMatchPage extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            wordBankRange: "",
-            usedWordsRange: "",
+            referenceRange: "",
+            matchRange: "",
         };
     }
 
     render() {
-        const { wordBankRange } = this.state;
+        const { referenceRange } = this.state;
         return (
             <div>
                 <div className="block">
-                    <h3>Highlight used words</h3>
+                    <h3>Auto match</h3>
                 </div>
                 <div className="block">
                     <div className="block">
-                        Select the range of the word bank and click "Select".
+                        Select the range of the reference column and click "Select".
+                        All values in the reference column must be distinct.
                     </div>
                     <div className="block">
                         <button
                             className="blue"
-                            onClick={this.setWordBankRange}
+                            onClick={this.setReferenceRange}
                         >
                             Select
                         </button>
                         <input
                             readOnly={true}
-                            value={wordBankRange}
+                            value={referenceRange}
                         />
                     </div>
                 </div>
-                {this.maybeRenderUsedWordsRange()}
+                {this.maybeRenderMatchRange()}
             </div>
         );
     }
 
-    maybeRenderUsedWordsRange() {
-        const { wordBankRange, usedWordsRange } = this.state;
-        if (wordBankRange) {
+    maybeRenderMatchRange() {
+        const { referenceRange, matchRange } = this.state;
+        if (referenceRange) {
             return (
                 <div className="block">
                     <div className="block">
-                        Select the range of used words and click "Select".
-                        Snap will automatically highlight all words in the word bank that are present here.
+                        Select the range of the columns to reorder and click "Select".
+                        Snap will reorder these columns such that the first value in each row matches the value in the reference column.
                     </div>
                     <div className="block">
                         <button
                             className="blue"
-                            onClick={this.setUsedWordsRange}
+                            onClick={this.setMatchRange}
                         >
                             Select
                         </button>
                         <input
                             readOnly={true}
-                            value={usedWordsRange}
+                            value={matchRange}
                         />
                     </div>
                 </div>
@@ -64,15 +65,15 @@ export class WordBankPage extends React.Component {
         }
     }
 
-    setWordBankRange = () => {
-        gs_getSelectedRangeA1Notation(range => this.setState({ wordBankRange: range }));
+    setReferenceRange = () => {
+        gs_getSelectedRangeA1Notation(range => this.setState({ referenceRange: range }));
     }
 
-    setUsedWordsRange = () => {
-        const { wordBankRange } = this.state;
+    setMatchRange = () => {
+        const { referenceRange } = this.state;
         gs_getSelectedRangeA1Notation(range => {
-            this.setState({ usedWordsRange: range });
-            gs_highlightUsed(wordBankRange, range);
+            this.setState({ matchRange: range });
+            gs_autoMatch(referenceRange, range);
         });
     }
 }
