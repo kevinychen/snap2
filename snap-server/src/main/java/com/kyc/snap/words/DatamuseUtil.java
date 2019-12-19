@@ -2,8 +2,11 @@ package com.kyc.snap.words;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 
 import feign.Feign;
 import feign.QueryMap;
@@ -33,6 +36,12 @@ public class DatamuseUtil {
             .decoder(new JacksonDecoder())
             .target(DatamuseService.class, "https://api.datamuse.com");
         return datamuse.getWords(ImmutableMap.of("rc", word));
+    }
+
+    public static Set<String> getCommonWordsBetween(String before, String after) {
+        return Sets.intersection(
+            getCommonWordsAfter(before).stream().map(WordResult::getWord).collect(Collectors.toSet()),
+            getCommonWordsBefore(after).stream().map(WordResult::getWord).collect(Collectors.toSet()));
     }
 
     @Data

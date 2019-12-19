@@ -2,7 +2,7 @@ import "./style.css"
 import { UploadPage } from "./upload/uploadPage";
 import { WordBankPage } from "./wordBank/wordBankPage";
 import { CustomFunctionPage } from "./customFunction/customFunctionPage";
-import { AutoMatchPage } from "./autoSort/autoMatchPage";
+import { AutoMatchPage } from "./autoMatch/autoMatchPage";
 
 class Snap extends React.Component {
     constructor(props) {
