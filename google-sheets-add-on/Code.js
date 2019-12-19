@@ -109,6 +109,15 @@ function getSelectedRangeA1Notation() {
   return SpreadsheetApp.getActiveSheet().getActiveRange().getA1Notation();
 }
 
+function getSelectedRange() {
+  var range = SpreadsheetApp.getActiveSheet().getActiveRange();
+  return { rangeA1: range.getA1Notation(), values: range.getValues() };
+}
+
+function setValues(range, values) {
+  return SpreadsheetApp.getActiveSheet().getRange(range).setValues(values);
+}
+
 /**
  * Given a word bank of words and a range of used words, do the following:
  * (1) Highlight in gray all words in the word bank that are used (present in the range of used words)

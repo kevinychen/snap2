@@ -3,6 +3,7 @@ import { UploadPage } from "./upload/uploadPage";
 import { WordBankPage } from "./wordBank/wordBankPage";
 import { CustomFunctionPage } from "./customFunction/customFunctionPage";
 import { AutoMatchPage } from "./autoMatch/autoMatchPage";
+import { FindWordsPage } from "./findWords/findWordsPage";
 
 class Snap extends React.Component {
     constructor(props) {
@@ -44,6 +45,13 @@ class Snap extends React.Component {
                             {"Auto reorder rows to match a reference column"}
                         </button>
                     </div>
+                    <div className="block">
+                        <button
+                            onClick={() => this.setState({ route: "find-words" })}
+                        >
+                            {"Find words from letters"}
+                        </button>
+                    </div>
                 </div>
             );
         } else {
@@ -71,6 +79,8 @@ class Snap extends React.Component {
             return <CustomFunctionPage />
         } else if (route === "auto-match") {
             return <AutoMatchPage />
+        } else if (route === "find-words") {
+            return <FindWordsPage />
         }
     }
 }

@@ -26,6 +26,17 @@
                 .getSelectedRangeA1Notation();
         }
 
+        function gs_getSelectedRange(callback) {
+            google.script.run
+                .withSuccessHandler(callback)
+                .getSelectedRange();
+        }
+
+        function gs_setValues(range, values) {
+            google.script.run
+                .setValues(range, values);
+        }
+
         function gs_highlightUsed(wordBankRange, usedWordsRange) {
             google.script.run
                 .highlightUsed(wordBankRange, usedWordsRange);
