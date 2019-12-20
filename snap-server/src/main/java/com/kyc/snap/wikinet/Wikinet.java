@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,8 @@ import com.google.common.collect.Multimap;
 
 import lombok.Builder;
 import lombok.Data;
+import one.util.streamex.EntryStream;
+import one.util.streamex.StreamEx;
 
 /**
  * Stores summaries for all Wikipedia articles and indexes them for quick lookup.
@@ -132,19 +135,29 @@ public class Wikinet {
     private static final Logger log = LoggerFactory.getLogger(Wikinet.class);
 
     private final File downloadDir;
+    private final File rawDir;
     private final File indexDir;
     private final File partitionsDir;
 
+    private final File rawArticleFrequencies;
+
     private final File cleanedTitles;
     private final File letterOnlyTitles;
+    private final File cleanedTitlesWithFrequencies;
+    private final File letterOnlyTitlesWithFrequencies;
 
     public Wikinet() {
         downloadDir = new File(WIKINET_BASE_DIR, "download");
+        rawDir = new File(WIKINET_BASE_DIR, "raw");
         indexDir = new File(WIKINET_BASE_DIR, "index");
         partitionsDir = new File(WIKINET_BASE_DIR, "partitions");
 
+        rawArticleFrequencies = new File(rawDir, "article-frequencies");
+
         cleanedTitles = new File(indexDir, "titles-cleaned");
         letterOnlyTitles = new File(indexDir, "titles-letters-only");
+        cleanedTitlesWithFrequencies = new File(indexDir, "titles-cleaned-with-frequencies");
+        letterOnlyTitlesWithFrequencies = new File(indexDir, "titles-letters-only-with-frequencies");
     }
 
     /**
@@ -205,7 +218,7 @@ public class Wikinet {
             .map(title -> StringUtils.stripAccents(stripFrom(title, "_(")).toLowerCase().replaceAll("[^a-z0-9]+", " ").trim())
             .collect(Collectors.toList())), StandardCharsets.UTF_8);
         log.info("Writing article titles with only letters retained to {}...", letterOnlyTitles.getName());
-        Files.write(letterOnlyTitles.toPath(), new TreeSet<>(Files.lines(cleanedTitles.toPath())
+        Files.write(letterOnlyTitles.toPath(), new TreeSet<>(getCleanedTitles()
             .map(title -> title.replaceAll("[^a-z]", ""))
             .collect(Collectors.toList())), StandardCharsets.UTF_8);
     }
@@ -230,6 +243,15 @@ public class Wikinet {
                 articles.put(Math.abs(normalizedTitle.hashCode()) % NUM_PARTITIONS, article);
         });
 
+        log.info("Writing to raw article frequencies file...");
+        rawDir.mkdirs();
+        try (FileWriter fileWriter = new FileWriter(rawArticleFrequencies, true);
+                    BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+                    PrintWriter out = new PrintWriter(bufferedWriter)) {
+            for (Article article : articles.values())
+                out.println(article.toTsv1());
+        }
+
         log.info("Writing to partition files...");
         partitionsDir.mkdirs();
         for (int i = 0; i < NUM_PARTITIONS; i++) {
@@ -238,11 +260,58 @@ public class Wikinet {
                     BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
                     PrintWriter out = new PrintWriter(bufferedWriter)) {
                 for (Article article : articles.get(i))
-                    out.println(article.toTsv());
+                    out.println(article.toTsv2());
             }
         }
         completionFile.createNewFile();
         log.info("Wikinet created and marker file {} written.", completionFile.getName());
+    }
+
+    /**
+     * Constructs a file containing each article title and its frequency (estimated by the article
+     * length). Also constructs a file for article titles with all non-alphabetic characters
+     * removed. This method requires that {@link #processTitles()} and {@link #createNet(String)}
+     * have been called.
+     */
+    public void buildTitleFrequencies() throws IOException {
+        if (letterOnlyTitlesWithFrequencies.exists())
+            return;
+
+        log.info("Preparing to write frequency files...");
+        List<Article> articles = new ArrayList<>();
+        try (FileReader fileReader = new FileReader(rawArticleFrequencies);
+                BufferedReader in = new BufferedReader(fileReader)) {
+            while (true) {
+                String line = in.readLine();
+                if (line == null)
+                    break;
+                articles.add(Article.fromTsv1(line));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        log.info("blah");
+        Map<String, Integer> frequencyMap = articles.stream()
+            .filter(article -> article.redirect == null)
+            .collect(Collectors.toMap(Article::getTitle, Article::getFrequency, Math::max));
+        for (Article article : articles)
+            if (frequencyMap.containsKey(article.redirect)) {
+                int frequency = frequencyMap.get(article.redirect);
+                if (!frequencyMap.containsKey(article.title) || frequencyMap.get(article.title) < frequency)
+                    frequencyMap.put(article.title, frequency);
+            }
+
+        log.info("Writing cleaned article titles with frequencies to {}...", cleanedTitlesWithFrequencies.getName());
+        Files.write(cleanedTitlesWithFrequencies.toPath(), getCleanedTitles()
+            .filter(title -> frequencyMap.containsKey(normalize(title)))
+            .map(title -> title + "\t" + frequencyMap.get(normalize(title)))
+            .collect(Collectors.toList()), StandardCharsets.UTF_8);
+        log.info("Writing article titles with only letters retained with frequencies to {}...", letterOnlyTitlesWithFrequencies.getName());
+        Files.write(letterOnlyTitlesWithFrequencies.toPath(), getLetterOnlyTitles()
+            .filter(title -> frequencyMap.containsKey(title))
+            .map(title -> title + "\t" + frequencyMap.get(title))
+            .collect(Collectors.toList()), StandardCharsets.UTF_8);
     }
 
     /**
@@ -292,6 +361,34 @@ public class Wikinet {
     }
 
     /**
+     * Returns cleaned titles, mapped to a number correlated to its frequency/popularity. A
+     * reasonable rule of thumb is that common titles have a frequency of over 10,000.
+     */
+    public EntryStream<String, Integer> getCleanedTitlesWithFrequencies() {
+        try {
+            return StreamEx.ofLines(cleanedTitlesWithFrequencies.toPath())
+                    .map(line -> line.split("\t"))
+                    .mapToEntry(split -> split[0], split -> Integer.parseInt(split[1]));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Returns letter only titles, mapped to a number correlated to its frequency/popularity. A
+     * reasonable rule of thumb is that common titles have a frequency of over 10,000.
+     */
+    public EntryStream<String, Integer> getLetterOnlyTitlesWithFrequencies() {
+        try {
+            return StreamEx.ofLines(letterOnlyTitlesWithFrequencies.toPath())
+                    .map(line -> line.split("\t"))
+                    .mapToEntry(split -> split[0], split -> Integer.parseInt(split[1]));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Returns a set of all articles with the given name (not case sensitive).
      */
     public Set<Article> find(String title, boolean exact) {
@@ -330,7 +427,7 @@ public class Wikinet {
                 if (line == null)
                     break;
                 else if (line.startsWith(prefix)) {
-                    Article article = Article.fromTsv(line);
+                    Article article = Article.fromTsv2(line);
                     if (!exact || article.title.equals(title))
                         articles.add(article);
                 }
@@ -387,6 +484,7 @@ public class Wikinet {
                     namespace = input.getElementText();
                 } else if (name.equals("text")) {
                     String text = input.getElementText();
+                    builder.frequency = text.length();
                     if (!namespace.equals("0"))
                         continue;
                     /*
@@ -532,20 +630,41 @@ public class Wikinet {
         private String title;
         private String redirect;
         private String summary;
+        private int frequency;
+
+        public String toTsv1() {
+            if (redirect != null)
+                return normalize(title) + "\t" + "\tREDIRECT\t" + redirect;
+            else
+                return normalize(title) + "\t" + "\tFREQ\t" + frequency;
+        }
+
+        public static Article fromTsv1(String tsv) {
+            StringTokenizer tokenizer = new StringTokenizer(tsv, "\t");
+            ArticleBuilder builder = Article.builder();
+            builder.title = tokenizer.nextToken();
+            boolean isRedirect = tokenizer.nextToken().equals("REDIRECT");
+            String msg = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : "";
+            if (isRedirect)
+                builder.redirect = msg;
+            else
+                builder.frequency = Integer.parseInt(msg);
+            return builder.build();
+        }
 
         /**
          * A more human-friendly way of serializing the Article object in Wikinet's index files. The
          * normalized title (only lowercase characters) is prepended at the beginning for quick
          * filtering by title with a startsWith check without having to deserialize the article.
          */
-        public String toTsv() {
+        public String toTsv2() {
             if (redirect != null)
                 return normalize(title) + "\t" + title + "\tREDIRECT\t" + redirect;
             else
                 return normalize(title) + "\t" + title + "\tSUMMARY\t" + summary;
         }
 
-        public static Article fromTsv(String tsv) {
+        public static Article fromTsv2(String tsv) {
             StringTokenizer tokenizer = new StringTokenizer(tsv, "\t");
             tokenizer.nextToken();
             ArticleBuilder builder = Article.builder();
@@ -568,5 +687,6 @@ public class Wikinet {
             wikinet.download(articleLink);
             wikinet.createNet(articleLink);
         }
+        wikinet.buildTitleFrequencies();
     }
 }
