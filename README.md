@@ -21,6 +21,18 @@ Snap provides an easy way to copy jigsaw pieces or other moving components into 
 
 ![Parse blobs](docs/feature-blobs.gif)
 
+### Word bank
+
+Select a region in Google Sheets as a word bank. Used words will be automatically shaded.
+
+![Word bank](docs/feature-word-bank.gif)
+
+### Rearrange rows to match
+
+Suppose you have two sets of data in Google Sheets and you need to match them by a column. Snap provides an easy way to do this:
+
+![Reorder](docs/feature-reorder.gif)
+
 ### Grid and crossword parser
 
 Given an uploaded image or PDF containing a grid, Snap can determine where the grid lines are, extract the colors, borders, and text of each grid square, and export all of the information directly into a Google Sheet, saving hours of tedious data entry time. In addition, if the grid is a crossword, Snap will hook up the Google Sheet so that filling in one clue answer will automatically fill in the letters in the grid and orthogonal clues.
