@@ -14,6 +14,12 @@
     <script>
         // Functions that call into Code.js
 
+        function gs_shareWithServer(callback) {
+            google.script.run
+                .withSuccessHandler(callback)
+                .shareWithServer();
+        }
+
         function gs_getActiveCell(callback) {
             google.script.run
                 .withSuccessHandler(callback)

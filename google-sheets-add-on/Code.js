@@ -1,4 +1,5 @@
 
+SERVICE_USER = "sheets-creator@snap-187301.iam.gserviceaccount.com";
 CUSTOM_FUNCTION_METADATA_KEY = "SNAP_CUSTOM_FUNCTION";
 
 function onInstall() {
@@ -93,6 +94,10 @@ function makeVerticalHexagonalGrid() {
 /****************************************
  * HELPER FUNCTIONS USED BY CLIENT HTML *
  ****************************************/
+
+function shareWithServer() {
+  SpreadsheetApp.getActiveSpreadsheet().addEditor(SERVICE_USER);
+}
 
 function getActiveCell() {
   var sheet = SpreadsheetApp.getActiveSheet();

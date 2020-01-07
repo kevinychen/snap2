@@ -27,19 +27,21 @@ export class ExportToSheetPopup extends Popup {
 
     submit = () => {
         const { document, page, rectangle, blobs, gridPosition, grid, crossword, crosswordClues } = this.props;
-        gs_getActiveCell(({ spreadsheetId, sheetId, row, col }) => {
-            postJson({
-                path: `/documents/${document.id}/export/sheet/${spreadsheetId}/${sheetId}`,
-                body: {
-                    marker: { row, col },
-                    section: { page, rectangle },
-                    blobs,
-                    gridPosition,
-                    grid,
-                    crossword,
-                    crosswordClues,
-                },
-            }, this.exit);
+        gs_shareWithServer(() => {
+            gs_getActiveCell(({ spreadsheetId, sheetId, row, col }) => {
+                postJson({
+                    path: `/documents/${document.id}/export/sheet/${spreadsheetId}/${sheetId}`,
+                    body: {
+                        marker: { row, col },
+                        section: { page, rectangle },
+                        blobs,
+                        gridPosition,
+                        grid,
+                        crossword,
+                        crosswordClues,
+                    },
+                }, this.exit);
+            });
         });
     }
 }
