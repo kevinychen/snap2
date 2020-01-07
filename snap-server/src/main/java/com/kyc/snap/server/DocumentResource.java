@@ -188,8 +188,8 @@ public class DocumentResource implements DocumentService {
                     marker.getCol(),
                     scaledImage.getWidth(),
                     scaledImage.getHeight(),
-                    blob.getX(),
-                    blob.getY());
+                    (int) (blob.getX() / image.getScale()),
+                    (int) (blob.getY() / image.getScale()));
             });
         } else {
             BufferedImage scaledImage = ImageUtils.scale(image.getImage(), 1. / image.getScale());
