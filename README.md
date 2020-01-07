@@ -3,6 +3,8 @@ Snap
 
 Snap provides tooling for solving puzzles.
 
+## Features
+
 ### Parse crosswords
 
 Upload an image of a crossword, and Snap will format it in Google Sheets. Enter the crossword clues as well, and Snap will hook up the answer spaces so that they automatically fill in the grid and orthogonal clues!
@@ -33,23 +35,17 @@ Suppose you have two sets of data in Google Sheets and you need to match them by
 
 ![Reorder](docs/feature-reorder.gif)
 
-### Grid and crossword parser
+### Find words
 
-Given an uploaded image or PDF containing a grid, Snap can determine where the grid lines are, extract the colors, borders, and text of each grid square, and export all of the information directly into a Google Sheet, saving hours of tedious data entry time. In addition, if the grid is a crossword, Snap will hook up the Google Sheet so that filling in one clue answer will automatically fill in the letters in the grid and orthogonal clues.
+Snap has a powerful word solver. It uses cromulence analysis and word associations to find more promising solutions than Onelook or Nutrimatic.
 
-![Exported crossword](docs/crossword.gif)
+![Reorder](docs/feature-finder.gif)
 
-### Heavy duty anagram solver
+## Install Snap
 
-Snap uses a powerful solver engine that takes advantage of English word and bi-word frequencies (inspired by Rob Speer's [cromulence measure](https://github.com/rspeer/solvertools#cromulence)). This allows it to anagram long phrases and even sentences, which traditional anagramming tools such as [I, Rearrangement Servant](https://wordsmith.org/anagram/) simply cannot do.
+Find Snap in the [GSuite Marketplace](https://gsuite.google.com/marketplace/app/snap_functions/556464546174). Click INSTALL. Then, in any Google Sheet, click "Add-ons" -> "Snap functions" -> "Open sidebar". As a one-time action, you will need to allow Snap access to your Google Sheets.
 
-![Anagram](docs/anagram.gif)
-
-### Wordsearch solver
-
-Given a grid of letters, Snap shows a simple UI with a list of words that are highlighted in the grid on hover. The tool doesn't require knowing which words to search for. The visual aspect is much clearer than other tools that only show the positions of the words in text format.
-
-![Word Search](docs/wordsearch.gif)
+Snap does not store any personal information.
 
 Development
 -----------
@@ -87,16 +83,6 @@ The Wikinet is an indexed store of all Wikipedia article titles and summaries.
 To generate the Wikinet, go to the [snap-server](snap-server) directory and run `./gradlew generateWikinet`. Note that this needs to download about 50 files of about 20GB data total (~150GB uncompressed), so may take many hours.
 
 After the Wikinet is generated, the methods in the [Wikinet.java](snap-server/src/main/java/com/kyc/snap/wikinet/Wikinet.java) file and the Python [wikinet](snap-python/wikinet.py) functions can be used.
-
-### Apps Script
-
-To use Snap with Google Sheets, create a new project and copy the `Code.gs` and HTML files in [this directory](snap-apps-script/). Then publish the project and install it:
-
-1. Open the Publish menu and select "Deploy as Sheets add-on..."
-
-1. Fill in the information and click "Update web store draft", then "Publish changes". Wait a few minutes for the changes to propagate.
-
-1. Click "Return to Dashboard" in the resulting screen, click the add-on in your listings, and click "Free" to install. The Snap add-on can now be added to any of your Google Sheets by opening the Add-ons menu and selecting "Manage add-ons...".
 
 ### Python
 
