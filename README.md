@@ -1,10 +1,25 @@
 Snap
 ====
 
-Snap provides tooling for puzzle hunts. Try Snap at [util.in](https://util.in).
+Snap provides tooling for solving puzzles.
 
-Features
---------
+### Parse crosswords
+
+Upload an image of a crossword, and Snap will format it in Google Sheets. Enter the crossword clues as well, and Snap will hook up the answer spaces so that they automatically fill in the grid and orthogonal clues!
+
+![Parse crossword](docs/feature-crossword.gif)
+
+### Parse grids
+
+Snap can parse other types of grids as well. For example, here is a grid with borders:
+
+![Parse grid](docs/feature-grid.gif)
+
+### Parse blobs
+
+Snap provides an easy way to copy jigsaw pieces or other moving components into transparent movable pieces in Google Sheets.
+
+![Parse blobs](docs/feature-blobs.gif)
 
 ### Grid and crossword parser
 
