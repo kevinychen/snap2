@@ -58,7 +58,7 @@ public abstract class Scraper implements AutoCloseable {
             Response response = new OkHttpClient()
                 .newCall(new Request.Builder().url(normalizeUrl(url)).get().build())
                 .execute();
-            return Jsoup.parse(response.body().string());
+            return Jsoup.parse(response.body().string(), url);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
