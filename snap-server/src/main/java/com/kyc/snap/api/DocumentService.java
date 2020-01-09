@@ -144,7 +144,7 @@ public interface DocumentService {
         private Marker marker = null;
 
         private final Section section;
-        private GridPosition gridPosition;
+        private GridLines gridLines;
         private Grid grid;
         private Crossword crossword;
         private CrosswordClues crosswordClues;

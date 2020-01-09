@@ -4,8 +4,7 @@ import { DocumentImage } from "./documentImage";
 import { ParseBlobsPopup } from "./parseBlobsPopup";
 import { ParseGridLinesPopup } from "./parseGridLinesPopup";
 import { ParseContentPopup } from "./parseContentPopup";
-import { ParseCrosswordCluesPopup } from "./parseCrosswordCluesPopup";
-import { ExportToSheetPopup } from "./exportToSheetPopup";
+import { ParseCrosswordPopup } from "./parseCrosswordPopup";
 import { DropdownMenu } from "./dropdownMenu";
 
 export class Document extends React.Component {
@@ -25,6 +24,8 @@ export class Document extends React.Component {
             crossword: undefined,
             crosswordClues: undefined,
             popupMode: undefined,
+            numExporting: 0,
+            sharedWithServer: false,
         };
     }
 
@@ -63,6 +64,7 @@ export class Document extends React.Component {
             grid,
             crossword,
             popupMode,
+            numExporting,
         } = this.state;
 
         return (
@@ -101,7 +103,7 @@ export class Document extends React.Component {
                             All
                         </div>
                     </DropdownMenu>
-                    <DropdownMenu value={this.maybeBold("Parse", navBarMode === "PARSE")}>
+                    <DropdownMenu value={this.maybeBold("Detect", navBarMode === "PARSE")}>
                         <div
                             className={classNames({"clickable": rectangle !== undefined})}
                             onClick={() => this.setState({ navBarMode: "PARSE", popupMode: "PARSE_BLOBS"})}
@@ -127,16 +129,13 @@ export class Document extends React.Component {
                                 postJson({
                                     path: `/words/findCrossword`,
                                     body: { grid },
-                                }, response => this.setCrossword(response.crossword));
+                                }, response => {
+                                    this.setCrossword(response.crossword);
+                                    this.setState({ navBarMode: "PARSE", popupMode: "PARSE_CLUES"});
+                                });
                             }}
                         >
                             Crossword
-                        </div>
-                        <div
-                            className="clickable"
-                            onClick={() => this.setState({ navBarMode: "PARSE", popupMode: "PARSE_CLUES"})}
-                        >
-                            Crossword clues
                         </div>
                     </DropdownMenu>
                     <DropdownMenu value={this.maybeBold("Edit", navBarMode === "EDIT")}>
@@ -153,14 +152,14 @@ export class Document extends React.Component {
                             Crossword numbers
                         </div>
                     </DropdownMenu>
-                    <DropdownMenu value={this.maybeBold("Export", navBarMode === "EXPORT")}>
-                        <div
-                            className={classNames({"clickable": rectangle !== undefined})}
-                            onClick={() => this.setState({ popupMode: "EXPORT_TO_SHEET" })}
-                        >
-                            To sheet
-                        </div>
-                    </DropdownMenu>
+
+                    <button
+                        className="export-button"
+                        onClick={() => this.export()}
+                    >
+                        Export {this.currentType()} to cursor
+                        {numExporting > 0 ? " (...)" : ""}
+                    </button>
 
                     <ParseBlobsPopup
                         isVisible={popupMode === "PARSE_BLOBS"}
@@ -183,17 +182,11 @@ export class Document extends React.Component {
                         setGrid={({ gridPosition, grid }) => this.setGrid(gridPosition, grid)}
                         exit={this.clearPopupMode}
                     />
-                    <ParseCrosswordCluesPopup
+                    <ParseCrosswordPopup
                         isVisible={popupMode === "PARSE_CLUES"}
                         document={document}
                         {...this.state}
                         setCrosswordClues={this.setCrosswordClues}
-                        exit={this.clearPopupMode}
-                    />
-                    <ExportToSheetPopup
-                        isVisible={popupMode === "EXPORT_TO_SHEET"}
-                        document={document}
-                        {...this.state}
                         exit={this.clearPopupMode}
                     />
                 </div>
@@ -216,22 +209,34 @@ export class Document extends React.Component {
         }
     }
 
+    currentType() {
+        const { blobs, gridLines, grid, crossword, crosswordClues } = this.state;
+        if (gridLines && grid) {
+            if (crossword && crosswordClues) {
+                return "crossword";
+            } else {
+                return "grid";
+            }
+        } else if (blobs) {
+            return "blobs";
+        } else if (gridLines && gridLines.horizontalLines.length * gridLines.verticalLines.length > 1) {
+            return "images";
+        } else {
+            return "image";
+        }
+    }
+
     setImageDimensions = imageDimensions => {
         this.setRectangle({ x: 0, y: 0, width: imageDimensions.width, height: imageDimensions.height });
         this.setState({ imageDimensions })
     }
 
     setRectangle = rectangle => {
-        if (rectangle === undefined) {
-            this.setGridLines(undefined);
-            this.setState({ rectangle });
-        } else {
-            this.setState({ rectangle });
-            this.setGridLines({
-                horizontalLines: [0, rectangle.height],
-                verticalLines: [0, rectangle.width],
-            });
-        }
+        this.setState({ rectangle });
+        this.setGridLines({
+            horizontalLines: [0, rectangle.height],
+            verticalLines: [0, rectangle.width],
+        });
     }
 
     setBlobs = blobs => {
@@ -264,5 +269,34 @@ export class Document extends React.Component {
 
     clearPopupMode = () => {
         this.setState({ popupMode: undefined });
+    }
+
+    export = () => {
+        this.setState({ numExporting: this.state.numExporting + 1 });
+        if (this.state.sharedWithServer) {
+            this.exportHelper();
+        } else {
+            this.setState({ sharedWithServer: true });
+            gs_shareWithServer(this.exportHelper);
+        }
+    }
+
+    exportHelper = () => {
+        const { document } = this.props;
+        const { page, rectangle, blobs, gridLines, grid, crossword, crosswordClues } = this.state;
+        gs_getActiveCell(({ spreadsheetId, sheetId, row, col }) => {
+            postJson({
+                path: `/documents/${document.id}/export/sheet/${spreadsheetId}/${sheetId}`,
+                body: {
+                    marker: { row, col },
+                    section: { page, rectangle },
+                    blobs,
+                    gridLines,
+                    grid,
+                    crossword,
+                    crosswordClues,
+                },
+            }, () => this.setState({ numExporting: this.state.numExporting - 1 }));
+        });
     }
 }

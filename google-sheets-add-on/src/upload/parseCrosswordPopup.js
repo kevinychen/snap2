@@ -1,8 +1,7 @@
-import * as classNames from "classnames";
 import { postJson } from "../fetch";
 import { Popup } from "./popup";
 
-export class ParseCrosswordCluesPopup extends Popup {
+export class ParseCrosswordPopup extends Popup {
     constructor(props) {
         super(props);
         this.state = {
@@ -12,7 +11,7 @@ export class ParseCrosswordCluesPopup extends Popup {
     }
 
     customClass() {
-        return "parse-crossword-clues-popup";
+        return "parse-crossword-popup";
     }
 
     renderContent() {
@@ -20,7 +19,7 @@ export class ParseCrosswordCluesPopup extends Popup {
         return (
             <div>
                 <div className="block">
-                    <div className="center">Parse crossword clues</div>
+                    <div className="center">Enter crossword clues</div>
                     <textarea
                         style={{ fontFamily: hasLocalChanges ? "auto" : "monospace" }}
                         value={localChanges}

@@ -52,18 +52,13 @@
     height: 450px;
 }
 
-.parse-crossword-clues-popup {
+.parse-crossword-popup {
     width: 350px;
     height: 450px;
 }
 
-.parse-crossword-clues-popup textarea {
+.parse-crossword-popup textarea {
     width: 100%;
     height: 350px;
     resize: none;
-}
-
-.export-to-sheet-popup {
-    width: 250px;
-    height: 150px;
 }

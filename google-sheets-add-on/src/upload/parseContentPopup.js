@@ -35,7 +35,7 @@ export class ParseContentPopup extends Popup {
 
         return (
             <div>
-                <div className="center">Parse content</div>
+                <div className="center">Detect grid content</div>
                 <div className="block">
                     <div className="inline">
                         <input
