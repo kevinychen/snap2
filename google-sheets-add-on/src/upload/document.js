@@ -66,7 +66,6 @@ export class Document extends React.Component {
             grid,
             crossword,
             popupMode,
-            numExporting,
         } = this.state;
 
         return (
@@ -122,7 +121,7 @@ export class Document extends React.Component {
                             className={classNames({"clickable": gridLines !== undefined})}
                             onClick={() => this.setState({ navBarMode: "PARSE", popupMode: "PARSE_CONTENT"})}
                         >
-                            Grid square content
+                            {gridLines && gridLines.horizontalLines.length * gridLines.verticalLines.length > 4 ? "Grid square content" : "Content"}
                         </div>
                         <div
                             className={classNames({"clickable": grid !== undefined})}

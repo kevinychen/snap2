@@ -21,7 +21,14 @@ class Snap extends React.Component {
                         <button
                             onClick={() => this.setState({ route: "upload" })}
                         >
-                            {"Upload from document"}
+                            {"Upload crosswords, grids, and images"}
+                        </button>
+                    </div>
+                    <div className="block">
+                        <button
+                            onClick={() => this.setState({ route: "find-words" })}
+                        >
+                            {"Heavy-duty message solver"}
                         </button>
                     </div>
                     <div className="block">
@@ -33,23 +40,16 @@ class Snap extends React.Component {
                     </div>
                     <div className="block">
                         <button
+                            onClick={() => this.setState({ route: "auto-match" })}
+                        >
+                            {"Reorder column(s) to match another column"}
+                        </button>
+                    </div>
+                    <div className="block">
+                        <button
                             onClick={() => this.setState({ route: "custom-function" })}
                         >
                             {"Quick define custom function"}
-                        </button>
-                    </div>
-                    <div className="block">
-                        <button
-                            onClick={() => this.setState({ route: "auto-match" })}
-                        >
-                            {"Auto reorder rows to match a reference column"}
-                        </button>
-                    </div>
-                    <div className="block">
-                        <button
-                            onClick={() => this.setState({ route: "find-words" })}
-                        >
-                            {"Find words from letters"}
                         </button>
                     </div>
                 </div>

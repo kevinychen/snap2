@@ -20,9 +20,11 @@ export class ParseCrosswordPopup extends Popup {
             <div>
                 <div className="block">
                     <div className="center">Enter crossword clues</div>
+                    <p>Copy the clues below. The format is flexible, e.g. extraneous spaces, newlines, periods, etc. are OK.</p>
                     <textarea
                         style={{ fontFamily: hasLocalChanges ? "auto" : "monospace" }}
                         value={localChanges}
+                        placeholder={"Across\n1. Clue\n2. Clue\n3. Clue\nDown\n1. Clue\n4. Clue\n7. Clue\n"}
                         onChange={e => this.setState({ hasLocalChanges: true, localChanges: e.target.value })}
                     />
                 </div>

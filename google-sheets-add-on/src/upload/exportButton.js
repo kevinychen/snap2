@@ -21,7 +21,7 @@ export class ExportButton extends React.Component {
                 disabled={tempDisabled}
             >
                 Export {this.currentType()} at cursor
-                        {numExporting > 0 ? ` (${numExporting})` : ""}
+                        {numExporting > 0 ? ` (${numExporting} in progress)` : ""}
             </button>
         )
     }
