@@ -1,4 +1,4 @@
-import { getJson, post, postJson } from "../fetch";
+import { post, postJson } from "../fetch";
 import { Document } from "./document";
 
 export class UploadPage extends React.Component {
@@ -7,6 +7,8 @@ export class UploadPage extends React.Component {
         super(props);
         this.state = {
             good: true,
+            url: '',
+            loadingDocument: false,
             document: undefined,
         };
     }
@@ -14,10 +16,12 @@ export class UploadPage extends React.Component {
     componentDidMount() {
         this.checkGood();
         window.addEventListener("resize", this.checkGood);
+        window.addEventListener("paste", this.pasteImage);
     }
 
     componentWillUnmount() {
         window.removeEventListener("resize", this.checkGood);
+        window.removeEventListener("paste", this.pasteImage);
     }
 
     render() {
@@ -28,24 +32,34 @@ export class UploadPage extends React.Component {
         this.setState({ good: (document.body.clientWidth >= 500) });
     }
 
+    pasteImage = e => {
+        const item = (e.clipboardData || e.originalEvent.clipboardData).items[0];
+        if (item.kind === 'file') {
+            this.setFile(item.getAsFile());
+        }
+    }
+
     renderPage() {
-        const { document } = this.state;
+        const { url, loadingDocument, document } = this.state;
         return (
             <div className="block">
                 <div className="block">
                     <input
                         className="inline"
                         type="text"
-                        placeholder="Enter URL of image/PDF..."
+                        placeholder="Enter URL of image/PDF/HTML..."
                         style={{ width: "300px" }}
+                        value={url}
+                        onKeyUp={this.setUrl}
                         onChange={this.setUrl}
                     />
                     <span className="inline">or</span>
                     <input
                         className="inline"
                         type="file"
-                        onChange={this.setFile}
+                        onChange={e => this.setFile(e.target.files[0])}
                     />
+                    {loadingDocument ? <span className="loading"></span> : undefined}
                 </div>
                 {document ? <Document document={document} /> : undefined}
             </div>
@@ -54,13 +68,13 @@ export class UploadPage extends React.Component {
 
     setUrl = e => {
         const url = e.target.value;
-        if (url) {
-            postJson({ path: '/documents/url', body: { url } }, document => this.setState({ document }));
+        if (url && url !== this.state.url) {
+            this.setState({ url, loadingDocument: true });
+            postJson({ path: '/documents/url', body: { url } }, document => this.setState({ loadingDocument: false, document }));
         }
     }
 
-    setFile = e => {
-        const file = e.target.files[0];
+    setFile = file => {
         if (file) {
             const formData = new FormData();
             if (file.type === "application/pdf") {
