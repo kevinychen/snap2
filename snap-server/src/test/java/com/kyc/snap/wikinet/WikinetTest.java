@@ -23,7 +23,7 @@ public class WikinetTest {
     public void testSearch() {
         Set<Article> articles = wikinet.getTitles()
             .filter(title -> title.length() == 9 && title.toLowerCase().startsWith("an"))
-            .flatMap(title -> wikinet.find(title, true).stream())
+            .flatMap(title -> wikinet.find(title).stream())
             .filter(article -> article.getSummary().contains("philosophy"))
             .collect(Collectors.toSet());
         assertThat(articles)
@@ -34,7 +34,7 @@ public class WikinetTest {
     public void testFuzzySearch() {
         Set<Article> articles = wikinet.getLetterOnlyTitles()
             .filter(title -> title.length() == 12 && title.startsWith("ea"))
-            .flatMap(title -> wikinet.find(title, false).stream())
+            .flatMap(title -> wikinet.find(title).stream())
             .filter(article -> article.getSummary().contains("perfume"))
             .collect(Collectors.toSet());
         assertThat(articles)

@@ -291,7 +291,6 @@ public class Wikinet {
             throw new RuntimeException(e);
         }
 
-        log.info("blah");
         Map<String, Integer> frequencyMap = articles.stream()
             .filter(article -> article.redirect == null)
             .collect(Collectors.toMap(Article::getTitle, Article::getFrequency, Math::max));
@@ -391,9 +390,9 @@ public class Wikinet {
     /**
      * Returns a set of all articles with the given name (not case sensitive).
      */
-    public Set<Article> find(String title, boolean exact) {
+    public Set<Article> find(String title) {
         Set<Article> articles = new HashSet<>();
-        for (Article article : directFind(title, exact)) {
+        for (Article article : directFind(title, false)) {
             if (article.redirect != null) {
                 // follow redirect ignoring anchors, e.g. (Title: FOLD) #REDIRECT [[Betting in poker#Fold]] -> "Betting in power"
                 Set<Article> redirectArticles = directFind(stripFrom(article.redirect, "#"), true);
