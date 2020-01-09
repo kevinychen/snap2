@@ -242,8 +242,8 @@ export class DocumentImage extends React.Component {
             setRectangle({
                 x: Math.min(this.mouseDownLoc.x, this.mouseEndLoc.x),
                 y: Math.min(this.mouseDownLoc.y, this.mouseEndLoc.y),
-                width: Math.abs(this.mouseDownLoc.x - this.mouseEndLoc.x),
-                height: Math.abs(this.mouseDownLoc.y - this.mouseEndLoc.y),
+                width: Math.max(Math.abs(this.mouseDownLoc.x - this.mouseEndLoc.x), 1),
+                height: Math.max(Math.abs(this.mouseDownLoc.y - this.mouseEndLoc.y), 1),
             });
         }
         this.updateMouse(e);

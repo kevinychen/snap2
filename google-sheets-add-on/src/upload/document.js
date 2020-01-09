@@ -6,8 +6,10 @@ import { ParseGridLinesPopup } from "./parseGridLinesPopup";
 import { ParseContentPopup } from "./parseContentPopup";
 import { ParseCrosswordPopup } from "./parseCrosswordPopup";
 import { DropdownMenu } from "./dropdownMenu";
+import { ExportButton } from "./exportButton";
 
 export class Document extends React.Component {
+
     constructor(props) {
         super(props);
         this.state = {
@@ -153,13 +155,7 @@ export class Document extends React.Component {
                         </div>
                     </DropdownMenu>
 
-                    <button
-                        className="export-button"
-                        onClick={() => this.export()}
-                    >
-                        Export {this.currentType()} to cursor
-                        {numExporting > 0 ? " (...)" : ""}
-                    </button>
+                    <ExportButton document={document} {...this.state} />
 
                     <ParseBlobsPopup
                         isVisible={popupMode === "PARSE_BLOBS"}
@@ -209,23 +205,6 @@ export class Document extends React.Component {
         }
     }
 
-    currentType() {
-        const { blobs, gridLines, grid, crossword, crosswordClues } = this.state;
-        if (gridLines && grid) {
-            if (crossword && crosswordClues) {
-                return "crossword";
-            } else {
-                return "grid";
-            }
-        } else if (blobs) {
-            return "blobs";
-        } else if (gridLines && gridLines.horizontalLines.length * gridLines.verticalLines.length > 1) {
-            return "images";
-        } else {
-            return "image";
-        }
-    }
-
     setImageDimensions = imageDimensions => {
         this.setRectangle({ x: 0, y: 0, width: imageDimensions.width, height: imageDimensions.height });
         this.setState({ imageDimensions })
@@ -269,34 +248,5 @@ export class Document extends React.Component {
 
     clearPopupMode = () => {
         this.setState({ popupMode: undefined });
-    }
-
-    export = () => {
-        this.setState({ numExporting: this.state.numExporting + 1 });
-        if (this.state.sharedWithServer) {
-            this.exportHelper();
-        } else {
-            this.setState({ sharedWithServer: true });
-            gs_shareWithServer(this.exportHelper);
-        }
-    }
-
-    exportHelper = () => {
-        const { document } = this.props;
-        const { page, rectangle, blobs, gridLines, grid, crossword, crosswordClues } = this.state;
-        gs_getActiveCell(({ spreadsheetId, sheetId, row, col }) => {
-            postJson({
-                path: `/documents/${document.id}/export/sheet/${spreadsheetId}/${sheetId}`,
-                body: {
-                    marker: { row, col },
-                    section: { page, rectangle },
-                    blobs,
-                    gridLines,
-                    grid,
-                    crossword,
-                    crosswordClues,
-                },
-            }, () => this.setState({ numExporting: this.state.numExporting - 1 }));
-        });
     }
 }
