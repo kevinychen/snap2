@@ -201,10 +201,10 @@ export class DocumentImage extends React.Component {
 
     mouseDown = e => {
         const { navBarMode, mode } = this.props;
-        const { editGridLinesDirection, editGridLinesHoveredOver } = this.state;
+        const { editGridLinesDirection } = this.state;
         this.updateMouseWhileClicked(e);
         if (navBarMode === "EDIT" && mode === "GRID_LINES") {
-            if (editGridLinesHoveredOver === undefined && e.button === 2) {
+            if (e.button === 2) {
                 this.setState({ editGridLinesDirection: editGridLinesDirection === "ROW" ? "COL" : "ROW" });
             } else {
                 this.updateGridLine(e);
