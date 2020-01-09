@@ -217,7 +217,7 @@ export class Document extends React.Component {
     }
 
     setImageDimensions = imageDimensions => {
-        this.setRectangle(undefined);
+        this.setRectangle({ x: 0, y: 0, width: imageDimensions.width, height: imageDimensions.height });
         this.setState({ imageDimensions })
     }
 
