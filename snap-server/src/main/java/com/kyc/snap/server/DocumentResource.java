@@ -1,22 +1,18 @@
 package com.kyc.snap.server;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
-
-import org.jsoup.Jsoup;
-import org.jsoup.helper.W3CDom;
 
 import com.google.common.collect.ImmutableList;
 import com.kyc.snap.api.DocumentService;
@@ -43,8 +39,6 @@ import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
-import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.PageSizeUnits;
-import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
 import lombok.Data;
 import okhttp3.OkHttpClient;
@@ -109,20 +103,18 @@ public class DocumentResource implements DocumentService {
         else if (contentType.startsWith("image/") || urlExtension.equals("png") || urlExtension.equals("jpg"))
             return createDocumentFromImage(responseStream);
         else {
-            PipedInputStream in = new PipedInputStream();
-            Executors.newSingleThreadExecutor().submit(() -> {
-                try (PipedOutputStream out = new PipedOutputStream(in)) {
-                    new PdfRendererBuilder()
-                        .useFastMode()
-                        .useDefaultPageSize(16.5f, 23.4f, PageSizeUnits.INCHES) // A2 size
-                        .withW3cDocument(new W3CDom().fromJsoup(Jsoup.connect(url).get()), url)
-                        .toStream(out)
-                        .run();
-                    out.flush();
+            File tempPdf = File.createTempFile("snap", ".pdf");
+            try {
+                int exitCode = new ProcessBuilder("google-chrome", "--headless", "--disable-gpu", "--no-margins", "--no-sandbox",
+                    "--print-to-pdf=" + tempPdf.getAbsolutePath(), url).start().waitFor();
+                if (exitCode != 0)
+                    throw new IllegalStateException("Chrome printToPDF failed with exit code " + exitCode);
+                try (FileInputStream in = new FileInputStream(tempPdf)) {
+                    return createDocumentFromPdf(in);
                 }
-                return null;
-            });
-            return createDocumentFromPdf(in);
+            } finally {
+                tempPdf.delete();
+            }
         }
     }
 

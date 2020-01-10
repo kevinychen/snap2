@@ -47,6 +47,8 @@ To develop on and run the Snap server, you need JDK 8+.
 
 - Download required data files by running `./gradlew downloadFiles`.
 
+- Uploading HTML requires installing the Google Chrome binary. Steps for Ubuntu can be found [here](https://blog.softhints.com/ubuntu-16-04-server-install-headless-google-chrome/).
+
 - Start the Snap server by running `./gradlew run`.
 
 - Visit the app at `http://localhost:8080`, or whatever address your server is hosted at.
