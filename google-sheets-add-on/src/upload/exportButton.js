@@ -1,4 +1,3 @@
-import "./exportButton.css";
 import { postJson } from "../fetch";
 
 export class ExportButton extends React.Component {

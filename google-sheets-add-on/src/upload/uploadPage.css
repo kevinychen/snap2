@@ -1,0 +1,43 @@
+.page-nav {
+    min-width: 48px;
+}
+
+.loading {
+    border: 3px solid #f3f3f3;
+    animation: spin 1s linear infinite;
+    border-top: 3px solid #555;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.export-button {
+    float: right;
+    margin-right: 20px;
+}
+
+.image-container {
+    position: relative;
+    width: 97%;
+    -webkit-user-select: none;
+}
+
+.image {
+    max-height: 100%;
+    width: 100%;
+    border: 1px black solid;
+}
+
+.overlay-canvas {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: calc(100% - 5px);
+}

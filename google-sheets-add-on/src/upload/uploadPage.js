@@ -1,3 +1,4 @@
+import "./uploadPage.css";
 import { post, postJson } from "../fetch";
 import { Document } from "./document";
 

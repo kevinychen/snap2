@@ -1,4 +1,3 @@
-import "./documentImage.css";
 
 export class DocumentImage extends React.Component {
 
