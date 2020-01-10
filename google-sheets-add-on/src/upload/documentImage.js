@@ -203,7 +203,7 @@ export class DocumentImage extends React.Component {
         const { editGridLinesDirection } = this.state;
         this.updateMouseWhileClicked(e);
         if (navBarMode === "EDIT" && mode === "GRID_LINES") {
-            if (e.button === 2) {
+            if (e.button === 2 || e.ctrlKey || e.altKey || e.metaKey) {
                 this.setState({ editGridLinesDirection: editGridLinesDirection === "ROW" ? "COL" : "ROW" });
             } else {
                 this.updateGridLine(e);
