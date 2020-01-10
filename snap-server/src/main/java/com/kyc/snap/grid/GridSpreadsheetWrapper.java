@@ -8,6 +8,7 @@ import com.kyc.snap.google.SpreadsheetManager;
 import com.kyc.snap.google.SpreadsheetManager.BorderedCell;
 import com.kyc.snap.google.SpreadsheetManager.ColoredCell;
 import com.kyc.snap.google.SpreadsheetManager.Dimension;
+import com.kyc.snap.google.SpreadsheetManager.SheetData;
 import com.kyc.snap.google.SpreadsheetManager.SizedRowOrColumn;
 import com.kyc.snap.google.SpreadsheetManager.ValueCell;
 import com.kyc.snap.grid.Grid.Square;
@@ -30,7 +31,14 @@ public class GridSpreadsheetWrapper {
     private final int rowOffset;
     private final int colOffset;
 
-    public void toSpreadsheet(GridPosition pos, Grid grid, BufferedImage image) {
+    public void toSpreadsheet(GridPosition pos, Grid grid, BufferedImage image, SheetData sheetData) {
+        int numRowsInSheet = sheetData.getRowHeights().size();
+        int numColsInSheet = sheetData.getColWidths().size();
+        if (numRowsInSheet < rowOffset + pos.getNumRows())
+            spreadsheets.insertRowOrColumns(Dimension.ROWS, numRowsInSheet, rowOffset + pos.getNumRows() - numRowsInSheet);
+        if (numColsInSheet < colOffset + pos.getNumCols())
+            spreadsheets.insertRowOrColumns(Dimension.COLUMNS, numColsInSheet, colOffset + pos.getNumCols() - numColsInSheet);
+
         int totalWidth = pos.getCols().stream().mapToInt(GridPosition.Col::getWidth).sum();
         int totalHeight = pos.getRows().stream().mapToInt(GridPosition.Row::getHeight).sum();
         double scale = Math.max(

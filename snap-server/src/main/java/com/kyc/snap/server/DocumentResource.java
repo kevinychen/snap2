@@ -177,7 +177,7 @@ public class DocumentResource implements DocumentService {
         GridPosition gridPosition = request.getGridLines() == null ? null : gridParser.getGridPosition(request.getGridLines());
         if (gridPosition != null && request.getGrid() != null) {
             new GridSpreadsheetWrapper(spreadsheets, marker.getRow(), marker.getCol())
-                .toSpreadsheet(gridPosition, request.getGrid(), image.getImage());
+                .toSpreadsheet(gridPosition, request.getGrid(), image.getImage(), sheetData);
             if (request.getCrossword() != null && request.getCrosswordClues() != null) {
                 new CrosswordSpreadsheetWrapper(spreadsheets, marker.getRow(), marker.getCol())
                     .toSpreadsheet(request.getGrid(), request.getCrossword(), request.getCrosswordClues());
