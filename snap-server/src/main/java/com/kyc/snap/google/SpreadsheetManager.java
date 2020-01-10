@@ -27,6 +27,7 @@ import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.Color;
 import com.google.api.services.sheets.v4.model.DataFilter;
+import com.google.api.services.sheets.v4.model.DeleteProtectedRangeRequest;
 import com.google.api.services.sheets.v4.model.DimensionProperties;
 import com.google.api.services.sheets.v4.model.DimensionRange;
 import com.google.api.services.sheets.v4.model.ExtendedValue;
@@ -235,6 +236,19 @@ public class SpreadsheetManager {
                         .setStartColumnIndex(colIndex)
                         .setEndColumnIndex(colIndex + numCols))
                     .setWarningOnly(true))));
+    }
+
+    public void clearProtectedRanges() {
+        try {
+            Spreadsheet spreadsheet = spreadsheets.get(spreadsheetId).execute();
+            executeRequests(findSheet(spreadsheet, sheetId).getProtectedRanges().stream()
+                .map(protectedRange -> new Request()
+                    .setDeleteProtectedRange(new DeleteProtectedRangeRequest()
+                        .setProtectedRangeId(protectedRange.getProtectedRangeId())))
+                .collect(Collectors.toList()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void setBackgroundColors(List<ColoredCell> cells) {
