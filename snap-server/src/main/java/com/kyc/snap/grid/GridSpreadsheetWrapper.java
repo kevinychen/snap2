@@ -18,7 +18,7 @@ import lombok.Data;
 @Data
 public class GridSpreadsheetWrapper {
 
-    public static final int AVERAGE_HEIGHT = 25;
+    public static final int MIN_CELL_SIZE = 25;
     public static final double IMAGE_OPACITY = 0.4;
     /**
      * For some reason, a column of width X pixels is slightly longer than a row of height X pixels.
@@ -33,7 +33,9 @@ public class GridSpreadsheetWrapper {
     public void toSpreadsheet(GridPosition pos, Grid grid, BufferedImage image) {
         int totalWidth = pos.getCols().stream().mapToInt(GridPosition.Col::getWidth).sum();
         int totalHeight = pos.getRows().stream().mapToInt(GridPosition.Row::getHeight).sum();
-        double scale = (double) pos.getRows().size() * AVERAGE_HEIGHT / totalHeight;
+        double scale = Math.max(
+            (double) pos.getNumRows() * MIN_CELL_SIZE / totalHeight,
+            (double) pos.getNumCols() * MIN_CELL_SIZE / totalWidth);
 
         List<SizedRowOrColumn> rows = new ArrayList<>();
         for (int i = 0; i < pos.getNumRows(); i++)
