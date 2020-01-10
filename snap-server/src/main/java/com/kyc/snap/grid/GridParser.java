@@ -40,13 +40,6 @@ public class GridParser {
     private final OpenCvManager openCv;
 
     public GridLines findGridLines(BufferedImage image, int approxGridSquareSize) {
-        GridLines gridLines = findGridLinesHelper(image, approxGridSquareSize);
-        int betterApproxGridSquareSize = (image.getWidth() / gridLines.getVerticalLines().size()
-                + image.getHeight() / gridLines.getHorizontalLines().size()) / 2;
-        return findGridLinesHelper(image, betterApproxGridSquareSize);
-    }
-
-    private GridLines findGridLinesHelper(BufferedImage image, int approxGridSquareSize) {
         List<Line> cardinalLines = openCv.findLines(image, Math.PI / 2, approxGridSquareSize);
 
         TreeSet<Integer> horizontalLines = new TreeSet<>();

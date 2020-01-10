@@ -1,3 +1,4 @@
+import * as classNames from "classnames";
 import { postJson } from "../fetch";
 import { Popup } from "./popup";
 
@@ -7,7 +8,7 @@ export class ParseGridLinesPopup extends Popup {
         this.state = {
             mode: "EXPLICIT",
             interpolate: false,
-            approxGridSize: 12,
+            approxGridSquareSize: 32,
         };
     }
 
@@ -16,10 +17,10 @@ export class ParseGridLinesPopup extends Popup {
     }
 
     renderContent() {
-        const { mode, interpolate, approxGridSize } = this.state;
+        const { mode, interpolate, approxGridSquareSize } = this.state;
         return (
             <div>
-                <div className="center">Detect grid lines</div>
+                <div className="center">Find grid lines</div>
                 <div className="block">
                     <div className="inline">
                         <input
@@ -69,13 +70,13 @@ export class ParseGridLinesPopup extends Popup {
                 </div>
 
                 <div className="block">
-                    <span className="inline">Approximate number of rows or columns:</span>
+                    <span className="inline">Approximate grid size (in pixels):</span>
                     <input
                         className="inline"
                         type="text"
                         style={{ width: "40px" }}
-                        value={approxGridSize}
-                        onChange={e => this.setState({ approxGridSize: parseInt(e.target.value) })}
+                        value={approxGridSquareSize}
+                        onChange={e => this.setState({ approxGridSquareSize: parseInt(e.target.value) })}
                     />
                 </div>
             </div>
@@ -84,11 +85,7 @@ export class ParseGridLinesPopup extends Popup {
 
     submit = () => {
         const { document, page, rectangle, setGridLines } = this.props;
-        const { mode, interpolate, approxGridSize } = this.state;
-        const approxGridSquareSize = Math.round(Math.min(
-            (rectangle.width + rectangle.height) / (2 * approxGridSize),
-            rectangle.width / 6,
-            rectangle.height / 6));
+        const { mode, interpolate, approxGridSquareSize } = this.state;
         postJson({
             path: `/documents/${document.id}/lines`,
             body: {

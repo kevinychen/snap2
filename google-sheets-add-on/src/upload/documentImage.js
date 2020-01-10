@@ -43,7 +43,7 @@ export class DocumentImage extends React.Component {
         if (rectangle && gridLines) {
             ctx.strokeStyle = 'red';
             ctx.fillStyle = 'red';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = Math.ceil((rectangle.width + rectangle.height) / 1000);
             for (var row of gridLines.horizontalLines) {
                 ctx.beginPath();
                 ctx.moveTo(rectangle.x, rectangle.y + row);
