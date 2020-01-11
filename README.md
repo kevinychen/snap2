@@ -24,13 +24,13 @@ Easily import jigsaw pieces or other moving components into Google Sheets.
 
 ![Blobs](docs/blobs.gif)
 
-### Heavy duty solver
+### [Heavy duty anagram solver](https://util.in/solver.html)
 
-Snap has a powerful solver engine with a deep understanding of English. This allows it to solve for phrases and even sentences, whichi traditional tools cannot do.
+Snap has a powerful solver engine with a deep understanding of English. This allows it to solve for phrases and even sentences, which traditional tools cannot do.
 
 ![Anagram](docs/anagram.gif)
 
-### Wordsearch solver
+### [Wordsearch solver](https://util.in/wordsearch.html)
 
 Find words in a grid. Both straight words and boggle mode are supported.
 

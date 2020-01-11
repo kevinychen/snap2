@@ -21,5 +21,17 @@ To develop on and run the Snap server, you need JDK 8+. All commands should be r
 
 - Visit the app at `http://localhost:8080`, or whatever address your server is hosted at.
 
+When running Snap on the server with NGINX, make sure to allow access control headers from other origins (so that the Google Sheet add-on can talk to it). In `/etc/nginx/conf.d/nginx.conf`:
+
+    server {
+        server_name util.in;
+
+        location / {
+            proxy_pass http://localhost:8080;
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Headers *;
+        }
+    }
+
 You can develop on Snap by running `./gradlew eclipse` and then importing "Existing Projects into Workspace" in Eclipse. Files are in the standard Java project layout, with the entry point at [SnapServer.java](src/main/java/com/kyc/snap/server/SnapServer.java) and web assets under [assets](src/main/resources/assets).
 
