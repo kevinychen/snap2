@@ -1,13 +1,18 @@
 package com.kyc.snap.words;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.api.client.util.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -21,7 +26,13 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * All phones are represented by ARPABET codes, which uses ASCII characters instead of IPA symbols.
+ * See https://en.wikipedia.org/wiki/ARPABET.
+ */
 public class PhoneticsUtil {
+
+    private static final String PHONES_FILE = "./data/cmudict.0.7a_SPHINX_40";
 
     private static final int CONSONANT = 0;
     private static final int BILABIAL = 4;
@@ -88,6 +99,25 @@ public class PhoneticsUtil {
      * A set of all phones used in the CMU Pronouncing Dictionary.
      */
     public static final Set<String> PHONES = PHONE_FEATURE_BITSET_MAP.keySet();
+
+    /**
+     * Returns all words in the CMU Pronouncing Dictionary and their pronunciations, described as a
+     * list of phones.
+     */
+    public static Map<String, List<String>> getAllWords() {
+        try (Scanner scanner = new Scanner(new File(PHONES_FILE))) {
+            Map<String, List<String>> allWords = new TreeMap<>();
+            while (scanner.hasNext()) {
+                String word = scanner.next();
+                List<String> phones = Arrays.asList(scanner.nextLine().trim().split(" "));
+                if (StringUtils.isAlpha(word))
+                    allWords.put(word, phones);
+            }
+            return allWords;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Returns the difference between two phones. Both phones must be keys in PHONE_FEATURE_MAP, or

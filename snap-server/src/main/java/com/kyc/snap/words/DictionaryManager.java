@@ -45,6 +45,10 @@ public class DictionaryManager {
         return wordFrequencies.keySet();
     }
 
+    public Map<String, Long> getWordFrequencies() {
+        return getWordFrequencies("");
+    }
+
     public Map<String, Long> getWordFrequencies(String prefix) {
         return wordFrequencies.subMap(prefix, prefix + Character.MAX_VALUE);
     }

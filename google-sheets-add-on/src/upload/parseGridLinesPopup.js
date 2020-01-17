@@ -70,7 +70,7 @@ export class ParseGridLinesPopup extends Popup {
                 </div>
 
                 <div className="block">
-                    <span className="inline">Approximate grid size (in pixels):</span>
+                    <span className="inline">Approximate square size (in pixels):</span>
                     <input
                         className="inline"
                         type="text"

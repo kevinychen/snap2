@@ -108,10 +108,10 @@ public class LowLevelCromulenceSolver {
     @Builder
     private static class Candidate<State> {
 
-        private final List<String> words;
-        private final String currentPrefix;
-        private final double score;
-        private final State state;
+        final List<String> words;
+        final String currentPrefix;
+        final double score;
+        final State state;
 
         @Override
         public String toString() {

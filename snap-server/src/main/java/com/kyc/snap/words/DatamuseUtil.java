@@ -24,7 +24,7 @@ public class DatamuseUtil {
         DatamuseService datamuse = Feign.builder()
             .decoder(new JacksonDecoder())
             .target(DatamuseService.class, "https://api.datamuse.com");
-        return datamuse.getWords(ImmutableMap.of("lc", word));
+        return datamuse.getWords(ImmutableMap.of("sp", pattern, "lc", word));
     }
 
     public static List<WordResult> getCommonWordsBefore(String word) {
@@ -35,7 +35,7 @@ public class DatamuseUtil {
         DatamuseService datamuse = Feign.builder()
             .decoder(new JacksonDecoder())
             .target(DatamuseService.class, "https://api.datamuse.com");
-        return datamuse.getWords(ImmutableMap.of("rc", word));
+        return datamuse.getWords(ImmutableMap.of("sp", pattern, "rc", word));
     }
 
     public static Set<String> getCommonWordsBetween(String before, String after) {
