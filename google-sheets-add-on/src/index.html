@@ -63,6 +63,11 @@
             google.script.run
                 .autoMatch(referenceRange, matchRange);
         }
+
+        function gs_reshape(startWidth, startHeight, endWidth, endHeight) {
+            google.script.run
+                .reshape(startWidth, startHeight, endWidth, endHeight);
+        }
     </script>
 </body>
 

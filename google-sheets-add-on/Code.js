@@ -209,6 +209,59 @@ function autoMatch(referenceRangeA1, matchRangeA1) {
   matchRange.setValues(newMatchValues);
 }
 
+/**
+ * Rearranges the values in the currently selected range as follows.
+ * First, divide the range into rectangular regions with the given starting width and height.
+ * Then, change these rectangular regions into a shape with the given ending width and height.
+ * The reading order of the values in each region remain the same.
+ * For example, resize(range, 1, 2, 2, 1) would do the following:
+ *
+ * A B
+ * C D      A C B D
+ * E F  =>  E G F H
+ * G H      I   J
+ * I J
+ */
+function reshape(startWidth, startHeight, endWidth, endHeight) {
+  var range = SpreadsheetApp.getActiveSheet().getActiveRange();
+  var values = range.getValues();
+  var blankValues = [];
+  for (var i = 0; i < values.length; i++) {
+    blankValues.push([]);
+    for (var j = 0; j < values[i].length; j++) {
+      blankValues[i].push("");
+    }
+  }
+  range.setValues(blankValues);
+
+  var numRegionsX = Math.ceil(values[0].length / startWidth);
+  var numRegionsY = Math.ceil(values.length / startHeight);
+  var newValues = [];
+  for (var i = 0; i < numRegionsY * endHeight; i++) {
+    newValues.push([]);
+  }
+  for (var i = 0; i < numRegionsY; i++) {
+    for (var j = 0; j < numRegionsX; j++) {
+      var regionValues = [];
+      for (var ii = i * startHeight; ii < (i + 1) * startHeight; ii++) {
+        for (var jj = j * startWidth; jj < (j + 1) * startWidth; jj++) {
+          regionValues.push(ii < values.length && jj < values[ii].length ? values[ii][jj] : "");
+        }
+      }
+      var index = 0;
+      for (var ii = i * endHeight; ii < (i + 1) * endHeight; ii++) {
+        for (var jj = j * endWidth; jj < (j + 1) * endWidth; jj++) {
+          newValues[ii].push(index < regionValues.length ? regionValues[index] : "");
+          index++;
+        }
+      }
+    }
+  }
+  var newRange = SpreadsheetApp.getActiveSheet().getRange(range.getRow(), range.getColumn(), numRegionsY * endHeight, numRegionsX * endWidth)
+  newRange.setValues(newValues);
+  SpreadsheetApp.setActiveRange(newRange);
+}
+
 /********************
  * CUSTOM FUNCTIONS *
  ********************/
