@@ -105,4 +105,33 @@ public interface WordsService {
 
         private final List<CromulenceSolverResult> results;
     }
+
+    @POST
+    @Path("words/find")
+    FindWordsResponse findWords(FindWordsRequest request);
+
+    @Data
+    public static class FindWordsRequest {
+
+        private final Dictionary dictionary;
+        private Integer minLength;
+        private Integer maxLength;
+        private Long minFreq;
+        private String regex;
+        private String containsSubseq;
+        private String containedSubseq;
+        private String contains;
+        private String contained;
+        private List<Integer> lengthPattern; // WIKIPEDIA_TITLES only
+    }
+
+    public enum Dictionary {
+        NORMAL, WIKIPEDIA_TITLES;
+    }
+
+    @Data
+    public static class FindWordsResponse {
+
+        private final List<String> words;
+    }
 }

@@ -363,11 +363,11 @@ public class Wikinet {
      * Returns cleaned titles, mapped to a number correlated to its frequency/popularity. A
      * reasonable rule of thumb is that common titles have a frequency of over 10,000.
      */
-    public EntryStream<String, Integer> getCleanedTitlesWithFrequencies() {
+    public EntryStream<String, Long> getCleanedTitlesWithFrequencies() {
         try {
             return StreamEx.ofLines(cleanedTitlesWithFrequencies.toPath())
                     .map(line -> line.split("\t"))
-                    .mapToEntry(split -> split[0], split -> Integer.parseInt(split[1]));
+                    .mapToEntry(split -> split[0], split -> Long.parseLong(split[1]));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -377,11 +377,11 @@ public class Wikinet {
      * Returns letter only titles, mapped to a number correlated to its frequency/popularity. A
      * reasonable rule of thumb is that common titles have a frequency of over 10,000.
      */
-    public EntryStream<String, Integer> getLetterOnlyTitlesWithFrequencies() {
+    public EntryStream<String, Long> getLetterOnlyTitlesWithFrequencies() {
         try {
             return StreamEx.ofLines(letterOnlyTitlesWithFrequencies.toPath())
                     .map(line -> line.split("\t"))
-                    .mapToEntry(split -> split[0], split -> Integer.parseInt(split[1]));
+                    .mapToEntry(split -> split[0], split -> Long.parseLong(split[1]));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

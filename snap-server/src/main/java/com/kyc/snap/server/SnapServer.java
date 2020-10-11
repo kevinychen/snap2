@@ -13,6 +13,7 @@ import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.store.FileStore;
+import com.kyc.snap.wikinet.Wikinet;
 import com.kyc.snap.words.DictionaryManager;
 import com.kyc.snap.words.WordsearchSolver;
 
@@ -49,11 +50,12 @@ public class SnapServer extends Application<Configuration> {
         WordsearchSolver wordsearchSolver = new WordsearchSolver(dictionary);
         NiceCromulenceSolver cromulenceSolver = new NiceCromulenceSolver(new CromulenceSolver(new LowLevelCromulenceSolver(dictionary)));
         FileStore store = new FileStore();
+        Wikinet wikinet = new Wikinet();
 
         environment.jersey().setUrlPattern("/api/*");
 
         environment.jersey().register(new MultiPartFeature());
-        environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver));
+        environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver, dictionary, wikinet));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser));
         environment.jersey().register(new DashboardResource(googleApi));

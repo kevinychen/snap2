@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <link href="wrench.png" rel="icon">
+  </head>
+  <body>
+    <div class="banner">
+      <a href="index.html" class="hsection"><img src="wrench.png"></a>
+      <a href="/document.html" class="linker hsection">DOCUMENT</a>
+      <a href="/wordsearch.html" class="linker hsection">WORD SEARCH</a>
+      <a href="/solver.html" class="linker hsection">HEAVY-DUTY ANAGRAM SOLVER</a>
+      <a href="/findwords.html" class="linker hsection" enabled>FIND WORDS</a>
+    </div>
+    <div class="whole">
+      <div class="section">
+        Dictionary:
+          <input type="radio" name="dictionary" value="NORMAL" checked>Normal
+          <input type="radio" name="dictionary" value="WIKIPEDIA_TITLES">Wikipedia (slow!)
+
+        <br><br>
+
+        has length at least <input id="find-min-length" type="number"><br>
+        has length at most <input id="find-max-length" type="number"><br>
+        has frequency at least <input id="find-min-freq" type="number"> (10,000 is a good default)<br>
+        matches regex <input id="find-regex" type="text"><br>
+        contains the subsequence <input id="find-contains-subseq" type="text"><br>
+        is a subsequence of <input id="find-contained-subseq" type="text"><br>
+        contains all letters of <input id="find-contains" type="text"><br>
+        has letters all contained in <input id="find-contained" type="text"><br>
+        (Wikipedia only) has word lengths equal to <input id="find-length-pattern" type="text"> (enter comma-separated list)<br>
+
+        <input id="find-submit" type="button" value="Solve!">
+      </div>
+      <div id="loader" class="initial-hide loader section"></div>
+      <div class="section">
+        <table id="find-results"></table>
+      </div>
+    </div>
+  </body>
+
+  <script src="jquery-3.3.1.min.js"></script>
+  <script src="common.js"></script>
+  <script>
+    function showWords(words) {
+      $('#find-results').html('<tr><td>Words</td></tr>');
+      for (const word of words) {
+        $('#find-results').append('<tr><td>' + word + '</td><td>');
+      }
+    }
+
+    $(document).ready(function() {
+      $('#find-submit').click(e => {
+        const minLength = $('#find-min-length').val();
+        const maxLength = $('#find-max-length').val();
+        const minFreq = $('#find-min-freq').val();
+        const regex = $('#find-regex').val();
+        const containsSubseq = $('#find-contains-subseq').val();
+        const containedSubseq = $('#find-contained-subseq').val();
+        const contains = $('#find-contains').val();
+        const contained = $('#find-contained').val();
+        const lengthPattern = $('#find-length-pattern').val();
+        postJson({ path: '/words/find', body: {
+          dictionary: $("input[name='dictionary']:checked").val(),
+          minLength: minLength === '' ? undefined : parseInt(minLength),
+          maxLength: maxLength === '' ? undefined : parseInt(maxLength),
+          minFreq: minFreq === '' ? undefined : parseInt(minFreq),
+          regex: regex === '' ? undefined : regex,
+          containsSubseq: containsSubseq === '' ? undefined : containsSubseq,
+          containedSubseq: containedSubseq === '' ? undefined : containedSubseq,
+          contains: contains === '' ? undefined : contains,
+          contained: contained === '' ? undefined : contained,
+          lengthPattern: lengthPattern === '' ? undefined : lengthPattern.split(/[^0-9]+/),
+        } }, response => {
+          showWords(response.words);
+        });
+      });
+    });
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</html>
