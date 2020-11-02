@@ -41,7 +41,7 @@ public class WordsearchSolver {
                             if (di != 0 || dj != 0) {
                                 String word = "";
                                 for (int row = i, col = j; row >= 0 && row < grid.size() && col >= 0
-                                        && col < grid.size(); row += di, col += dj) {
+                                        && col < width; row += di, col += dj) {
                                     word += grid.get(row).charAt(col);
                                     positions.add(new Point(col, row));
                                     if (words.contains(word))
