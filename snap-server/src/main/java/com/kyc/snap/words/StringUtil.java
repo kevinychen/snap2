@@ -57,6 +57,10 @@ public class StringUtil {
         return new String(chars);
     }
 
+    public static boolean isSubset(String outer, String inner) {
+        return isSubsequence(sorted(outer), sorted(inner));
+    }
+
     /**
      * Returns the string with the specified character removed. If the string contains multiple
      * occurrences of the character, only the first occurrence is removed. If the character doesn't
