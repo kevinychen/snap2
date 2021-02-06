@@ -59,7 +59,7 @@ def anagram(s, dict=words):
     return matches
 
 def caesar(s):
-    for i in xrange(26):
+    for i in range(26):
         shift = ''
         for c in s:
             if c >= 'A' and c <= 'Z':
@@ -68,7 +68,7 @@ def caesar(s):
                 shift += chr((ord(c) - 97 + i) % 26 + 97)
             else:
                 shift += c
-        print shift
+        print(shift)
 
 def match(pattern, dict=words):
     """ Returns a list of all English words that match the given pattern.
@@ -106,7 +106,7 @@ def subseq(letters, subseq, ordered=True):
         if c not in letters:
             return False
         index = letters.index(c)
-	if ordered:
+        if ordered:
             letters = letters[index+1:]
         else:
             letters = letters[:index] + letters[index+1:]
