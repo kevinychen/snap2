@@ -1,5 +1,6 @@
 package com.kyc.snap.server;
 
+import com.kyc.snap.cromulence.CromulenceSolver;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,7 +8,6 @@ import java.util.stream.Collectors;
 import com.google.common.base.Joiner;
 import com.kyc.snap.api.WordsService;
 import com.kyc.snap.cromulence.CromulenceSolverResult;
-import com.kyc.snap.cromulence.NiceCromulenceSolver;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordParser;
@@ -26,7 +26,7 @@ public class WordsResource implements WordsService {
 
     private final WordsearchSolver wordsearchSolver;
     private final CrosswordParser crosswordParser;
-    private final NiceCromulenceSolver cromulenceSolver;
+    private final CromulenceSolver cromulenceSolver;
     private final DictionaryManager dictionary;
     private final Wikinet wikinet;
 
@@ -56,18 +56,17 @@ public class WordsResource implements WordsService {
 
     @Override
     public OptimizeCromulenceResponse optimizeCromulence(OptimizeCromulenceRequest request) {
-        List<CromulenceSolverResult> results;
+        String query;
         if (request.isCanRearrange()) {
-            if (request.getWordLengths() != null)
-                results = cromulenceSolver.solveRearrangement(request.getParts(), request.getWordLengths());
+            if (request.getParts().size() == 1)
+                query = "<" + request.getParts().get(0) + ">";
             else
-                results = cromulenceSolver.solveRearrangement(request.getParts());
-        } else {
-            if (request.getWordLengths() != null)
-                results = cromulenceSolver.solveSlug(Joiner.on("").join(request.getParts()), request.getWordLengths());
-            else
-                results = cromulenceSolver.solveSlug(Joiner.on("").join(request.getParts()));
-        }
+                query = "<" + Joiner.on("").join(request.getParts().stream()
+                    .map(part -> "(" + part + ")")
+                    .collect(Collectors.toList())) + ">";
+        } else
+            query = Joiner.on("").join(request.getParts());
+        List<CromulenceSolverResult> results = cromulenceSolver.solve(query, request.getWordLengths());
         return new OptimizeCromulenceResponse(results);
     }
 

@@ -1,3 +1,6 @@
+*.iml
+*.ipr
+*.iws
 .DS_Store
 .classpath
 .gradle
@@ -7,4 +10,5 @@
 /build/
 data
 google-api-credentials.json
+out
 

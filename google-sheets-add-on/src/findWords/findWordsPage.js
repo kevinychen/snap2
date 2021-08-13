@@ -107,7 +107,7 @@ export class FindWordsPage extends React.Component {
             for (var val of row) {
                 val = val.replace(/[^A-Za-z]/g, '');
                 if (val === '') {
-                    parts.push('*');
+                    parts.push('.');
                 } else if (isAnagramMode) {
                     parts.push(val);
                 } else {

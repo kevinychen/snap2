@@ -6,8 +6,6 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import com.kyc.snap.cromulence.CromulenceSolver;
-import com.kyc.snap.cromulence.LowLevelCromulenceSolver;
-import com.kyc.snap.cromulence.NiceCromulenceSolver;
 import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.GridParser;
@@ -48,7 +46,7 @@ public class SnapServer extends Application<Configuration> {
         CrosswordParser crosswordParser = new CrosswordParser();
         DictionaryManager dictionary = new DictionaryManager();
         WordsearchSolver wordsearchSolver = new WordsearchSolver(dictionary);
-        NiceCromulenceSolver cromulenceSolver = new NiceCromulenceSolver(new CromulenceSolver(new LowLevelCromulenceSolver(dictionary)));
+        CromulenceSolver cromulenceSolver = new CromulenceSolver(dictionary);
         FileStore store = new FileStore();
         Wikinet wikinet = new Wikinet();
 

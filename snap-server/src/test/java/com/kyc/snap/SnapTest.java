@@ -4,15 +4,13 @@ package com.kyc.snap;
 import org.junit.Test;
 
 import com.kyc.snap.cromulence.CromulenceSolver;
-import com.kyc.snap.cromulence.LowLevelCromulenceSolver;
-import com.kyc.snap.cromulence.NiceCromulenceSolver;
 import com.kyc.snap.wikinet.Wikinet;
 import com.kyc.snap.words.DictionaryManager;
 
 public class SnapTest {
 
     DictionaryManager dictionary = new DictionaryManager();
-    NiceCromulenceSolver cromulence = new NiceCromulenceSolver(new CromulenceSolver(new LowLevelCromulenceSolver(dictionary)));
+    CromulenceSolver cromulence = new CromulenceSolver(dictionary);
     Wikinet wikinet = new Wikinet();
 
     @Test

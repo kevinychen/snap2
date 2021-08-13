@@ -15,7 +15,7 @@
         Examples:
         <ul>
           <li>
-            A string with some unknown letters: (<span class="parsed">*H*S*nEH**so*E**KNeWN*E*tE*S</span>)
+            A string with some unknown letters: (<span class="parsed">.H.S.nEH..so.E..KNeWN.E.tE.S</span>)
             <input id="demo1" type="button" value="Demo">
           </li>
           <li>
@@ -28,7 +28,7 @@
             <input id="demo3" type="button" value="Demo">
           </li>
         </ul>
-        Capital letters denote letters you're sure about, lowercase letters denote about 80% confidence, and asterisks
+        Capital letters denote letters you're sure about, lowercase letters denote about 80% confidence, and periods ('.')
         represent wildcards. Use square brackets ("[ABC]") to denote one of several possible letters.
       </div>
       <div class="section">
@@ -56,7 +56,7 @@
 
     $(document).ready(function() {
       $('#demo1').click(e => {
-        $('#solver-input-parts').val('*H*S*nEH**so*E**KNeWN*E*tE*S');
+        $('#solver-input-parts').val('.H.S.nEH..so.E..KNeWN.E.tE.S');
         $('#solver-input-word-lengths').val('');
         $('#solver-input-can-rearrange').prop('checked', false);
       });
@@ -72,25 +72,7 @@
       });
 
       $('#solver-input-submit').click(e => {
-        var parts = $('#solver-input-parts').val().split(/[^A-Za-z*\[\]]+/);
-        if (parts.length === 1) {
-          // split "AB[CD]" into ["A", "B", "[CD]"]
-          const part = parts[0];
-          const splitParts = [];
-          for (var index = 0; index < part.length; index++) {
-            if (parts[0][index] === '[') {
-              var endIndex = part.indexOf(']', index);
-              if (endIndex == -1) {
-                endIndex = part.length;
-              }
-              splitParts.push(part.substring(index, endIndex + 1))
-              index = endIndex;
-            } else {
-              splitParts.push(part[index]);
-            }
-          }
-          parts = splitParts;
-        }
+        const parts = $('#solver-input-parts').val().split(/[ ,]+/);
         const wordLengths = $('#solver-input-word-lengths').val();
         postJson({ path: '/words/cromulence', body: {
           parts: parts,
