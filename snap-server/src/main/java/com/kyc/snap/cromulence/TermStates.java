@@ -1,7 +1,7 @@
 package com.kyc.snap.cromulence;
 
 import com.google.common.collect.ImmutableList;
-import com.kyc.snap.cromulence.CromulenceSolver.Dictionary;
+import com.kyc.snap.cromulence.CromulenceSolver.Context;
 import com.kyc.snap.cromulence.CromulenceSolver.State;
 import com.kyc.snap.cromulence.TermNodes.TermNode;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ class TermStates {
     private static final double MIDDLE_CONFIDENCE = .8;
 
     interface TermState {
-        List<State> newStates(Dictionary dictionary, State state);
+        List<State> newStates(State state, Context context);
     }
 
     @Data
@@ -27,8 +27,8 @@ class TermStates {
         final char c;
 
         @Override
-        public List<State> newStates(Dictionary dictionary, State state) {
-            double[] probs = dictionary.getNextLetterProbabilities(state.words, state.prefix);
+        public List<State> newStates(State state, Context context) {
+            double[] probs = context.getNextLetterProbabilities(state.words, state.prefix);
             if (state.quoteLevel > 0)
                 probs[NUM_LETTERS] = 0;
             boolean hasWordLengths = state.wordLengths != null && !state.wordLengths.isEmpty();
@@ -99,18 +99,18 @@ class TermStates {
         }
 
         @Override
-        public List<State> newStates(Dictionary dictionary, State state) {
+        public List<State> newStates(State state, Context context) {
             if (usedBitset + 1 == (1L << sortedChildren.size()))
                 return List.of(state.toBuilder().termState(parent).build());
             return IntStream.range(0, sortedChildren.size())
                 .filter(i -> (usedBitset >> i) % 2 == 0)
-                // optimization: avoid recursing on something recursed on previously
+                // optimization: only return the first child if multiple are identical
                 .filter(i -> i == 0
                     || ((usedBitset >> (i - 1)) % 2 == 1)
                     || !sortedChildren.get(i).equals(sortedChildren.get(i - 1)))
                 .mapToObj(i -> state.toBuilder()
                     .termState(sortedChildren.get(i).toTermState(
-                        new AnagramState(parent, sortedChildren, usedBitset | (1 << i))))
+                        new AnagramState(parent, sortedChildren, usedBitset | (1L << i))))
                     .build())
                 .collect(Collectors.toList());
         }
@@ -124,7 +124,7 @@ class TermStates {
         final boolean used;
 
         @Override
-        public List<State> newStates(Dictionary dictionary, State state) {
+        public List<State> newStates(State state, Context context) {
             if (used)
                 return List.of(state.toBuilder().termState(parent).build());
             return children.stream()
@@ -144,7 +144,7 @@ class TermStates {
         final int index;
 
         @Override
-        public List<State> newStates(Dictionary dictionary, State state) {
+        public List<State> newStates(State state, Context context) {
             if (index == children.size())
                 return List.of(state.toBuilder().termState(parent).build());
             return List.of(state.toBuilder()
@@ -162,7 +162,7 @@ class TermStates {
         final int index;
 
         @Override
-        public List<State> newStates(Dictionary dictionary, State state) {
+        public List<State> newStates(State state, Context context) {
             if (index == children.size())
                 return List.of(state.toBuilder().termState(parent).quoteLevel(state.quoteLevel - 1).build());
             return List.of(state.toBuilder()

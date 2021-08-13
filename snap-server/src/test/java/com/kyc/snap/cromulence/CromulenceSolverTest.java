@@ -50,8 +50,6 @@ public class CromulenceSolverTest {
 
     @Test
     public void testSolveRearrangement() {
-        cromulence.solve("<(AS)(EL)(KE)(NE)(TA)(TH)(TO)>", null)
-            .forEach(System.out::println);
         CromulenceSolverResult result = cromulence.solve("<(AS)(EL)(KE)(NE)(TA)(TH)(TO)>", null).get(0);
         assertThat(result.getWords()).containsExactly("TAKE", "THE", "LAST", "ONE");
     }
