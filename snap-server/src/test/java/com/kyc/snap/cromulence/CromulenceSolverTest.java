@@ -71,4 +71,12 @@ public class CromulenceSolverTest {
         assertThat(result.getWords()).containsExactly("WE", "ARE", "FACED", "WITH", "THE", "VERY", "GRAVEST", "OF", "CHALLENGES", "THE",
             "BIBLE", "CALLS", "THIS", "DAY");
     }
+
+    @Test
+    public void testSolveMultipleAnagrams() {
+        CromulenceSolverResult result = cromulence.solve(
+            "<HET><RAL><SEG><TAN><RUT><BLA><OODY><AFL><NDI><CIN><AWE><TER>", null).get(0);
+        assertThat(result.getWords()).containsExactly("THE", "LARGEST", "NATURAL", "BODY", "OF", "LAND", "IN", "ICE",
+            "WATER");
+    }
 }

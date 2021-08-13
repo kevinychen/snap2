@@ -39,7 +39,7 @@ class TermStates {
                 else
                     probs[NUM_LETTERS] = 0;
             }
-            if (c == '-') {
+            if (c == ' ') {
                 for (int i = 0; i < NUM_LETTERS; i++)
                     probs[i] = 0;
             } else if (c == '.') {
@@ -70,7 +70,7 @@ class TermStates {
                 }
             if (probs[NUM_LETTERS] > 0) {
                 newStates.add(state.toBuilder()
-                    .termState(c == '-' ? parent : this)
+                    .termState(c == ' ' ? parent : this)
                     .words(ImmutableList.<String>builder()
                         .addAll(state.words)
                         .add(state.prefix)
@@ -137,6 +137,23 @@ class TermStates {
     }
 
     @Data
+    static class CountState implements TermState {
+
+        final TermState parent;
+        final TermNode child;
+        final int count;
+
+        @Override
+        public List<State> newStates(State state, Context context) {
+            if (count == 0)
+                return List.of(state.toBuilder().termState(parent).build());
+            return List.of(state.toBuilder()
+                .termState(child.toTermState(new CountState(parent, child, count - 1)))
+                .build());
+        }
+    }
+
+    @Data
     static class ListState implements TermState {
 
         final TermState parent;
@@ -151,6 +168,46 @@ class TermStates {
                 .termState(children.get(index).toTermState(
                     new ListState(parent, children, index + 1)))
                 .build());
+        }
+    }
+
+    @Data
+    static class MaybeState implements TermState {
+
+        final TermState parent;
+        final TermNode child;
+        final boolean used;
+
+        @Override
+        public List<State> newStates(State state, Context context) {
+            List<State> newStates = new ArrayList<>();
+            newStates.add(state.toBuilder().termState(parent).build());
+            if (!used)
+                newStates.add(state.toBuilder()
+                    .termState(child.toTermState(
+                        new MaybeState(parent, child, true)))
+                    .build());
+            return newStates;
+        }
+    }
+
+    @Data
+    static class OrMoreState implements TermState {
+
+        final TermState parent;
+        final TermNode child;
+        final int atLeast;
+
+        @Override
+        public List<State> newStates(State state, Context context) {
+            List<State> newStates = new ArrayList<>();
+            if (atLeast == 0)
+                newStates.add(state.toBuilder().termState(parent).build());
+            newStates.add(state.toBuilder()
+                .termState(child.toTermState(
+                    new OrMoreState(parent, child, Math.max(atLeast - 1, 0))))
+                .build());
+            return newStates;
         }
     }
 

@@ -1,5 +1,6 @@
 package com.kyc.snap.cromulence;
 
+import com.google.common.collect.TreeMultiset;
 import com.kyc.snap.antlr.PregexLexer;
 import com.kyc.snap.antlr.PregexParser;
 import com.kyc.snap.antlr.PregexParser.TermsContext;
@@ -41,7 +42,7 @@ public class CromulenceSolver {
             new CommonTokenStream(new PregexLexer(CharStreams.fromString(query)))).terms();
         List<TermNode> parts = new ArrayList<>();
         termsContext.term().forEach(childContext -> parts.add(TermNodes.fromAntlr(childContext)));
-        parts.add(new SymbolNode('-'));
+        parts.add(new SymbolNode(' '));
         Comparator<State> scoreComparator = Comparator.comparingDouble(State::getScore).reversed();
 
         TreeMap<Integer, List<State>> statesByLength = new TreeMap<>();
@@ -54,16 +55,20 @@ public class CromulenceSolver {
             .score(0.)
             .wordLengths(wordLengths)
             .build());
-        List<State> bestFinalStates = new ArrayList<>();
-        while (!statesByLength.isEmpty())
-            statesByLength.remove(statesByLength.firstKey()).stream().sorted(scoreComparator)
-                .limit(SEARCH_LIMIT).forEach(state -> {
+        TreeMultiset<State> bestFinalStates = TreeMultiset.create(scoreComparator);
+        while (!statesByLength.isEmpty()) {
+            statesByLength.remove(statesByLength.firstKey()).stream().sorted(scoreComparator).limit(SEARCH_LIMIT).forEach(state -> {
+                if (bestFinalStates.size() >= NUM_RESULTS && state.score < bestFinalStates.lastEntry().getElement().score)
+                    return;
                 for (State newState : state.termState.newStates(state, context))
                     if (newState.termState != null)
                         statesByLength.computeIfAbsent(newState.len, key -> new ArrayList<>()).add(newState);
                     else
                         bestFinalStates.add(newState);
             });
+            while (bestFinalStates.size() > NUM_RESULTS)
+                bestFinalStates.pollLastEntry();
+        }
         return bestFinalStates.stream()
             .sorted(scoreComparator)
             .limit(NUM_RESULTS)

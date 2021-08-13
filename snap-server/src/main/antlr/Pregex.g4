@@ -4,7 +4,7 @@ grammar Pregex;
 package com.kyc.snap.antlr;
 }
 
-fragment CHAR : [-.A-Za-z];
+fragment CHAR : [.A-Za-z];
 fragment DIGIT : [0-9];
 
 SYMBOL : CHAR;
