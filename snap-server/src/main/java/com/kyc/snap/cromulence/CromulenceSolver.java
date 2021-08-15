@@ -26,7 +26,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 @Data
 public class CromulenceSolver {
 
-    private static final int NUM_LETTERS = 26;
+    static final int NUM_LETTERS = 26;
+
     private static final int SEARCH_LIMIT = 2000;
     private static final int NUM_RESULTS = 50;
 
@@ -44,10 +45,13 @@ public class CromulenceSolver {
         termsContext.term().forEach(childContext -> parts.add(TermNodes.fromAntlr(childContext)));
         parts.add(new SymbolNode(' '));
         Comparator<State> scoreComparator = Comparator.comparingDouble(State::getScore).reversed();
+        TermNode node = new ListNode(parts);
+        if (node.complexity() > 1000)
+            throw new IllegalArgumentException("Query too complex");
 
         TreeMap<Integer, List<State>> statesByLength = new TreeMap<>();
         statesByLength.computeIfAbsent(0, key -> new ArrayList<>()).add(State.builder()
-            .termState(new ListNode(parts).toTermState(null))
+            .termState(node.toTermState(null))
             .words(List.of())
             .prefix("")
             .len(0)
@@ -70,7 +74,6 @@ public class CromulenceSolver {
                 bestFinalStates.pollLastEntry();
         }
         return bestFinalStates.stream()
-            .sorted(scoreComparator)
             .limit(NUM_RESULTS)
             .map(state -> new CromulenceSolverResult(state.words, state.score))
             .collect(Collectors.toList());

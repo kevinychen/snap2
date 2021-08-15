@@ -1,5 +1,7 @@
 package com.kyc.snap.cromulence;
 
+import static com.kyc.snap.cromulence.CromulenceSolver.NUM_LETTERS;
+
 import com.google.common.collect.ImmutableList;
 import com.kyc.snap.cromulence.CromulenceSolver.Context;
 import com.kyc.snap.cromulence.CromulenceSolver.State;
@@ -13,7 +15,6 @@ import lombok.Data;
 
 class TermStates {
 
-    private static final int NUM_LETTERS = 26;
     private static final double MIDDLE_CONFIDENCE = .8;
 
     interface TermState {

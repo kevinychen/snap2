@@ -1,5 +1,7 @@
 package com.kyc.snap.cromulence;
 
+import static com.kyc.snap.cromulence.CromulenceSolver.NUM_LETTERS;
+
 import com.kyc.snap.antlr.PregexParser.AnagramContext;
 import com.kyc.snap.antlr.PregexParser.ChoiceContext;
 import com.kyc.snap.antlr.PregexParser.CountContext;
@@ -26,12 +28,18 @@ import lombok.Data;
 class TermNodes {
 
     interface TermNode {
+        int complexity();
         TermState toTermState(TermState parent);
     }
 
     @Data
     static class SymbolNode implements TermNode {
         final char c;
+
+        @Override
+        public int complexity() {
+            return c >= 'A' && c <= 'Z' ? 1 : NUM_LETTERS;
+        }
 
         @Override
         public TermState toTermState(TermState parent) {
@@ -44,9 +52,12 @@ class TermNodes {
         final List<TermNode> children;
 
         @Override
+        public int complexity() {
+            return children.stream().mapToInt(TermNode::complexity).sum();
+        }
+
+        @Override
         public TermState toTermState(TermState parent) {
-            if (children.size() > 60)
-                throw new IllegalArgumentException("Too many anagram components");
             return AnagramState.of(parent, children);
         }
     }
@@ -54,6 +65,11 @@ class TermNodes {
     @Data
     static class ChoiceNode implements TermNode {
         final List<TermNode> children;
+
+        @Override
+        public int complexity() {
+            return children.stream().mapToInt(TermNode::complexity).sum();
+        }
 
         @Override
         public TermState toTermState(TermState parent) {
@@ -67,9 +83,12 @@ class TermNodes {
         final int count;
 
         @Override
+        public int complexity() {
+            return child.complexity();
+        }
+
+        @Override
         public TermState toTermState(TermState parent) {
-            if (count > 60)
-                throw new IllegalArgumentException("Count too high");
             return new CountState(parent, child, count);
         }
     }
@@ -77,6 +96,11 @@ class TermNodes {
     @Data
     static class ListNode implements TermNode {
         final List<TermNode> children;
+
+        @Override
+        public int complexity() {
+            return children.stream().mapToInt(TermNode::complexity).max().orElse(0);
+        }
 
         @Override
         public TermState toTermState(TermState parent) {
@@ -87,6 +111,11 @@ class TermNodes {
     @Data
     static class MaybeNode implements TermNode {
         final TermNode child;
+
+        @Override
+        public int complexity() {
+            return child.complexity();
+        }
 
         @Override
         public TermState toTermState(TermState parent) {
@@ -100,6 +129,11 @@ class TermNodes {
         final int atLeast;
 
         @Override
+        public int complexity() {
+            return child.complexity();
+        }
+
+        @Override
         public TermState toTermState(TermState parent) {
             return new OrMoreState(parent, child, atLeast);
         }
@@ -108,6 +142,11 @@ class TermNodes {
     @Data
     static class QuoteNode implements TermNode {
         final List<TermNode> children;
+
+        @Override
+        public int complexity() {
+            return children.stream().mapToInt(TermNode::complexity).max().orElse(0);
+        }
 
         @Override
         public TermState toTermState(TermState parent) {
