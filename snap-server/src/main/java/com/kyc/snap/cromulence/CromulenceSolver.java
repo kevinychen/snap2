@@ -1,5 +1,7 @@
 package com.kyc.snap.cromulence;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.TreeMultiset;
 import com.kyc.snap.antlr.PregexLexer;
 import com.kyc.snap.antlr.PregexParser;
@@ -23,7 +25,6 @@ import lombok.Data;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
-@Data
 public class CromulenceSolver {
 
     static final int NUM_LETTERS = 26;
@@ -32,7 +33,18 @@ public class CromulenceSolver {
     private static final int NUM_RESULTS = 50;
 
     private final DictionaryManager dictionaryManager;
-    private final Map<String, double[]> nextLetterFreqsCache = new HashMap<>();
+    private final Cache<StringPair, double[]> nextLetterFreqsCache;
+    private final Cache<String, double[]> singlePrefixFreqsCache;
+
+    public CromulenceSolver(DictionaryManager dictionaryManager) {
+        this.dictionaryManager = dictionaryManager;
+        this.nextLetterFreqsCache = Caffeine.newBuilder()
+            .maximumSize(100000)
+            .build();
+        this.singlePrefixFreqsCache = Caffeine.newBuilder()
+            .maximumSize(100000)
+            .build();
+    }
 
     public List<CromulenceSolverResult> solve(String query, @Nullable List<Integer> wordLengths) {
         if (query.length() > 500)
@@ -61,8 +73,11 @@ public class CromulenceSolver {
             .build());
         TreeMultiset<State> bestFinalStates = TreeMultiset.create(scoreComparator);
         while (!statesByLength.isEmpty()) {
+            double minScore = bestFinalStates.size() >= NUM_RESULTS
+                ? bestFinalStates.lastEntry().getElement().score
+                : Double.NEGATIVE_INFINITY;
             statesByLength.remove(statesByLength.firstKey()).stream().sorted(scoreComparator).limit(SEARCH_LIMIT).forEach(state -> {
-                if (bestFinalStates.size() >= NUM_RESULTS && state.score < bestFinalStates.lastEntry().getElement().score)
+                if (state.score < minScore)
                     return;
                 for (State newState : state.termState.newStates(state, context))
                     if (newState.termState != null)
@@ -92,30 +107,36 @@ public class CromulenceSolver {
     }
 
     @Data
+    static class StringPair {
+        final String prevWord;
+        final String currWord;
+    }
+
+    @Data
     class Context {
 
         double[] getNextLetterProbabilities(List<String> words, String prefix) {
-            double[] freqs = Arrays.copyOf(getCachedFrequencies(prefix), NUM_LETTERS + 1);
+            return nextLetterFreqsCache.get(new StringPair(words.isEmpty() ? null : words.get(words.size() - 1), prefix), key -> {
+                double[] freqs = Arrays.copyOf(getCachedFrequencies(prefix), NUM_LETTERS + 1);
 
-            // bias toward words that appear in the biword list after the previous word
-            if (!words.isEmpty())
-                updateFrequencies(dictionaryManager.getWordFrequencies(words.get(words.size() - 1), prefix), prefix, freqs);
-            double totalProb = 0;
-            for (double prob : freqs)
-                totalProb += prob;
-            for (int i = 0; i < freqs.length; i++)
-                freqs[i] /= totalProb;
-            return freqs;
+                // bias toward words that appear in the biword list after the previous word
+                if (key.prevWord != null)
+                    updateFrequencies(dictionaryManager.getWordFrequencies(key.prevWord, prefix), prefix, freqs);
+                double totalProb = 0;
+                for (double prob : freqs)
+                    totalProb += prob;
+                for (int i = 0; i <= NUM_LETTERS; i++)
+                    freqs[i] /= totalProb;
+                return freqs;
+            });
         }
 
         double[] getCachedFrequencies(String prefix) {
-            if (nextLetterFreqsCache.containsKey(prefix))
-                return nextLetterFreqsCache.get(prefix);
-            double[] freqs = new double[NUM_LETTERS + 1];
-            updateFrequencies(dictionaryManager.getWordFrequencies(prefix), prefix, freqs);
-            if (prefix.length() <= 2)
-                nextLetterFreqsCache.put(prefix, freqs);
-            return freqs;
+            return singlePrefixFreqsCache.get(prefix, key -> {
+                double[] freqs = new double[NUM_LETTERS + 1];
+                updateFrequencies(dictionaryManager.getWordFrequencies(prefix), prefix, freqs);
+                return freqs;
+            });
         }
 
         private void updateFrequencies(Map<String, Long> wordFreqs, String prefix, double[] freqs) {

@@ -2,11 +2,11 @@ package com.kyc.snap.cromulence;
 
 import static com.kyc.snap.cromulence.CromulenceSolver.NUM_LETTERS;
 
-import com.google.common.collect.ImmutableList;
 import com.kyc.snap.cromulence.CromulenceSolver.Context;
 import com.kyc.snap.cromulence.CromulenceSolver.State;
 import com.kyc.snap.cromulence.TermNodes.TermNode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +29,9 @@ class TermStates {
 
         @Override
         public List<State> newStates(State state, Context context) {
-            double[] probs = context.getNextLetterProbabilities(state.words, state.prefix);
+            double[] probs = Arrays.copyOf(
+                context.getNextLetterProbabilities(state.words, state.prefix),
+                NUM_LETTERS + 1);
             if (state.quoteLevel > 0)
                 probs[NUM_LETTERS] = 0;
             boolean hasWordLengths = state.wordLengths != null && !state.wordLengths.isEmpty();
@@ -70,12 +72,12 @@ class TermStates {
                         .build());
                 }
             if (probs[NUM_LETTERS] > 0) {
+                List<String> newWords = new ArrayList<>(state.words.size() + 1);
+                newWords.addAll(state.words);
+                newWords.add(state.prefix);
                 newStates.add(state.toBuilder()
                     .termState(c == ' ' ? parent : this)
-                    .words(ImmutableList.<String>builder()
-                        .addAll(state.words)
-                        .add(state.prefix)
-                        .build())
+                    .words(newWords)
                     .prefix("")
                     .score(state.score + Math.log(probs[NUM_LETTERS]))
                     .wordLengths(hasWordLengths ? state.wordLengths.subList(1, state.wordLengths.size()) : null)
