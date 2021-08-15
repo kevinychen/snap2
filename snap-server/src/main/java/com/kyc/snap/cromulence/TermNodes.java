@@ -10,7 +10,6 @@ import com.kyc.snap.antlr.PregexParser.OrContext;
 import com.kyc.snap.antlr.PregexParser.QuoteContext;
 import com.kyc.snap.antlr.PregexParser.SymbolContext;
 import com.kyc.snap.antlr.PregexParser.TermContext;
-import com.kyc.snap.antlr.PregexParser.ZeroOrMoreContext;
 import com.kyc.snap.cromulence.TermStates.AnagramState;
 import com.kyc.snap.cromulence.TermStates.ChoiceState;
 import com.kyc.snap.cromulence.TermStates.CountState;
@@ -154,9 +153,6 @@ class TermNodes {
             return new QuoteNode(((QuoteContext) context).terms().term().stream()
                 .map(TermNodes::fromAntlr)
                 .collect(Collectors.toList()));
-        }
-        if (context instanceof ZeroOrMoreContext) {
-            return new OrMoreNode(fromAntlr(((ZeroOrMoreContext) context).term()), 0);
         }
         return new SymbolNode('-'); // fallback
     }

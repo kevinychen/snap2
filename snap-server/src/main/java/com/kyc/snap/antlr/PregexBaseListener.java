@@ -78,18 +78,6 @@ public class PregexBaseListener implements PregexListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterZeroOrMore(PregexParser.ZeroOrMoreContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitZeroOrMore(PregexParser.ZeroOrMoreContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterSymbol(PregexParser.SymbolContext ctx) { }
 	/**
 	 * {@inheritDoc}

@@ -42,7 +42,7 @@ class TermStates {
             if (c == ' ') {
                 for (int i = 0; i < NUM_LETTERS; i++)
                     probs[i] = 0;
-            } else if (c == '.') {
+            } else if (c == '.' || c == '*') {
                 // do nothing
             } else if (c >= 'A' && c <= 'Z') {
                 for (int i = 0; i < NUM_LETTERS; i++)

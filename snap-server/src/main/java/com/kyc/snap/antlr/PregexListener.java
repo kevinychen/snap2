@@ -70,18 +70,6 @@ public interface PregexListener extends ParseTreeListener {
 	 */
 	void exitOr(PregexParser.OrContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ZeroOrMore}
-	 * labeled alternative in {@link PregexParser#term}.
-	 * @param ctx the parse tree
-	 */
-	void enterZeroOrMore(PregexParser.ZeroOrMoreContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ZeroOrMore}
-	 * labeled alternative in {@link PregexParser#term}.
-	 * @param ctx the parse tree
-	 */
-	void exitZeroOrMore(PregexParser.ZeroOrMoreContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code Symbol}
 	 * labeled alternative in {@link PregexParser#term}.
 	 * @param ctx the parse tree

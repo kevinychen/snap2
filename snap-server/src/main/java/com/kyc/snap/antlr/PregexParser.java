@@ -20,7 +20,7 @@ public class PregexParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
-		T__9=10, T__10=11, T__11=12, T__12=13, SYMBOL=14, COUNT=15;
+		T__9=10, T__10=11, T__11=12, SYMBOL=13, COUNT=14;
 	public static final int
 		RULE_term = 0, RULE_terms = 1;
 	private static String[] makeRuleNames() {
@@ -33,14 +33,14 @@ public class PregexParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'<'", "'>'", "'['", "']'", "'{'", "'}'", "'('", "')'", "'?'", 
-			"'+'", "'|'", "'\"'", "'*'"
+			"'+'", "'|'", "'\"'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
-			null, null, "SYMBOL", "COUNT"
+			null, "SYMBOL", "COUNT"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -176,20 +176,6 @@ public class PregexParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PregexListener ) ((PregexListener)listener).exitOr(this);
-		}
-	}
-	public static class ZeroOrMoreContext extends TermContext {
-		public TermContext term() {
-			return getRuleContext(TermContext.class,0);
-		}
-		public ZeroOrMoreContext(TermContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof PregexListener ) ((PregexListener)listener).enterZeroOrMore(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof PregexListener ) ((PregexListener)listener).exitZeroOrMore(this);
 		}
 	}
 	public static class SymbolContext extends TermContext {
@@ -332,7 +318,7 @@ public class PregexParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(39);
+			setState(37);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -340,7 +326,7 @@ public class PregexParser extends Parser {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(37);
+					setState(35);
 					_errHandler.sync(this);
 					switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
 					case 1:
@@ -348,11 +334,11 @@ public class PregexParser extends Parser {
 						_localctx = new OrContext(new TermContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_term);
 						setState(24);
-						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
+						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
 						setState(25);
 						match(T__10);
 						setState(26);
-						term(4);
+						term(3);
 						}
 						break;
 					case 2:
@@ -360,7 +346,7 @@ public class PregexParser extends Parser {
 						_localctx = new CountContext(new TermContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_term);
 						setState(27);
-						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
+						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
 						setState(28);
 						match(T__4);
 						setState(29);
@@ -374,7 +360,7 @@ public class PregexParser extends Parser {
 						_localctx = new MaybeContext(new TermContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_term);
 						setState(31);
-						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
+						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
 						setState(32);
 						match(T__8);
 						}
@@ -384,25 +370,15 @@ public class PregexParser extends Parser {
 						_localctx = new OneOrMoreContext(new TermContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_term);
 						setState(33);
-						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
+						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
 						setState(34);
 						match(T__9);
-						}
-						break;
-					case 5:
-						{
-						_localctx = new ZeroOrMoreContext(new TermContext(_parentctx, _parentState));
-						pushNewRecursionContext(_localctx, _startState, RULE_term);
-						setState(35);
-						if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-						setState(36);
-						match(T__12);
 						}
 						break;
 					}
 					} 
 				}
-				setState(41);
+				setState(39);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			}
@@ -447,7 +423,7 @@ public class PregexParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(43); 
+			setState(41); 
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -455,7 +431,7 @@ public class PregexParser extends Parser {
 				case 1:
 					{
 					{
-					setState(42);
+					setState(40);
 					term(0);
 					}
 					}
@@ -463,7 +439,7 @@ public class PregexParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(45); 
+				setState(43); 
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -490,34 +466,32 @@ public class PregexParser extends Parser {
 	private boolean term_sempred(TermContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
-			return precpred(_ctx, 3);
+			return precpred(_ctx, 2);
 		case 1:
-			return precpred(_ctx, 7);
+			return precpred(_ctx, 6);
 		case 2:
-			return precpred(_ctx, 5);
-		case 3:
 			return precpred(_ctx, 4);
-		case 4:
-			return precpred(_ctx, 1);
+		case 3:
+			return precpred(_ctx, 3);
 		}
 		return true;
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\21\62\4\2\t\2\4\3"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\20\60\4\2\t\2\4\3"+
 		"\t\3\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3"+
-		"\2\3\2\5\2\31\n\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2"+
-		"\7\2(\n\2\f\2\16\2+\13\2\3\3\6\3.\n\3\r\3\16\3/\3\3\2\3\2\4\2\4\2\2\2"+
-		"9\2\30\3\2\2\2\4-\3\2\2\2\6\7\b\2\1\2\7\31\7\20\2\2\b\t\7\3\2\2\t\n\5"+
-		"\4\3\2\n\13\7\4\2\2\13\31\3\2\2\2\f\r\7\5\2\2\r\16\5\4\3\2\16\17\7\6\2"+
-		"\2\17\31\3\2\2\2\20\21\7\t\2\2\21\22\5\4\3\2\22\23\7\n\2\2\23\31\3\2\2"+
-		"\2\24\25\7\16\2\2\25\26\5\4\3\2\26\27\7\16\2\2\27\31\3\2\2\2\30\6\3\2"+
-		"\2\2\30\b\3\2\2\2\30\f\3\2\2\2\30\20\3\2\2\2\30\24\3\2\2\2\31)\3\2\2\2"+
-		"\32\33\f\5\2\2\33\34\7\r\2\2\34(\5\2\2\6\35\36\f\t\2\2\36\37\7\7\2\2\37"+
-		" \7\21\2\2 (\7\b\2\2!\"\f\7\2\2\"(\7\13\2\2#$\f\6\2\2$(\7\f\2\2%&\f\3"+
-		"\2\2&(\7\17\2\2\'\32\3\2\2\2\'\35\3\2\2\2\'!\3\2\2\2\'#\3\2\2\2\'%\3\2"+
-		"\2\2(+\3\2\2\2)\'\3\2\2\2)*\3\2\2\2*\3\3\2\2\2+)\3\2\2\2,.\5\2\2\2-,\3"+
-		"\2\2\2./\3\2\2\2/-\3\2\2\2/\60\3\2\2\2\60\5\3\2\2\2\6\30\')/";
+		"\2\3\2\5\2\31\n\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\7\2&\n\2"+
+		"\f\2\16\2)\13\2\3\3\6\3,\n\3\r\3\16\3-\3\3\2\3\2\4\2\4\2\2\2\66\2\30\3"+
+		"\2\2\2\4+\3\2\2\2\6\7\b\2\1\2\7\31\7\17\2\2\b\t\7\3\2\2\t\n\5\4\3\2\n"+
+		"\13\7\4\2\2\13\31\3\2\2\2\f\r\7\5\2\2\r\16\5\4\3\2\16\17\7\6\2\2\17\31"+
+		"\3\2\2\2\20\21\7\t\2\2\21\22\5\4\3\2\22\23\7\n\2\2\23\31\3\2\2\2\24\25"+
+		"\7\16\2\2\25\26\5\4\3\2\26\27\7\16\2\2\27\31\3\2\2\2\30\6\3\2\2\2\30\b"+
+		"\3\2\2\2\30\f\3\2\2\2\30\20\3\2\2\2\30\24\3\2\2\2\31\'\3\2\2\2\32\33\f"+
+		"\4\2\2\33\34\7\r\2\2\34&\5\2\2\5\35\36\f\b\2\2\36\37\7\7\2\2\37 \7\20"+
+		"\2\2 &\7\b\2\2!\"\f\6\2\2\"&\7\13\2\2#$\f\5\2\2$&\7\f\2\2%\32\3\2\2\2"+
+		"%\35\3\2\2\2%!\3\2\2\2%#\3\2\2\2&)\3\2\2\2\'%\3\2\2\2\'(\3\2\2\2(\3\3"+
+		"\2\2\2)\'\3\2\2\2*,\5\2\2\2+*\3\2\2\2,-\3\2\2\2-+\3\2\2\2-.\3\2\2\2.\5"+
+		"\3\2\2\2\6\30%\'-";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
