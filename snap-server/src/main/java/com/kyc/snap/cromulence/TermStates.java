@@ -113,6 +113,7 @@ class TermStates {
                     .termState(sortedChildren.get(i).toTermState(
                         new AnagramState(parent, sortedChildren, usedBitset | (1L << i))))
                     .build())
+                .flatMap(newState -> newState.termState.newStates(newState, context).stream())
                 .collect(Collectors.toList());
         }
     }
@@ -133,6 +134,7 @@ class TermStates {
                     .termState(node.toTermState(
                         new ChoiceState(parent, children, true)))
                     .build())
+                .flatMap(newState -> newState.termState.newStates(newState, context).stream())
                 .collect(Collectors.toList());
         }
     }
@@ -148,9 +150,10 @@ class TermStates {
         public List<State> newStates(State state, Context context) {
             if (count == 0)
                 return List.of(state.toBuilder().termState(parent).build());
-            return List.of(state.toBuilder()
+            State newState = state.toBuilder()
                 .termState(child.toTermState(new CountState(parent, child, count - 1)))
-                .build());
+                .build();
+            return newState.termState.newStates(newState, context);
         }
     }
 
@@ -165,10 +168,10 @@ class TermStates {
         public List<State> newStates(State state, Context context) {
             if (index == children.size())
                 return List.of(state.toBuilder().termState(parent).build());
-            return List.of(state.toBuilder()
-                .termState(children.get(index).toTermState(
-                    new ListState(parent, children, index + 1)))
-                .build());
+            State newState = state.toBuilder()
+                .termState(children.get(index).toTermState(new ListState(parent, children, index + 1)))
+                .build();
+            return newState.termState.newStates(newState, context);
         }
     }
 
@@ -183,11 +186,12 @@ class TermStates {
         public List<State> newStates(State state, Context context) {
             List<State> newStates = new ArrayList<>();
             newStates.add(state.toBuilder().termState(parent).build());
-            if (!used)
-                newStates.add(state.toBuilder()
-                    .termState(child.toTermState(
-                        new MaybeState(parent, child, true)))
-                    .build());
+            if (!used) {
+                State newState = state.toBuilder()
+                    .termState(child.toTermState(new MaybeState(parent, child, true)))
+                    .build();
+                newStates.addAll(newState.termState.newStates(newState, context));
+            }
             return newStates;
         }
     }
@@ -204,10 +208,10 @@ class TermStates {
             List<State> newStates = new ArrayList<>();
             if (atLeast == 0)
                 newStates.add(state.toBuilder().termState(parent).build());
-            newStates.add(state.toBuilder()
-                .termState(child.toTermState(
-                    new OrMoreState(parent, child, Math.max(atLeast - 1, 0))))
-                .build());
+            State newState = state.toBuilder()
+                .termState(child.toTermState(new OrMoreState(parent, child, Math.max(atLeast - 1, 0))))
+                .build();
+            newStates.addAll(newState.termState.newStates(newState, context));
             return newStates;
         }
     }
@@ -223,11 +227,11 @@ class TermStates {
         public List<State> newStates(State state, Context context) {
             if (index == children.size())
                 return List.of(state.toBuilder().termState(parent).quoteLevel(state.quoteLevel - 1).build());
-            return List.of(state.toBuilder()
-                .termState(children.get(index).toTermState(
-                    new QuoteState(parent, children, index + 1)))
+            State newState = state.toBuilder()
+                .termState(children.get(index).toTermState(new QuoteState(parent, children, index + 1)))
                 .quoteLevel(index == 0 ? state.quoteLevel + 1 : state.quoteLevel)
-                .build());
+                .build();
+            return newState.termState.newStates(newState, context);
         }
     }
 }

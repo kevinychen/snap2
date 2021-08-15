@@ -28,7 +28,7 @@ public class CromulenceSolver {
 
     static final int NUM_LETTERS = 26;
 
-    private static final int SEARCH_LIMIT = 2000;
+    private static final int SEARCH_LIMIT = 1000;
     private static final int NUM_RESULTS = 50;
 
     private final DictionaryManager dictionaryManager;
@@ -46,7 +46,7 @@ public class CromulenceSolver {
         parts.add(new SymbolNode(' '));
         Comparator<State> scoreComparator = Comparator.comparingDouble(State::getScore).reversed();
         TermNode node = new ListNode(parts);
-        if (node.complexity() > 1000)
+        if (node.complexity() > SEARCH_LIMIT)
             throw new IllegalArgumentException("Query too complex");
 
         TreeMap<Integer, List<State>> statesByLength = new TreeMap<>();
