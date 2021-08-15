@@ -14,9 +14,9 @@ import com.kyc.snap.words.DictionaryManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -29,12 +29,13 @@ public class CromulenceSolver {
 
     static final int NUM_LETTERS = 26;
 
-    private static final int SEARCH_LIMIT = 1000;
+    private static final int SEARCH_LIMIT = 2000;
     private static final int NUM_RESULTS = 50;
 
     private final DictionaryManager dictionaryManager;
     private final Cache<StringPair, double[]> nextLetterFreqsCache;
     private final Cache<String, double[]> singlePrefixFreqsCache;
+    private final Random random = new Random(0);
 
     public CromulenceSolver(DictionaryManager dictionaryManager) {
         this.dictionaryManager = dictionaryManager;
@@ -73,18 +74,15 @@ public class CromulenceSolver {
             .build());
         TreeMultiset<State> bestFinalStates = TreeMultiset.create(scoreComparator);
         while (!statesByLength.isEmpty()) {
-            double minScore = bestFinalStates.size() >= NUM_RESULTS
-                ? bestFinalStates.lastEntry().getElement().score
-                : Double.NEGATIVE_INFINITY;
-            statesByLength.remove(statesByLength.firstKey()).stream().sorted(scoreComparator).limit(SEARCH_LIMIT).forEach(state -> {
-                if (state.score < minScore)
-                    return;
-                for (State newState : state.termState.newStates(state, context))
-                    if (newState.termState != null)
-                        statesByLength.computeIfAbsent(newState.len, key -> new ArrayList<>()).add(newState);
-                    else
-                        bestFinalStates.add(newState);
-            });
+            List<State> currStates = statesByLength.remove(statesByLength.firstKey());
+            double scoreThreshold = Math.max(approxScoreThreshold(currStates), minScoreThreshold(bestFinalStates));
+            for (State state : currStates)
+                if (state.score >= scoreThreshold)
+                    for (State newState : state.termState.newStates(state, context))
+                        if (newState.termState != null)
+                            statesByLength.computeIfAbsent(newState.len, key -> new ArrayList<>()).add(newState);
+                        else
+                            bestFinalStates.add(newState);
             while (bestFinalStates.size() > NUM_RESULTS)
                 bestFinalStates.pollLastEntry();
         }
@@ -92,6 +90,22 @@ public class CromulenceSolver {
             .limit(NUM_RESULTS)
             .map(state -> new CromulenceSolverResult(state.words, state.score))
             .collect(Collectors.toList());
+    }
+
+    private double approxScoreThreshold(List<State> states) {
+        if (states.size() < SEARCH_LIMIT)
+            return Double.NEGATIVE_INFINITY;
+        double[] samples = new double[SEARCH_LIMIT];
+        for (int i = 0; i < SEARCH_LIMIT; i++)
+            samples[i] = states.get(random.nextInt(states.size())).score;
+        Arrays.sort(samples);
+        return samples[SEARCH_LIMIT - SEARCH_LIMIT * SEARCH_LIMIT / states.size()];
+    }
+
+    private double minScoreThreshold(TreeMultiset<State> bestFinalStates) {
+        if (bestFinalStates.size() < NUM_RESULTS)
+            return Double.NEGATIVE_INFINITY;
+        return bestFinalStates.lastEntry().getElement().score;
     }
 
     @Data
