@@ -311,7 +311,7 @@ public class SpreadsheetManager {
     }
 
     /**
-     * Runs a published Google script that adds an image to a sheet. See the code in snap-apps-script/WebApp.gs.
+     * Runs a published Google script that adds an image to a sheet. See the code in snap-server/WebApp.gs.
      */
     public void insertImage(BufferedImage image, int row, int col, int width, int height, int offsetX, int offsetY) {
         /*

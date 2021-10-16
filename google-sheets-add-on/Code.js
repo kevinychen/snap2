@@ -311,7 +311,7 @@ function CHARS(string) {
   if (string.map) {
     return string.map(CHARS);
   }
-  return string.split('');
+  return [string.split('')];
 }
 
 /**
