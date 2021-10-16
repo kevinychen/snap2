@@ -123,31 +123,6 @@ function setValues(range, values) {
   return SpreadsheetApp.getActiveSheet().getRange(range).setValues(values);
 }
 
-/**
- * Given a word bank of words and a range of used words, do the following:
- * (1) Highlight in gray all words in the word bank that are used (present in the range of used words)
- * (2) Highlight in red all words in the range of used words that aren't in the word bank.
- */
-function highlightUsed(wordBankRange, usedWordsRange) {
-  var sheet = SpreadsheetApp.getActiveSheet();
-  var rules = sheet.getConditionalFormatRules();
-  var wordBankAbsoluteRange = Utilities.formatString('INDIRECT("%s")', wordBankRange);
-  var usedWordsAbsoluteRange = Utilities.formatString('INDIRECT("%s")', usedWordsRange);
-  var wordBankStart = Utilities.formatString('INDEX(%s, 1, 1)', wordBankRange);
-  var usedWordsStart = Utilities.formatString('INDEX(%s, 1, 1)', usedWordsRange);
-  var wordBankRule = SpreadsheetApp.newConditionalFormatRule()
-    .withCriteria(SpreadsheetApp.BooleanCriteria.CUSTOM_FORMULA, [Utilities.formatString('=AND(COUNTIF(%s, %s) > 0, NOT(ISBLANK(%s)))', usedWordsAbsoluteRange, wordBankStart, wordBankStart)])
-    .setBackground('#D9D9D9')
-    .setRanges([sheet.getRange(wordBankRange)])
-    .build();
-  var usedWordsRules = SpreadsheetApp.newConditionalFormatRule()
-    .withCriteria(SpreadsheetApp.BooleanCriteria.CUSTOM_FORMULA, [Utilities.formatString('=AND(COUNTIF(%s, %s) = 0, NOT(ISBLANK(%s)))', wordBankAbsoluteRange, usedWordsStart, usedWordsStart)])
-    .setBackground('#F4CCCC')
-    .setRanges([sheet.getRange(usedWordsRange)])
-    .build();
-  sheet.setConditionalFormatRules(rules.concat(wordBankRule, usedWordsRules));
-}
-
 function getCustomFunctionMetadata() {
   var customFunctionMetadata = SpreadsheetApp.getActiveSpreadsheet().getDeveloperMetadata().filter(function(metadata) {
     return metadata.getKey() === CUSTOM_FUNCTION_METADATA_KEY;
@@ -169,44 +144,6 @@ function saveCustomFunction(customFunction) {
   } else {
     SpreadsheetApp.getActiveSpreadsheet().addDeveloperMetadata(CUSTOM_FUNCTION_METADATA_KEY, customFunction);
   }
-}
-
-/**
- * Rearranges the rows in "matchRange" such that the first value in each row matches the first value in the same row of the "referenceRange".
- * Values that do not match anything in the referenceRange are kept in the same order.
- */
-function autoMatch(referenceRangeA1, matchRangeA1) {
-  var sheet = SpreadsheetApp.getActiveSheet();
-  var matchMap = {};
-  var matchRange = sheet.getRange(matchRangeA1);
-  var oldMatchValues = matchRange.getValues();
-  for (var i = 0; i < matchRange.getNumRows(); i++) {
-    matchMap[oldMatchValues[i][0]] = i;
-  }
-  var referenceRange = sheet.getRange(referenceRangeA1);
-  var referenceValues = referenceRange.getValues();
-  var newMatchValues = [];
-  for (var i = 0; i < referenceRange.getNumRows(); i++) {
-    var newMatchRow = referenceRange.getRow() + i - matchRange.getRow();
-    if (newMatchRow >= 0 && newMatchRow < matchRange.getNumRows()) {
-      var oldMatchRow = matchMap[referenceValues[i][0]];
-      if (oldMatchRow !== undefined) {
-        newMatchValues[newMatchRow] = oldMatchValues[oldMatchRow];
-        oldMatchValues[oldMatchRow] = undefined;
-      }
-    }
-  }
-  var oldIndex = 0;
-  for (var newIndex = 0; newIndex < matchRange.getNumRows(); newIndex++) {
-    if (newMatchValues[newIndex] === undefined) {
-      while (oldMatchValues[oldIndex] === undefined) {
-        oldIndex++;
-      }
-      newMatchValues[newIndex] = oldMatchValues[oldIndex];
-      oldMatchValues[oldIndex] = undefined;
-    }
-  }
-  matchRange.setValues(newMatchValues);
 }
 
 /**

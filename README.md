@@ -36,18 +36,6 @@ Find words in a grid. Both straight words and boggle mode are supported.
 
 ![Word search](docs/wordsearch.gif)
 
-### Word bank
-
-Augment Google Sheets by automatically highlighting used words.
-
-![Word bank](docs/word-bank.gif)
-
-### Reorder a column to match another
-
-Ever have two separate blocks that need to be joined in Google Sheets? Snap makes it easy.
-
-![Reorder](docs/reorder.gif)
-
 Install add-on
 --------------
 
