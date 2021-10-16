@@ -58,9 +58,8 @@ Install add-on
 Development
 -----------
 
-Snap consists of four components, each corresponding to a top-level folder. Click on each folder to view a README with more details.
+Snap consists of three components, each corresponding to a top-level folder. Click on each folder to view a README with more details.
 - [google-sheets-add-on](google-sheets-add-on): the code for the Google Sheets add-on.
-- [snap-dashboard](snap-dashboard): a way to organize all your puzzles in a puzzle hunt in Google Sheets. Hooks in the Google Sheet are set up to automatically create sheets for each puzzle, send Slack alerts, etc.
 - [snap-python](snap-python): functions that can be quickly run in Python, e.g. `anagram('hnopty')`.
 - [snap-server](snap-server): the main Java Dropwizard server, used for all server-side logic and heavy-duty computations.
 

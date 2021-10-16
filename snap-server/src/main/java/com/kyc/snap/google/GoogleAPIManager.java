@@ -55,49 +55,6 @@ public class GoogleAPIManager {
         }
     }
 
-    /**
-     * Anyone with a link to the file is given the specified role (either "writer", "reader", or null).
-     */
-    public void grantLinkPermissions(String fileId, String role) {
-        try {
-            drive.permissions().update(fileId, "anyoneWithLink", new Permission().setRole(role)).execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public List<String> getParents(String fileId) {
-        try {
-            return drive.files().get(fileId).setFields("parents").execute().getParents();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void rename(String fileId, String name) {
-        try {
-            drive.files()
-                .update(fileId, new File().setName(name))
-                .execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public SpreadsheetManager createSheet(String name, String folderId) {
-        try {
-            Spreadsheet spreadsheet = sheets.spreadsheets().create(new Spreadsheet()).execute();
-            drive.files().update(spreadsheet.getSpreadsheetId(), new File().setName(name))
-                .setAddParents(folderId)
-                .setRemoveParents(Joiner.on(", ").join(getParents(spreadsheet.getSpreadsheetId())))
-                .setFields("id, parents")
-                .execute();
-            return getSheet(spreadsheet.getSpreadsheetId(), DEFAULT_SHEET_ID);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
         return new SpreadsheetManager(credential, serverScriptUrl, sheets.spreadsheets(), spreadsheetId, sheetId);
     }
