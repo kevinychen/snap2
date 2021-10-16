@@ -76,8 +76,8 @@ public interface DocumentService {
 
         private final Section section;
         private FindGridLinesMode findGridLinesMode = FindGridLinesMode.EXPLICIT;
-        private boolean interpolate = false;
-        private int approxGridSquareSize = 32;
+        private boolean interpolate = true;
+        private int approxGridSquareSize = -1;
 
         public enum FindGridLinesMode {
 

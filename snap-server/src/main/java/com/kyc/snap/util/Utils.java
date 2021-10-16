@@ -50,13 +50,13 @@ public class Utils {
             return Math.hypot(sin, cos) * Math.sqrt(x);
         };
 
-        double coarsePeriod = IntStream.range(1, maxMark)
-            .<Double>mapToObj(Double::valueOf)
+        double coarsePeriod = IntStream.range(1, maxMark / 4)
+            .mapToObj(Double::valueOf)
             .max(Comparator.comparing(x -> scoreFunction.apply(x)))
             .get();
 
         double finePeriod = IntStream.range(-maxMark / 2, maxMark / 2)
-            .<Double>mapToObj(x -> coarsePeriod + 4. * x / maxMark)
+            .mapToObj(x -> coarsePeriod + 4. * x / maxMark)
             .max(Comparator.comparing(x -> scoreFunction.apply(x)))
             .get();
 
@@ -65,7 +65,7 @@ public class Utils {
 
     /**
      * Returns a list of increasing integers with roughly the same difference between adjacent
-     * values and contain all the marks (other than outliers).
+     * values and contains all the marks (other than outliers).
      */
     public static TreeSet<Integer> findInterpolatedSequence(Collection<Integer> marks) {
         int maxMark = Collections.max(marks);
@@ -78,24 +78,30 @@ public class Utils {
             .toArray();
         double offset = errors[errors.length / 2];
 
-        List<Integer> goodClosestMarks = new ArrayList<>();
-        List<Integer> goodFixedMarks = new ArrayList<>();
-        for (double fixedMark = offset; fixedMark < maxMark + period; fixedMark += period) {
-            int closestMark = Integer.MAX_VALUE / 2;
-            for (int mark : marks)
-                if (Math.abs(mark - fixedMark) < Math.abs(closestMark - fixedMark))
-                    closestMark = mark;
-            if (Math.abs(closestMark - fixedMark) < period / 4)
-                goodClosestMarks.add(closestMark);
-            else
-                goodFixedMarks.add((int) fixedMark);
-        }
-
-        TreeSet<Integer> sequence = new TreeSet<>(goodClosestMarks);
-        for (int mark : goodFixedMarks)
-            if (mark > sequence.first() && mark < sequence.last())
-                sequence.add(mark);
-        return sequence;
+        TreeSet<Integer> bestSequence = new TreeSet<>();
+        double bestScore = 0;
+        for (double min = offset; min < maxMark; min += period)
+            for (double max = min + period; max < maxMark + period; max += period) {
+                TreeSet<Integer> sequence = new TreeSet<>();
+                double score = 0;
+                for (double fixedMark = min; fixedMark <= max; fixedMark += period) {
+                    int closestMark = Integer.MAX_VALUE / 2;
+                    for (int mark : marks)
+                        if (Math.abs(mark - fixedMark) < Math.abs(closestMark - fixedMark))
+                            closestMark = mark;
+                    if (Math.abs(closestMark - fixedMark) < period / 4) {
+                        sequence.add(closestMark);
+                        score++;
+                    } else
+                        sequence.add((int) fixedMark);
+                }
+                score /= Math.sqrt(max - min);
+                if (score > bestScore) {
+                    bestSequence = sequence;
+                    bestScore = score;
+                }
+            }
+        return bestSequence;
     }
 
     private Utils() {

@@ -123,7 +123,7 @@ public class DocumentResource implements DocumentService {
         BufferedImage image = getSectionImage(documentId, request.getSection()).getImage();
         GridLines gridLines;
         if (request.getFindGridLinesMode() == FindGridLinesMode.EXPLICIT)
-            gridLines = gridParser.findGridLines(image, request.getApproxGridSquareSize());
+            gridLines = gridParser.findGridLines(image);
         else if (request.getFindGridLinesMode() == FindGridLinesMode.IMPLICIT)
             gridLines = gridParser.findImplicitGridLines(image);
         else

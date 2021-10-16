@@ -39,8 +39,11 @@ public class GridParser {
 
     private final OpenCvManager openCv;
 
-    public GridLines findGridLines(BufferedImage image, int approxGridSquareSize) {
-        List<Line> cardinalLines = openCv.findLines(image, Math.PI / 2, approxGridSquareSize);
+    public GridLines findGridLines(BufferedImage image) {
+        List<Line> cardinalLines = openCv.findLines(
+            image,
+            Math.PI / 2,
+            (image.getWidth() + image.getHeight()) / 100);
 
         TreeSet<Integer> horizontalLines = new TreeSet<>();
         TreeSet<Integer> verticalLines = new TreeSet<>();
@@ -55,9 +58,11 @@ public class GridParser {
                 verticalLines.add((int) line.getX1());
         }
 
+        double horizontalPeriod = Utils.findApproxPeriod(horizontalLines);
+        double verticalPeriod = Utils.findApproxPeriod(verticalLines);
         return new GridLines(
-            Utils.deduplicateCloseMarks(horizontalLines, approxGridSquareSize / 4),
-            Utils.deduplicateCloseMarks(verticalLines, approxGridSquareSize / 4));
+            Utils.deduplicateCloseMarks(horizontalLines, (int) horizontalPeriod / 4),
+            Utils.deduplicateCloseMarks(verticalLines, (int) verticalPeriod / 4));
     }
 
     public GridLines getInterpolatedGridLines(GridLines lines) {
