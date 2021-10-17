@@ -1,8 +1,10 @@
 import classNames from "classnames";
 import React from "react";
 import { get, post, postJson } from "../fetch";
+import { AdvancedSettingsPopup } from "./advancedSettingsPopup";
 import { DocumentImage } from "./documentImage";
 import { Output } from "./output";
+import { ParseCrosswordPopup } from "./parseCrosswordPopup";
 import "./parser.css";
 
 export default class Parser extends React.Component {
@@ -16,6 +18,7 @@ export default class Parser extends React.Component {
             page: 0,
             imageDataUrl: undefined,
             mode: "SELECT_REGION",
+            popupMode: undefined,
             imageDimensions: { width: 0, height: 0 },
             rectangle: undefined,
             blobs: undefined,
@@ -24,6 +27,8 @@ export default class Parser extends React.Component {
             grid: undefined,
             crossword: undefined,
             crosswordClues: undefined,
+
+            findGridLinesMode: "EXPLICIT",
 
             loadingDocument: false,
             loadingGrid: false,
@@ -58,7 +63,7 @@ export default class Parser extends React.Component {
     }
 
     render() {
-        const { url, document, grid, loadingGrid, loadingClipboard } = this.state;
+        const { url, document, popupMode, grid, crossword, loadingGrid, loadingClipboard } = this.state;
         return <div className="parser">
             <div className="input">
                 <div className="block">
@@ -86,10 +91,13 @@ export default class Parser extends React.Component {
                     <div
                         className={classNames({ hidden: document === undefined }, "big button")}
                         onClick={() => {
-
+                            if (!this.state.loadingGrid) {
+                                this.setState({ loadingGrid: true });
+                                this.findCrossword(() => this.setState({ loadingGrid: false }));
+                            }
                         }}
                     >
-                        {"Parse crossword"}
+                        {loadingGrid ? <span className="loading" /> : "Parse crossword"}
                     </div>
                     <div
                         className={classNames({ hidden: document === undefined }, "big button")}
@@ -105,14 +113,17 @@ export default class Parser extends React.Component {
                     <div
                         className={classNames({ hidden: document === undefined }, "big button")}
                         onClick={() => {
-
+                            if (!this.state.loadingGrid) {
+                                this.setState({ loadingGrid: true });
+                                this.findBlobs(() => this.setState({ loadingGrid: false }));
+                            }
                         }}
                     >
-                        {"Parse blobs"}
+                        {loadingGrid ? <span className="loading" /> : "Parse blobs"}
                     </div>
                 </div>
                 <div id="html-grid" className="block">
-                    <Output {...this.state} />
+                    <Output grid={grid} crossword={crossword} />
                 </div>
                 <div className="block">
                     <div
@@ -123,6 +134,17 @@ export default class Parser extends React.Component {
                     </div>
                 </div>
             </div>
+            <AdvancedSettingsPopup
+                {...this.state}
+                isVisible={popupMode === "ADVANCED_SETTINGS"}
+                setAdvancedSetting={(key, value) => this.setState({ [key]: value })}
+                exit={() => this.setState({ popupMode: undefined })}
+            />
+            <ParseCrosswordPopup
+                isVisible={popupMode === "PARSE_CLUES"}
+                setCrosswordClues={this.setCrosswordClues}
+                exit={() => this.setState({ popupMode: undefined })}
+            />
         </div>;
     }
 
@@ -137,6 +159,12 @@ export default class Parser extends React.Component {
                 onClick={() => this.setRectangle({ x: 0, y: 0, width: imageDimensions.width, height: imageDimensions.height })}
             >
                 {"Reset"}
+            </button>
+            <button
+                className="inline"
+                onClick={() => this.setState({ popupMode: "ADVANCED_SETTINGS" })}
+            >
+                {"Advanced..."}
             </button>
             {this.maybeRenderNav()}
             <div className="toolbar_options">
@@ -246,8 +274,12 @@ export default class Parser extends React.Component {
     }
 
     setBlobs = blobs => {
+        const { rectangle } = this.state;
         if (blobs) {
-            this.setGridLines(undefined);
+            this.setGridLines({
+                horizontalLines: [0, rectangle.height],
+                verticalLines: [0, rectangle.width],
+            });
         }
         this.setState({ blobs });
     }
@@ -284,6 +316,7 @@ export default class Parser extends React.Component {
             body: {
                 section: { page, rectangle },
                 findGridLinesMode: 'EXPLICIT',
+                interpolate: true,
             }
         }, gridLines => {
             this.setGridLines(gridLines);
@@ -308,6 +341,39 @@ export default class Parser extends React.Component {
                 this.setGrid(gridPosition, grid);
                 callback(gridPosition, grid);
             });
+        });
+    }
+
+    findCrossword = callback => {
+        const { crossword } = this.state;
+        if (crossword !== undefined) {
+            return;
+        }
+        this.findGrid((_, grid) => {
+            postJson({
+                path: `/words/findCrossword`,
+                body: { grid },
+            }, response => {
+                this.setCrossword(response.crossword);
+                this.setState({ navBarMode: "PARSE", popupMode: "PARSE_CLUES" });
+                callback();
+            });
+        });
+    }
+
+    findBlobs = callback => {
+        const { document, page, rectangle, blobs } = this.state;
+        if (blobs !== undefined) {
+            return;
+        }
+        postJson({
+            path: `/documents/${document.id}/blobs`,
+            body: {
+                section: { page, rectangle },
+            },
+        }, blobs => {
+            this.setBlobs(blobs);
+            callback();
         });
     }
 

@@ -16,7 +16,7 @@ export class DocumentImage extends React.Component {
     }
 
     componentDidUpdate() {
-        const { imageDimensions, rectangle, blobs, gridLines, gridPosition, crossword } = this.props;
+        const { rectangle, blobs, gridLines } = this.props;
         const { editGridLinesHoveredOver } = this.state;
 
         const ctx = this.canvas.getContext('2d');
@@ -74,20 +74,6 @@ export class DocumentImage extends React.Component {
                     ctx.lineTo(rectangle.x + value, rectangle.y + rectangle.height);
                     ctx.stroke();
                 }
-            }
-        }
-
-        if (crossword) {
-            ctx.font = "18px Helvetica";
-            ctx.strokeStyle = 'blue';
-            const widthRatio = this.canvas.width / imageDimensions.width;
-            const heightRatio = this.canvas.height / imageDimensions.height;
-            for (const entry of crossword.entries) {
-                const row = gridPosition.rows[entry.startRow];
-                const col = gridPosition.cols[entry.startCol];
-                ctx.strokeText(entry.clueNumber,
-                    widthRatio * (col.startX + col.width / 3),
-                    heightRatio * (row.startY + row.height * 2 / 3));
             }
         }
     }

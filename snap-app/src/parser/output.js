@@ -1,10 +1,18 @@
 import "./output.css";
 
-export function Output({ grid }) {
+export function Output({ grid, crossword }) {
     if (grid === undefined) {
         return null;
     }
     const { squares } = grid;
+
+    const crosswordNums = {};
+    if (crossword) {
+        for (const { startRow, startCol, clueNumber } of crossword.entries) {
+            crosswordNums[`${startRow}-${startCol}`] = clueNumber;
+        }
+    }
+
     return <table>
         <tbody>
             {squares.map((row, i) => <tr key={i}>
@@ -17,7 +25,7 @@ export function Output({ grid }) {
                             borderBottom: `${borderToHtml(bottomBorder)}px solid black`,
                         }}
                     >
-                        {text}
+                        {crosswordNums[`${i}-${j}`] || text}
                     </td>;
                 })}
             </tr>)}
