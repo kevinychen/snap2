@@ -1,5 +1,9 @@
 package com.kyc.snap.server;
 
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import com.kyc.snap.cromulence.CromulenceSolver;
@@ -15,6 +19,7 @@ import com.kyc.snap.words.WordsearchSolver;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
 import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.servlets.assets.AssetServlet;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import javax.ws.rs.container.ContainerResponseFilter;
@@ -27,7 +32,7 @@ public class SnapServer extends Application<Configuration> {
 
     @Override
     public void initialize(Bootstrap<Configuration> bootstrap) {
-        bootstrap.addBundle(new AssetsBundle("/assets", "/", "index.html"));
+        bootstrap.addBundle(new SinglePageAppAssetsBundle("/assets", "/", "index.html"));
     }
 
     @Override
@@ -55,5 +60,34 @@ public class SnapServer extends Application<Configuration> {
         environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver, dictionary, wikinet));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser));
+    }
+
+    static class SinglePageAppAssetsBundle extends AssetsBundle {
+
+        SinglePageAppAssetsBundle(String resourcePath, String uriPath, String indexFile) {
+            super(resourcePath, uriPath, indexFile);
+        }
+
+        @Override
+        protected AssetServlet createServlet() {
+            return new SinglePageAppAssetsServlet(getResourcePath(), getUriPath(), getIndexFile(), StandardCharsets.UTF_8);
+        }
+    }
+
+    static class SinglePageAppAssetsServlet extends AssetServlet {
+
+        SinglePageAppAssetsServlet(String resourcePath, String uriPath, String indexFile, Charset defaultCharset) {
+            super(resourcePath, uriPath, indexFile, defaultCharset);
+        }
+
+        @Override
+        protected URL getResourceUrl(String absoluteRequestedResourcePath) {
+            // Redirect any frontend managed routes to root
+            if (absoluteRequestedResourcePath.matches("assets/[^\\.]+(\\.html)?")) {
+                return super.getResourceUrl("assets/index.html");
+            }
+            else
+                return super.getResourceUrl(absoluteRequestedResourcePath);
+        }
     }
 }

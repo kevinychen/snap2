@@ -74,9 +74,6 @@ function App() {
                 <Header mode="findwords" />
                 <FindWords />
             </Route>
-            <Route path="/">
-                <Index />
-            </Route>
             <Route path="/index.html">
                 <Redirect to="/" />
             </Route>
@@ -88,6 +85,9 @@ function App() {
             </Route>
             <Route path="/findwords.html">
                 <Redirect to="/findwords" />
+            </Route>
+            <Route path="/">
+                <Index />
             </Route>
         </Switch>
     </Router>;

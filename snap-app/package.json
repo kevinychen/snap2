@@ -11,7 +11,7 @@
     "react-scripts": "4.0.3"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "REACT_APP_LOCAL=true react-scripts start",
     "build": "BUILD_PATH='../snap-server/src/main/resources/assets' react-scripts build"
   },
   "eslintConfig": {

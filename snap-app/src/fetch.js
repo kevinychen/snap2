@@ -1,5 +1,7 @@
+const SERVER = process.env.REACT_APP_LOCAL ? "http://localhost:8080/api" : "/api";
+
 function fetchBackend(path, args, onSuccess, onError) {
-    fetch('http://localhost:8080/api' + path, args).then(response => {
+    fetch(SERVER + path, args).then(response => {
         if (response.ok) {
             onSuccess && onSuccess(response);
         } else {
