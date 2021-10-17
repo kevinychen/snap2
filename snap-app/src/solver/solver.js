@@ -33,7 +33,7 @@ export default class Solver extends React.Component {
                 <ul>
                     <li>
                         <span className="inline">
-                            A string with some unknown letters: (<span class="parsed">.H.S.nEH..so.E..KNeWN.E.tE.S</span>)
+                            A string with some unknown letters: (<span className="parsed">.H.S.nEH..so.E..KNeWN.E.tE.S</span>)
                         </span>
                         <input
                             type="button"
@@ -47,7 +47,7 @@ export default class Solver extends React.Component {
                     </li>
                     <li>
                         <span className="inline">
-                            A collection of letters to anagram: (<span class="parsed">AADDDEGILNNOORRRRUU</span>)
+                            A collection of letters to anagram: (<span className="parsed">AADDDEGILNNOORRRRUU</span>)
                         </span>
                         <input
                             type="button"
@@ -61,7 +61,7 @@ export default class Solver extends React.Component {
                     </li>
                     <li>
                         <span className="inline">
-                            A space/comma separated list of character sequences to rearrange (<span class="parsed">CHA DEB ERO GRA HES ITY LFO MPI ONC REV TIT TOF TOT UDE WEA WIL E</span>)
+                            A space/comma separated list of character sequences to rearrange (<span className="parsed">CHA DEB ERO GRA HES ITY LFO MPI ONC REV TIT TOF TOT UDE WEA WIL E</span>)
                         </span>
                         <input
                             type="button"
@@ -77,13 +77,13 @@ export default class Solver extends React.Component {
                 Capital letters denote letters you're sure about, lowercase letters denote about 80% confidence, and periods ('.') are wildcards.
                 <br />
                 You can also use{" "}
-                <span class="parsed">()</span> for groups,{" "}
-                <span class="parsed">[]</span> for one of several possible letters,{" "}
-                <span class="parsed">{"<>"}</span> for (nested) anagrams,{" "}
-                <span class="parsed">""</span> to forbid spaces,{" "}
-                and <span class="parsed">{"{}, ?, +"}</span> as in regular expressions.
+                <span className="parsed">()</span> for groups,{" "}
+                <span className="parsed">[]</span> for one of several possible letters,{" "}
+                <span className="parsed">{"<>"}</span> for (nested) anagrams,{" "}
+                <span className="parsed">""</span> to forbid spaces,{" "}
+                and <span className="parsed">{"{}, ?, +"}</span> as in regular expressions.
             </div>
-            <div class="block">
+            <div className="block">
                 <div>
                     {"Letters/parts: "}
                     <input
@@ -111,7 +111,7 @@ export default class Solver extends React.Component {
                 <input type="button" value="Solve!" onClick={this.solve} />
             </div>
             {loading ? <span className="loading" /> : undefined}
-            <div class="block">
+            <div className="block">
                 <table>
                     <tbody>
                         {results.length > 0 ? <tr>

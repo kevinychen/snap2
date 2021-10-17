@@ -8,6 +8,7 @@ import {
     Route,
     Link
 } from 'react-router-dom';
+import FindWords from './findwords';
 import Parser from './parser';
 import Solver from './solver';
 import Wordsearch from './wordsearch';
@@ -34,6 +35,11 @@ function Index() {
             <br />
             Solver that uses knowledge of English n-grams and word frequencies to complete and anagram long phrases and sentences (can be used for single words as well)
         </div>
+        <div className="block">
+            <Link to="/findwords"><span className="link">FIND WORDS</span></Link>
+            <br />
+            Find words that satisfy one or more various properties
+        </div>
     </>;
 }
 
@@ -43,6 +49,7 @@ function Header({ mode }) {
         <Link to="/parser"><span className={classNames("inline link", {selected: mode === "parser"})}>GRID PARSER</span></Link>
         <Link to="/wordsearch"><span className={classNames("inline link", {selected: mode === "wordsearch"})}>WORD SEARCH</span></Link>
         <Link to="/solver"><span className={classNames("inline link", {selected: mode === "solver"})}>HEAVY-DUTY ANAGRAM SOLVER</span></Link>
+        <Link to="/findwords"><span className={classNames("inline link", {selected: mode === "findwords"})}>FIND WORDS</span></Link>
     </div>;
 }
 
@@ -61,6 +68,10 @@ function App() {
                 <Header mode="solver" />
                 <Solver />
             </Route>
+            <Route path="/findwords">
+                <Header mode="findwords" />
+                <FindWords />
+            </Route>
             <Route path="/">
                 <Index />
             </Route>
@@ -72,6 +83,9 @@ function App() {
             </Route>
             <Route path="/solver.html">
                 <Redirect to="/solver" />
+            </Route>
+            <Route path="/findwords.html">
+                <Redirect to="/findwords" />
             </Route>
         </Switch>
     </Router>;
