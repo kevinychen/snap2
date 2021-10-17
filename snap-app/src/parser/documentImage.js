@@ -16,7 +16,7 @@ export class DocumentImage extends React.Component {
     }
 
     componentDidUpdate() {
-        const { imageDimensions, rectangle, blobs, gridLines, gridPosition, grid, crossword } = this.props;
+        const { imageDimensions, rectangle, blobs, gridLines, gridPosition, crossword } = this.props;
         const { editGridLinesHoveredOver } = this.state;
 
         const ctx = this.canvas.getContext('2d');
@@ -73,58 +73,6 @@ export class DocumentImage extends React.Component {
                     ctx.moveTo(rectangle.x + value, rectangle.y);
                     ctx.lineTo(rectangle.x + value, rectangle.y + rectangle.height);
                     ctx.stroke();
-                }
-            }
-        }
-
-        if (grid) {
-            for (let i = 0; i < grid.numRows; i++) {
-                for (let j = 0; j < grid.numCols; j++) {
-                    const row = gridPosition.rows[i];
-                    const col = gridPosition.cols[j];
-                    const square = grid.squares[i][j];
-
-                    ctx.beginPath();
-                    ctx.rect(
-                        rectangle.x + col.startX + col.width / 3,
-                        rectangle.y + row.startY + row.height / 3,
-                        col.width / 3,
-                        row.height / 3);
-                    ctx.fillStyle = this.rgbToStyle(square.rgb);
-                    ctx.fill();
-                    ctx.strokeStyle = 'red';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-
-                    ctx.strokeStyle = 'blue';
-                    ctx.strokeText(square.text,
-                        rectangle.x + col.startX + col.width / 3,
-                        rectangle.y + row.startY + 2 * row.height / 3);
-
-                    ctx.fillStyle = this.rgbToStyle(square.topBorder.rgb);
-                    ctx.fillRect(
-                        rectangle.x + col.startX + col.width / 3,
-                        rectangle.y + row.startY + row.height / 3 - 1,
-                        col.width / 3,
-                        -square.topBorder.width);
-                    ctx.fillStyle = this.rgbToStyle(square.rightBorder.rgb);
-                    ctx.fillRect(
-                        rectangle.x + col.startX + col.width * 2 / 3 + 1,
-                        rectangle.y + row.startY + row.height / 3,
-                        square.rightBorder.width,
-                        row.height / 3);
-                    ctx.fillStyle = this.rgbToStyle(square.bottomBorder.rgb);
-                    ctx.fillRect(
-                        rectangle.x + col.startX + col.width / 3,
-                        rectangle.y + row.startY + row.height * 2 / 3 + 1,
-                        col.width / 3,
-                        square.bottomBorder.width);
-                    ctx.fillStyle = this.rgbToStyle(square.leftBorder.rgb);
-                    ctx.fillRect(
-                        rectangle.x + col.startX + col.width / 3 - 1,
-                        rectangle.y + row.startY + row.height / 3,
-                        -square.leftBorder.width,
-                        row.height / 3);
                 }
             }
         }

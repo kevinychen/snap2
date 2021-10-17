@@ -2,6 +2,7 @@ import classNames from "classnames";
 import React from "react";
 import { get, post, postJson } from "../fetch";
 import { DocumentImage } from "./documentImage";
+import { Output } from "./output";
 import "./parser.css";
 
 export default class Parser extends React.Component {
@@ -24,7 +25,7 @@ export default class Parser extends React.Component {
             grid: undefined,
             crossword: undefined,
             crosswordClues: undefined,
-            popupMode: undefined,
+            loading: false,
         };
     }
 
@@ -55,7 +56,7 @@ export default class Parser extends React.Component {
     }
 
     render() {
-        const { url, document } = this.state;
+        const { url, loading, document } = this.state;
         return <div className="parser">
             <div className="input">
                 <div className="block">
@@ -79,30 +80,36 @@ export default class Parser extends React.Component {
                 {this.maybeRenderDocument()}
             </div>
             <div className="output">
-                <div
-                    className={classNames({ hidden: document === undefined }, "big button")}
-                    onClick={() => {
+                <div className="block">
+                    <div
+                        className={classNames({ hidden: document === undefined }, "big button")}
+                        onClick={() => {
 
-                    }}
-                >
-                    {"Parse crossword"}
-                </div>
-                <div
-                    className={classNames({ hidden: document === undefined }, "big button")}
-                    onClick={() => {
+                        }}
+                    >
+                        {"Parse crossword"}
+                    </div>
+                    <div
+                        className={classNames({ hidden: document === undefined }, "big button")}
+                        onClick={() => {
+                            if (!this.state.loading) {
+                                this.setState({ loading: true });
+                                this.findGrid(() => this.setState({ loading: false }));
+                            }
+                        }}
+                    >
+                        {loading ? <span className="loading" /> : "Parse grid"}
+                    </div>
+                    <div
+                        className={classNames({ hidden: document === undefined }, "big button")}
+                        onClick={() => {
 
-                    }}
-                >
-                    {"Parse grid"}
+                        }}
+                    >
+                        {"Parse blobs"}
+                    </div>
                 </div>
-                <div
-                    className={classNames({ hidden: document === undefined }, "big button")}
-                    onClick={() => {
-
-                    }}
-                >
-                    {"Parse blobs"}
-                </div>
+                <Output {...this.state} />
             </div>
         </div>;
     }
@@ -252,5 +259,43 @@ export default class Parser extends React.Component {
 
     setCrosswordClues = crosswordClues => {
         this.setState({ crosswordClues });
+    }
+
+    findGridLines = callback => {
+        const { document, page, rectangle, gridLines } = this.state;
+        if (gridLines.horizontalLines.length > 2 || gridLines.verticalLines.length > 2) {
+            callback();
+            return;
+        }
+        postJson({
+            path: `/documents/${document.id}/lines`,
+            body: {
+                section: { page, rectangle },
+                findGridLinesMode: 'EXPLICIT',
+            }
+        }, gridLines => {
+            this.setGridLines(gridLines);
+            callback(gridLines);
+        });
+    }
+
+    findGrid = callback => {
+        const { document, page, rectangle, grid } = this.state;
+        if (grid !== undefined) {
+            callback();
+            return;
+        }
+        this.findGridLines(gridLines => {
+            postJson({
+                path: `/documents/${document.id}/grid`,
+                body: {
+                    section: { page, rectangle },
+                    gridLines,
+                }
+            }, ({ gridPosition, grid }) => {
+                this.setGrid(gridPosition, grid);
+                callback(gridPosition, grid);
+            });
+        });
     }
 }
