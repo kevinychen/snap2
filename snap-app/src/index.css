@@ -1,0 +1,29 @@
+body {
+    padding: 10px;
+}
+
+img[src="./wrench.png"] {
+    width: 48px;
+    height: 48px;
+}
+
+.title {
+    font-size: 40px;
+    font-weight: 600;
+    margin-bottom: 30px;
+}
+
+.hsection {
+    margin-right: 5px;
+}
+
+.vsection {
+    margin-bottom: 20px;
+}
+
+.link {
+    color: #000;
+    background-color: #f1f1f1;
+    font-size: 18px;
+    border-radius: 10%;
+}
