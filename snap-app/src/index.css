@@ -29,6 +29,10 @@ img[src="./wrench.png"] {
     border-radius: 10%;
 }
 
+.link.selected {
+    background-color: #cccccc;
+}
+
 .loading {
     border: 3px solid #f3f3f3;
     animation: spin 1s linear infinite;

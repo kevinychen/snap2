@@ -1,9 +1,9 @@
-table {
+.parser-output table {
     border: 1px solid black;
     border-spacing: 0;
 }
 
-td {
+.parser-output td {
     width: 20px;
     height: 20px;
 }

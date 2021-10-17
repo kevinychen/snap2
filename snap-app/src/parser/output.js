@@ -13,7 +13,7 @@ export function Output({ grid, crossword }) {
         }
     }
 
-    return <table>
+    return <table className='parser-output'>
         <tbody>
             {squares.map((row, i) => <tr key={i}>
                 {row.map(({ rgb, text, rightBorder, bottomBorder }, j) => {
