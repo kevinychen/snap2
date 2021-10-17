@@ -53,16 +53,9 @@ public interface DocumentService {
     Document createDocumentFromUrl(CreateDocumentFromUrlRequest request) throws Exception;
 
     @Data
-    public static class CreateDocumentFromUrlRequest {
+    class CreateDocumentFromUrlRequest {
 
         private final String url;
-    }
-
-    @Data
-    public static class CreateSheetResponse {
-
-        private final String spreadsheetId;
-        private final int sheetId;
     }
 
     @POST
@@ -72,11 +65,13 @@ public interface DocumentService {
     GridLines findGridLines(@PathParam("documentId") String documentId, FindGridLinesRequest request);
 
     @Data
-    public static class FindGridLinesRequest {
+    class FindGridLinesRequest {
 
         private final Section section;
         private FindGridLinesMode findGridLinesMode = FindGridLinesMode.EXPLICIT;
         private boolean interpolate = true;
+
+        // unused
         private int approxGridSquareSize = -1;
 
         public enum FindGridLinesMode {
@@ -93,7 +88,7 @@ public interface DocumentService {
     List<ImageBlob> findBlobs(@PathParam("documentId") String documentId, FindBlobsRequest request);
 
     @Data
-    public static class FindBlobsRequest {
+    class FindBlobsRequest {
 
         private final Section section;
         private int minBlobSize = 6;
@@ -107,14 +102,16 @@ public interface DocumentService {
     FindGridResponse findGrid(@PathParam("documentId") String documentId, FindGridRequest request);
 
     @Data
-    public static class FindGridRequest {
+    class FindGridRequest {
 
         private final Section section;
         private final GridLines gridLines;
-        private boolean findColors = false;
-        private boolean findBorders = false;
+        private OcrOptions ocrOptions = null;
+
+        // unused
+        private boolean findColors = true;
+        private boolean findBorders = true;
         private FindTextMode findTextMode = FindTextMode.NONE;
-        private OcrOptions ocrOptions = new OcrOptions();
 
         public enum FindTextMode {
 
@@ -125,7 +122,7 @@ public interface DocumentService {
     }
 
     @Data
-    public static class FindGridResponse {
+    class FindGridResponse {
 
         private final GridPosition gridPosition;
         private final Grid grid;
@@ -139,7 +136,7 @@ public interface DocumentService {
             @PathParam("sheetId") int sheetId, ExportSheetRequest request);
 
     @Data
-    public static class ExportSheetRequest {
+    class ExportSheetRequest {
 
         private Marker marker = null;
 
@@ -152,7 +149,7 @@ public interface DocumentService {
     }
 
     @Data
-    public static class Marker {
+    class Marker {
 
         private final int row;
         private final int col;
@@ -166,7 +163,7 @@ public interface DocumentService {
             @PathParam("slideId") String slideId, ExportSlideRequest request);
 
     @Data
-    public static class ExportSlideRequest {
+    class ExportSlideRequest {
 
         private final Section section;
         private List<ImageBlob> blobs;
