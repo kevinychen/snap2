@@ -13,10 +13,10 @@ import './index.css';
 function Index() {
     return <>
         <div className="title">
-            <Link to="/" className="hsection"><img src="./wrench.png" alt="Home" /></Link>
+            <Link to="/" className="inline"><img src="./wrench.png" alt="Home" /></Link>
             util.in
         </div>
-        <div className="vsection">
+        <div className="block">
             <Link to="/parser"><span className="link">GRID PARSER</span></Link>
             <br />
             Parse grids, text, and crosswords in PDFs and images to Google Sheets
@@ -25,9 +25,9 @@ function Index() {
 }
 
 function Header() {
-    return <div class="vsection">
-        <Link to="/" className="hsection"><img src="./wrench.png" alt="Home" /></Link>
-        <Link to="/parser"><span className="hsection link">GRID PARSER</span></Link>
+    return <div className="block">
+        <Link to="/" className="inline"><img src="./wrench.png" alt="Home" /></Link>
+        <Link to="/parser"><span className="inline link">GRID PARSER</span></Link>
     </div>;
 }
 

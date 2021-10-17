@@ -13,11 +13,12 @@ img[src="./wrench.png"] {
     margin-bottom: 30px;
 }
 
-.hsection {
+.inline {
     margin-right: 5px;
+    display: inline;
 }
 
-.vsection {
+.block {
     margin-bottom: 20px;
 }
 
@@ -26,4 +27,14 @@ img[src="./wrench.png"] {
     background-color: #f1f1f1;
     font-size: 18px;
     border-radius: 10%;
+}
+
+.loading {
+    border: 3px solid #f3f3f3;
+    animation: spin 1s linear infinite;
+    border-top: 3px solid #555;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
 }
