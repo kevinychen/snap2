@@ -11,7 +11,6 @@ export default class Parser extends React.Component {
         super(props);
         this.state = {
             url: '',
-            loadingDocument: false,
             document: undefined,
 
             page: 0,
@@ -25,7 +24,10 @@ export default class Parser extends React.Component {
             grid: undefined,
             crossword: undefined,
             crosswordClues: undefined,
-            loading: false,
+
+            loadingDocument: false,
+            loadingGrid: false,
+            loadingClipboard: false,
         };
     }
 
@@ -56,7 +58,7 @@ export default class Parser extends React.Component {
     }
 
     render() {
-        const { url, loading, document } = this.state;
+        const { url, document, grid, loadingGrid, loadingClipboard } = this.state;
         return <div className="parser">
             <div className="input">
                 <div className="block">
@@ -92,13 +94,13 @@ export default class Parser extends React.Component {
                     <div
                         className={classNames({ hidden: document === undefined }, "big button")}
                         onClick={() => {
-                            if (!this.state.loading) {
-                                this.setState({ loading: true });
-                                this.findGrid(() => this.setState({ loading: false }));
+                            if (!this.state.loadingGrid) {
+                                this.setState({ loadingGrid: true });
+                                this.findGrid(() => this.setState({ loadingGrid: false }));
                             }
                         }}
                     >
-                        {loading ? <span className="loading" /> : "Parse grid"}
+                        {loadingGrid ? <span className="loading" /> : "Parse grid"}
                     </div>
                     <div
                         className={classNames({ hidden: document === undefined }, "big button")}
@@ -109,7 +111,17 @@ export default class Parser extends React.Component {
                         {"Parse blobs"}
                     </div>
                 </div>
-                <Output {...this.state} />
+                <div id="html-grid" className="block">
+                    <Output {...this.state} />
+                </div>
+                <div className="block">
+                    <div
+                        className={classNames({ hidden: grid === undefined }, "big button")}
+                        onClick={this.copyGridToClipboard}
+                    >
+                        {loadingClipboard ? "Copied!" : "Copy to clipboard"}
+                    </div>
+                </div>
             </div>
         </div>;
     }
@@ -297,5 +309,16 @@ export default class Parser extends React.Component {
                 callback(gridPosition, grid);
             });
         });
+    }
+
+    copyGridToClipboard = () => {
+        if (window.getSelection()) window.getSelection().removeAllRanges();
+        const range = document.createRange();
+        range.selectNode(document.getElementById('html-grid'));
+        if (window.getSelection()) window.getSelection().addRange(range);
+        document.execCommand("copy");
+        if (window.getSelection()) window.getSelection().removeAllRanges();
+        this.setState({ loadingClipboard: true });
+        setTimeout(() => this.setState({ loadingClipboard: false }), 3000);
     }
 }

@@ -1,23 +1,20 @@
+import "./output.css";
+
 export function Output({ grid }) {
     if (grid === undefined) {
         return null;
     }
     const { squares } = grid;
-    return <table style={{ border: "1px solid black", borderSpacing: 0 }}>
+    return <table>
         <tbody>
             {squares.map((row, i) => <tr key={i}>
-                {row.map(({ rgb, text, topBorder, rightBorder, bottomBorder, leftBorder }, j) => {
+                {row.map(({ rgb, text, rightBorder, bottomBorder }, j) => {
                     return <td
                         key={j}
                         style={{
-                            width: 20,
-                            height: 20,
                             backgroundColor: '#' + rgb.toString(16).padStart(6, '0'),
-                            borderColor: 'black',
-                            borderTop: `${borderToHtml(topBorder)}px solid black`,
                             borderRight: `${borderToHtml(rightBorder)}px solid black`,
                             borderBottom: `${borderToHtml(bottomBorder)}px solid black`,
-                            borderLeft: `${borderToHtml(leftBorder)}px solid black`,
                         }}
                     >
                         {text}
