@@ -173,11 +173,11 @@ export class DocumentImage extends React.Component {
     }
 
     getCursor() {
-        const { navBarMode, mode } = this.props;
+        const { mode } = this.props;
         const { editGridLinesDirection, editGridLinesHoveredOver } = this.state;
-        if (navBarMode === "SELECT" && mode === "RECTANGLE") {
+        if (mode === "SELECT_REGION") {
             return "crosshair";
-        } else if (navBarMode === "EDIT" && mode === "GRID_LINES") {
+        } else if (mode === "EDIT_GRID_LINES") {
             if (editGridLinesHoveredOver) {
                 return "no-drop";
             }
@@ -200,16 +200,16 @@ export class DocumentImage extends React.Component {
     }
 
     mouseDown = e => {
-        const { navBarMode, mode } = this.props;
+        const { mode } = this.props;
         const { editGridLinesDirection } = this.state;
         this.updateMouseWhileClicked(e);
-        if (navBarMode === "EDIT" && mode === "GRID_LINES") {
+        if (mode === "EDIT_GRID_LINES") {
             if (e.button === 2 || e.ctrlKey || e.altKey || e.metaKey) {
                 this.setState({ editGridLinesDirection: editGridLinesDirection === "ROW" ? "COL" : "ROW" });
             } else {
                 this.updateGridLine(e);
             }
-        } else if (navBarMode === "EDIT" && mode === "CROSSWORD") {
+        } else if (mode === "EDIT_GRID_CROSSWORD") {
             this.updateCrossword(e);
         }
     };
@@ -231,14 +231,14 @@ export class DocumentImage extends React.Component {
         if (!this.canvas) {
             return;
         }
-        const { navBarMode, mode, setRectangle } = this.props;
+        const { mode, setRectangle } = this.props;
         const xRatio = this.canvas.scrollWidth / this.canvas.width;
         const yRatio = this.canvas.scrollHeight / this.canvas.height;
         this.mouseEndLoc = { x: e.offsetX / xRatio, y: e.offsetY / yRatio };
         if (this.mouseDownLoc === undefined) {
             this.mouseDownLoc = this.mouseEndLoc;
         }
-        if (navBarMode === "SELECT" && mode === "RECTANGLE") {
+        if (mode === "SELECT_REGION") {
             setRectangle({
                 x: Math.min(this.mouseDownLoc.x, this.mouseEndLoc.x),
                 y: Math.min(this.mouseDownLoc.y, this.mouseEndLoc.y),
@@ -250,10 +250,10 @@ export class DocumentImage extends React.Component {
     };
 
     updateMouse = e => {
-        const { navBarMode, mode } = this.props;
-        if (navBarMode === "EDIT" && mode === "GRID_LINES") {
+        const { mode } = this.props;
+        if (mode === "EDIT_GRID_LINES") {
             this.setState({ editGridLinesHoveredOver: this.findHoveredOverGridLine(e) });
-        } else if (navBarMode === "EDIT" && mode === "CROSSWORD") {
+        } else if (mode === "EDIT_GRID_CROSSWORD") {
             this.setState({
                 editCrosswordHoveredOverGridRow: this.findHoveredOverGridRow(e),
                 editCrosswordHoveredOverGridCol: this.findHoveredOverGridCol(e),
