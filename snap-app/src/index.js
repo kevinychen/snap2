@@ -1,6 +1,7 @@
 import classNames from "classnames";
 import React from 'react';
 import ReactDOM from 'react-dom';
+import GithubCorner from 'react-github-corner';
 import {
     BrowserRouter as Router,
     Redirect,
@@ -55,6 +56,7 @@ function Header({ mode }) {
 
 function App() {
     return <Router>
+        <GithubCorner href="https://github.com/kevinychen/snap2" />
         <Switch>
             <Route path="/parser">
                 <Header mode="parser" />
