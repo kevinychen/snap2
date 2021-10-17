@@ -1,31 +1,7 @@
-.input, .output{
-    max-width: 49%;
-}
-
-.selected {
-    font-weight: 600;
-}
-
-.clickable {
-    border: 1px solid black;
-    border-radius: 2px;
-    padding: 2px;
-    cursor: pointer;
-}
-
-.loading {
-    border: 3px solid #f3f3f3;
-    animation: spin 1s linear infinite;
-    border-top: 3px solid #555;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: inline-block;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.input, .output {
+    width: calc(50% - 50px);
+    float: left;
+    margin-right: 20px;
 }
 
 .toolbar_options {
@@ -33,28 +9,56 @@
     margin-right: 20px;
 }
 
-.export-button {
-    float: right;
-    margin-right: 20px;
+.radio {
+    background-color: lightgray;
+    margin-right: 0px;
+    padding: 4px;
 }
 
-.image-container {
-    position: relative;
-    width: 97%;
-    user-select: none;
-    -webkit-user-select: none;
+.radio.selected {
+    background-color: peachpuff;
+    font-weight: 600;
 }
 
-.image {
-    max-height: 100%;
-    width: 100%;
-    border: 1px black solid;
+.radio:not(.selected) {
+    cursor: pointer;
 }
 
-.overlay-canvas {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: calc(100% - 5px);
+.radio:not(.selected):hover {
+    background-color: burlywood;
+}
+
+.radio:first-child {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.radio:last-child {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.button {
+    display: inline-block;
+    text-align: center;
+    background-color: lightgray;
+    border: 1px solid black;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: burlywood;
+    transform: scale(1.05);
+}
+
+.big {
+    font-size: 24px;
+    padding: 15px;
+    margin: 10px;
+    width: 180px;
+    border-radius: 10px;
+}
+
+.hidden {
+    visibility: hidden;
 }

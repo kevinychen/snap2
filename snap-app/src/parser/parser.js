@@ -15,7 +15,7 @@ export default class Parser extends React.Component {
 
             page: 0,
             imageDataUrl: undefined,
-            mode: undefined,
+            mode: "SELECT_REGION",
             imageDimensions: { width: 0, height: 0 },
             rectangle: undefined,
             blobs: undefined,
@@ -55,7 +55,7 @@ export default class Parser extends React.Component {
     }
 
     render() {
-        const { url } = this.state;
+        const { url, document } = this.state;
         return <div className="parser">
             <div className="input">
                 <div className="block">
@@ -79,14 +79,38 @@ export default class Parser extends React.Component {
                 {this.maybeRenderDocument()}
             </div>
             <div className="output">
+                <div
+                    className={classNames({ hidden: document === undefined }, "big button")}
+                    onClick={() => {
+
+                    }}
+                >
+                    {"Parse crossword"}
+                </div>
+                <div
+                    className={classNames({ hidden: document === undefined }, "big button")}
+                    onClick={() => {
+
+                    }}
+                >
+                    {"Parse grid"}
+                </div>
+                <div
+                    className={classNames({ hidden: document === undefined }, "big button")}
+                    onClick={() => {
+
+                    }}
+                >
+                    {"Parse blobs"}
+                </div>
             </div>
         </div>;
     }
 
     maybeRenderToolbar() {
-        const { document, mode, imageDimensions, gridLines } = this.state;
+        const { document, mode, imageDimensions } = this.state;
         if (document === undefined) {
-            return undefined;
+            return;
         }
         return <div className="block">
             <button
@@ -97,18 +121,18 @@ export default class Parser extends React.Component {
             </button>
             {this.maybeRenderNav()}
             <div className="toolbar_options">
-                <span
-                    className={classNames({ "selected": mode === "SELECT_REGION" }, "clickable inline")}
+                <div
+                    className={classNames({ selected: mode === "SELECT_REGION" }, "inline radio")}
                     onClick={() => this.setState({ mode: "SELECT_REGION" })}
                 >
                     {"Select region"}
-                </span>
-                <span
-                    className={classNames({ "clickable": gridLines !== undefined, "selected": mode === "EDIT_GRID_LINES" }, "inline")}
+                </div>
+                <div
+                    className={classNames({ selected: mode === "EDIT_GRID_LINES" }, "inline radio")}
                     onClick={() => this.setState({ mode: "EDIT_GRID_LINES" })}
                 >
                     {"Edit grid lines"}
-                </span>
+                </div>
             </div>
         </div>;
     }
@@ -116,7 +140,7 @@ export default class Parser extends React.Component {
     maybeRenderNav() {
         const { document, page } = this.state;
         if(document.pages.length === 1) {
-            return undefined;
+            return;
         }
         return <>
             <button
