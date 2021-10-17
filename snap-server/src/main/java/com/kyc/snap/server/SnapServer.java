@@ -1,8 +1,5 @@
 package com.kyc.snap.server;
 
-import javax.servlet.FilterRegistration;
-
-import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import com.kyc.snap.cromulence.CromulenceSolver;
@@ -20,6 +17,7 @@ import io.dropwizard.Configuration;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import javax.ws.rs.container.ContainerResponseFilter;
 
 public class SnapServer extends Application<Configuration> {
 
@@ -33,12 +31,13 @@ public class SnapServer extends Application<Configuration> {
     }
 
     @Override
-    public void run(Configuration configuration, Environment environment) throws Exception {
+    public void run(Configuration configuration, Environment environment) {
         // Allow CORS - this server doesn't store any personal information
-        FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
-        cors.setInitParameter("allowedOrigins", "*");
-        cors.setInitParameter("allowedHeaders", "X-Requested-With,Content-Type,Accept,Origin");
-        cors.setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
+        environment.jersey().register(
+            (ContainerResponseFilter) (requestContext, responseContext) -> {
+                responseContext.getHeaders().add("Access-Control-Allow-Origin", "*");
+                responseContext.getHeaders().add("Access-Control-Allow-Headers", "*");
+            });
 
         GoogleAPIManager googleApi = new GoogleAPIManager();
         OpenCvManager openCv = new OpenCvManager();
