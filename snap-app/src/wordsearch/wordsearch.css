@@ -1,0 +1,8 @@
+.wordsearch textarea {
+    width: 100%;
+    height: calc(100vh - 250px);
+}
+
+.wordsearch .hovering {
+    background-color: #cccccc;
+}

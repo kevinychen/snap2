@@ -27,6 +27,7 @@ img[src="./wrench.png"] {
     background-color: #f1f1f1;
     font-size: 18px;
     border-radius: 10%;
+    cursor: pointer;
 }
 
 .link.selected {
@@ -46,4 +47,10 @@ img[src="./wrench.png"] {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.input, .output {
+    width: calc(50% - 50px);
+    float: left;
+    margin-right: 20px;
 }

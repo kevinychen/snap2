@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import Parser from './parser';
 import Solver from './solver';
+import Wordsearch from './wordsearch';
 import './index.css';
 
 function Index() {
@@ -24,6 +25,11 @@ function Index() {
             Parse grids, text, and crosswords in PDFs and images to Google Sheets
         </div>
         <div className="block">
+            <Link to="/wordsearch"><span className="link">WORD SEARCH</span></Link>
+            <br />
+            Search for words in a grid (both straight lines and boggle style)
+        </div>
+        <div className="block">
             <Link to="/solver"><span className="link">HEAVY-DUTY ANAGRAM SOLVER</span></Link>
             <br />
             Solver that uses knowledge of English n-grams and word frequencies to complete and anagram long phrases and sentences (can be used for single words as well)
@@ -35,6 +41,7 @@ function Header({ mode }) {
     return <div className="block">
         <Link to="/" className="inline"><img src="./wrench.png" alt="Home" /></Link>
         <Link to="/parser"><span className={classNames("inline link", {selected: mode === "parser"})}>GRID PARSER</span></Link>
+        <Link to="/wordsearch"><span className={classNames("inline link", {selected: mode === "wordsearch"})}>WORD SEARCH</span></Link>
         <Link to="/solver"><span className={classNames("inline link", {selected: mode === "solver"})}>HEAVY-DUTY ANAGRAM SOLVER</span></Link>
     </div>;
 }
@@ -45,6 +52,10 @@ function App() {
             <Route path="/parser">
                 <Header mode="parser" />
                 <Parser />
+            </Route>
+            <Route path="/wordsearch">
+                <Header mode="wordsearch" />
+                <Wordsearch />
             </Route>
             <Route path="/solver">
                 <Header mode="solver" />

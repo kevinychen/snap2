@@ -1,9 +1,3 @@
-.input, .output {
-    width: calc(50% - 50px);
-    float: left;
-    margin-right: 20px;
-}
-
 .toolbar_options {
     float: right;
     margin-right: 20px;
@@ -45,6 +39,7 @@
     background-color: lightgray;
     border: 1px solid black;
     cursor: pointer;
+    padding: 2px;
 }
 
 .button:hover {
