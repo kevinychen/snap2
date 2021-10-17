@@ -27,7 +27,7 @@ export class AdvancedSettingsPopup extends Popup {
                             htmlFor="explicit-mode"
                             title="Look for explicit lines in the image"
                         >
-                            {"Explicit"}
+                            {"Explicit grid lines"}
                         </label>
                     </div>
                     <div className="inline">
@@ -41,10 +41,18 @@ export class AdvancedSettingsPopup extends Popup {
                             htmlFor="implicit-mode"
                             title="Look for whitespace in the image as implicit lines"
                         >
-                            {"Implicit"}
+                            {"Implicit grid lines"}
                         </label>
                     </div>
                 </div>
+            </div>
+        );
+    }
+
+    renderSubmitSection() {
+        return (
+            <div className="submit-section">
+                <button onClick={this.exit}>Done</button>
             </div>
         );
     }

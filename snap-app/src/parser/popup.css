@@ -38,8 +38,13 @@
 /* Individual popup features */
 
 .advanced-settings-popup {
-    width: 225px;
+    width: 300px;
     height: 150px;
+}
+
+.export-popup {
+    width: 500px;
+    height: 250px;
 }
 
 .parse-crossword-popup {

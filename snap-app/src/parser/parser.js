@@ -4,6 +4,7 @@ import { get, post, postJson } from "../fetch";
 import { AdvancedSettingsPopup } from "./advancedSettingsPopup";
 import { DocumentImage } from "./documentImage";
 import { Output } from "./output";
+import { ExportPopup } from "./exportPopup";
 import { ParseCrosswordPopup } from "./parseCrosswordPopup";
 import "./parser.css";
 
@@ -17,9 +18,10 @@ export default class Parser extends React.Component {
 
             page: 0,
             imageDataUrl: undefined,
-            mode: "SELECT_REGION",
+            mode: undefined,
             popupMode: undefined,
             imageDimensions: { width: 0, height: 0 },
+            selectedAll: false,
             rectangle: undefined,
             blobs: undefined,
             gridLines: undefined,
@@ -63,15 +65,15 @@ export default class Parser extends React.Component {
     }
 
     render() {
-        const { url, document, popupMode, grid, crossword, loadingGrid, loadingClipboard } = this.state;
+        const { url, document, popupMode, blobs, grid, crossword, loadingGrid, loadingClipboard } = this.state;
         return <div className="parser">
             <div className="input">
                 <div className="block">
                     <input
                         className="inline"
+                        style={{ width: "300px" }}
                         type="text"
                         placeholder="Enter URL of image/PDF/HTML..."
-                        style={{ width: "300px" }}
                         value={url}
                         onKeyUp={this.setUrl}
                         onChange={this.setUrl}
@@ -132,6 +134,12 @@ export default class Parser extends React.Component {
                     >
                         {loadingClipboard ? "Copied!" : "Copy to clipboard"}
                     </div>
+                    <div
+                        className={classNames({ hidden: blobs === undefined && grid === undefined }, "big button")}
+                        onClick={this.copyGridToSheet}
+                    >
+                        {"Export to Sheets"}
+                    </div>
                 </div>
             </div>
             <AdvancedSettingsPopup
@@ -145,18 +153,26 @@ export default class Parser extends React.Component {
                 setCrosswordClues={this.setCrosswordClues}
                 exit={() => this.setState({ popupMode: undefined })}
             />
+            <ExportPopup
+                {...this.state}
+                isVisible={popupMode === "EXPORT"}
+                exit={() => this.setState({ popupMode: undefined })}
+            />
         </div>;
     }
 
     maybeRenderToolbar() {
-        const { document, mode, imageDimensions } = this.state;
+        const { document, mode, imageDimensions, selectedAll } = this.state;
         if (document === undefined) {
             return;
         }
         return <div className="block">
             <button
                 className="inline"
-                onClick={() => this.setRectangle({ x: 0, y: 0, width: imageDimensions.width, height: imageDimensions.height })}
+                onClick={() => {
+                    this.setRectangle({ x: 0, y : 0, width: imageDimensions.width, height: imageDimensions.height });
+                    this.setState({ mode: undefined, selectedAll: true });
+                }}
             >
                 {"Reset"}
             </button>
@@ -168,17 +184,20 @@ export default class Parser extends React.Component {
             </button>
             {this.maybeRenderNav()}
             <div className="toolbar_options">
-                <div
-                    className={classNames({ selected: mode === "SELECT_REGION" }, "inline radio")}
-                    onClick={() => this.setState({ mode: "SELECT_REGION" })}
-                >
-                    {"Select region"}
-                </div>
-                <div
-                    className={classNames({ selected: mode === "EDIT_GRID_LINES" }, "inline radio")}
-                    onClick={() => this.setState({ mode: "EDIT_GRID_LINES" })}
-                >
-                    {"Edit grid lines"}
+                {selectedAll ? <span className="inline">Entire image selected.</span> : undefined}
+                <div className="inline">
+                    <span
+                        className={classNames({ selected: mode === "SELECT_REGION" }, "radio")}
+                        onClick={() => this.setState({ mode: "SELECT_REGION" })}
+                    >
+                        {"Select region"}
+                    </span>
+                    <span
+                        className={classNames({ selected: mode === "EDIT_GRID_LINES" }, "radio")}
+                        onClick={() => this.setState({ mode: "EDIT_GRID_LINES" })}
+                    >
+                        {"Edit grid lines"}
+                    </span>
                 </div>
             </div>
         </div>;
@@ -262,11 +281,11 @@ export default class Parser extends React.Component {
 
     setImageDimensions = imageDimensions => {
         this.setRectangle({ x: 0, y: 0, width: imageDimensions.width, height: imageDimensions.height });
-        this.setState({ imageDimensions })
+        this.setState({ imageDimensions, selectedAll: true })
     }
 
     setRectangle = rectangle => {
-        this.setState({ rectangle });
+        this.setState({ rectangle, selectedAll: false });
         this.setGridLines({
             horizontalLines: [0, rectangle.height],
             verticalLines: [0, rectangle.width],
@@ -306,16 +325,16 @@ export default class Parser extends React.Component {
     }
 
     findGridLines = callback => {
-        const { document, page, rectangle, gridLines } = this.state;
+        const { document, page, rectangle, gridLines, findGridLinesMode } = this.state;
         if (gridLines.horizontalLines.length > 2 || gridLines.verticalLines.length > 2) {
-            callback();
+            callback(gridLines);
             return;
         }
         postJson({
             path: `/documents/${document.id}/lines`,
             body: {
                 section: { page, rectangle },
-                findGridLinesMode: 'EXPLICIT',
+                findGridLinesMode,
                 interpolate: true,
             }
         }, gridLines => {
@@ -325,9 +344,9 @@ export default class Parser extends React.Component {
     }
 
     findGrid = callback => {
-        const { document, page, rectangle, grid } = this.state;
+        const { document, page, rectangle, gridPosition, grid } = this.state;
         if (grid !== undefined) {
-            callback();
+            callback(gridPosition, grid);
             return;
         }
         this.findGridLines(gridLines => {
@@ -370,6 +389,7 @@ export default class Parser extends React.Component {
             path: `/documents/${document.id}/blobs`,
             body: {
                 section: { page, rectangle },
+                exact: false,
             },
         }, blobs => {
             this.setBlobs(blobs);
@@ -378,13 +398,17 @@ export default class Parser extends React.Component {
     }
 
     copyGridToClipboard = () => {
-        if (window.getSelection()) window.getSelection().removeAllRanges();
+        window.getSelection().removeAllRanges();
         const range = document.createRange();
         range.selectNode(document.getElementById('html-grid'));
-        if (window.getSelection()) window.getSelection().addRange(range);
+        window.getSelection().addRange(range);
         document.execCommand("copy");
-        if (window.getSelection()) window.getSelection().removeAllRanges();
+        window.getSelection().removeAllRanges();
         this.setState({ loadingClipboard: true });
         setTimeout(() => this.setState({ loadingClipboard: false }), 3000);
+    }
+
+    copyGridToSheet = () => {
+        this.setState({ popupMode: "EXPORT" });
     }
 }
