@@ -235,7 +235,7 @@ public class GridParser {
                 for (Border border : square.borders()) {
                     int width = border.getWidth();
                     int styleLevel;
-                    if (width == 0)
+                    if (width == 0 || centers.size() == 1)
                         styleLevel = 0;
                     else {
                         int label = clusters.getLabels().get(new Tuple(width));

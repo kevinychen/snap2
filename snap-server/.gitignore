@@ -11,4 +11,5 @@
 data
 google-api-credentials.json
 out
+src/main/resources/assets
 

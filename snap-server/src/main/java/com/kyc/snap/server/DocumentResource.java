@@ -147,16 +147,12 @@ public class DocumentResource implements DocumentService {
         GridPosition gridPosition = gridParser.getGridPosition(gridLines);
         Grid grid = Grid.create(gridPosition.getNumRows(), gridPosition.getNumCols());
         SectionImage image = getSectionImage(documentId, request.getSection());
-        if (request.isFindColors())
-            gridParser.findGridColors(image.getImage(), gridPosition, grid);
-        if (request.getFindTextMode() == FindTextMode.USE_NATIVE)
-            gridParser.findGridText(image.getTexts(), request.getSection().getRectangle(), gridPosition, grid);
-        else if (request.getFindTextMode() == FindTextMode.USE_OCR)
+        gridParser.findGridColors(image.getImage(), gridPosition, grid);
+        gridParser.findGridBorders(image.getImage(), gridPosition, grid);
+        gridParser.findGridBorderStyles(grid);
+        gridParser.findGridText(image.getTexts(), request.getSection().getRectangle(), gridPosition, grid);
+        if (request.getOcrOptions() != null)
             gridParser.findGridText(image.getImage(), gridPosition, grid, request.getOcrOptions());
-        if (request.isFindBorders()) {
-            gridParser.findGridBorders(image.getImage(), gridPosition, grid);
-            gridParser.findGridBorderStyles(grid);
-        }
         return new FindGridResponse(gridPosition, grid);
     }
 

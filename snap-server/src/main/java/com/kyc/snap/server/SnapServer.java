@@ -1,8 +1,9 @@
 package com.kyc.snap.server;
 
-import javax.servlet.FilterRegistration;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
-import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import com.kyc.snap.cromulence.CromulenceSolver;
@@ -18,8 +19,10 @@ import com.kyc.snap.words.WordsearchSolver;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
 import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.servlets.assets.AssetServlet;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import javax.ws.rs.container.ContainerResponseFilter;
 
 public class SnapServer extends Application<Configuration> {
 
@@ -29,16 +32,17 @@ public class SnapServer extends Application<Configuration> {
 
     @Override
     public void initialize(Bootstrap<Configuration> bootstrap) {
-        bootstrap.addBundle(new AssetsBundle("/assets", "/", "index.html"));
+        bootstrap.addBundle(new SinglePageAppAssetsBundle("/assets", "/", "index.html"));
     }
 
     @Override
-    public void run(Configuration configuration, Environment environment) throws Exception {
+    public void run(Configuration configuration, Environment environment) {
         // Allow CORS - this server doesn't store any personal information
-        FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
-        cors.setInitParameter("allowedOrigins", "*");
-        cors.setInitParameter("allowedHeaders", "X-Requested-With,Content-Type,Accept,Origin");
-        cors.setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
+        environment.jersey().register(
+            (ContainerResponseFilter) (requestContext, responseContext) -> {
+                responseContext.getHeaders().add("Access-Control-Allow-Origin", "*");
+                responseContext.getHeaders().add("Access-Control-Allow-Headers", "*");
+            });
 
         GoogleAPIManager googleApi = new GoogleAPIManager();
         OpenCvManager openCv = new OpenCvManager();
@@ -56,5 +60,34 @@ public class SnapServer extends Application<Configuration> {
         environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver, dictionary, wikinet));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser));
+    }
+
+    static class SinglePageAppAssetsBundle extends AssetsBundle {
+
+        SinglePageAppAssetsBundle(String resourcePath, String uriPath, String indexFile) {
+            super(resourcePath, uriPath, indexFile);
+        }
+
+        @Override
+        protected AssetServlet createServlet() {
+            return new SinglePageAppAssetsServlet(getResourcePath(), getUriPath(), getIndexFile(), StandardCharsets.UTF_8);
+        }
+    }
+
+    static class SinglePageAppAssetsServlet extends AssetServlet {
+
+        SinglePageAppAssetsServlet(String resourcePath, String uriPath, String indexFile, Charset defaultCharset) {
+            super(resourcePath, uriPath, indexFile, defaultCharset);
+        }
+
+        @Override
+        protected URL getResourceUrl(String absoluteRequestedResourcePath) {
+            // Redirect any frontend managed routes to root
+            if (absoluteRequestedResourcePath.matches("assets/[^\\.]+(\\.html)?")) {
+                return super.getResourceUrl("assets/index.html");
+            }
+            else
+                return super.getResourceUrl(absoluteRequestedResourcePath);
+        }
     }
 }
