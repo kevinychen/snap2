@@ -28,7 +28,7 @@ export class Popup extends React.Component {
         if (this.state.awaitingServer) {
             return (
                 <button disabled={true}>
-                    Calculating...
+                    Please wait...
                 </button>
             );
         } else {

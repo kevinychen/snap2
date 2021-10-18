@@ -2,6 +2,7 @@ package com.kyc.snap.api;
 
 import java.util.List;
 
+import com.kyc.snap.crossword.CrosswordFormula;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -27,14 +28,14 @@ public interface WordsService {
     FetchCrosswordClueSuggestionsResponse fetchCrosswordClueSuggestions(FetchCrosswordClueSuggestionsRequest request);
 
     @Data
-    public static class FetchCrosswordClueSuggestionsRequest {
+    class FetchCrosswordClueSuggestionsRequest {
 
         private final String clue;
         private final int numLetters;
     }
 
     @Data
-    public static class FetchCrosswordClueSuggestionsResponse {
+    class FetchCrosswordClueSuggestionsResponse {
 
         private final List<ClueSuggestion> suggestions;
     }
@@ -44,14 +45,14 @@ public interface WordsService {
     SolveWordsearchResponse solveWordsearch(SolveWordsearchRequest request);
 
     @Data
-    public static class SolveWordsearchRequest {
+    class SolveWordsearchRequest {
 
         private List<String> grid;
         private boolean boggle = false;
     }
 
     @Data
-    public static class SolveWordsearchResponse {
+    class SolveWordsearchResponse {
 
         private final List<WordsearchSolver.Result> results;
     }
@@ -61,13 +62,13 @@ public interface WordsService {
     FindCrosswordResponse findCrossword(FindCrosswordRequest request);
 
     @Data
-    public static class FindCrosswordRequest {
+    class FindCrosswordRequest {
 
         private final Grid grid;
     }
 
     @Data
-    public static class FindCrosswordResponse {
+    class FindCrosswordResponse {
 
         private final Crossword crossword;
     }
@@ -77,15 +78,33 @@ public interface WordsService {
     ParseCrosswordCluesResponse parseCrosswordClues(ParseCrosswordCluesRequest request);
 
     @Data
-    public static class ParseCrosswordCluesRequest {
+    class ParseCrosswordCluesRequest {
 
         private final String unparsedClues;
     }
 
     @Data
-    public static class ParseCrosswordCluesResponse {
+    class ParseCrosswordCluesResponse {
 
         private final CrosswordClues clues;
+    }
+
+    @POST
+    @Path("words/crosswordFormulas")
+    GetCrosswordFormulasResponse getCrosswordFormulas(GetCrosswordFormulasRequest request);
+
+    @Data
+    class GetCrosswordFormulasRequest {
+
+        private final Grid grid;
+        private final Crossword crossword;
+        private final CrosswordClues clues;
+    }
+
+    @Data
+    class GetCrosswordFormulasResponse {
+
+        private final List<CrosswordFormula> formulas;
     }
 
     @POST
@@ -93,7 +112,7 @@ public interface WordsService {
     OptimizeCromulenceResponse optimizeCromulence(OptimizeCromulenceRequest request);
 
     @Data
-    public static class OptimizeCromulenceRequest {
+    class OptimizeCromulenceRequest {
 
         private final List<String> parts;
         private boolean canRearrange;
@@ -101,7 +120,7 @@ public interface WordsService {
     }
 
     @Data
-    public static class OptimizeCromulenceResponse {
+    class OptimizeCromulenceResponse {
 
         private final List<CromulenceSolverResult> results;
     }
@@ -111,7 +130,7 @@ public interface WordsService {
     FindWordsResponse findWords(FindWordsRequest request);
 
     @Data
-    public static class FindWordsRequest {
+    class FindWordsRequest {
 
         private final Dictionary dictionary;
         private Integer minLength;
@@ -125,12 +144,12 @@ public interface WordsService {
         private List<Integer> lengthPattern; // WIKIPEDIA_TITLES only
     }
 
-    public enum Dictionary {
+    enum Dictionary {
         NORMAL, WIKIPEDIA_TITLES;
     }
 
     @Data
-    public static class FindWordsResponse {
+    class FindWordsResponse {
 
         private final List<String> words;
     }

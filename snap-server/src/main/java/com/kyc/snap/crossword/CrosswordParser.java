@@ -1,10 +1,18 @@
 package com.kyc.snap.crossword;
 
+import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.kyc.snap.crossword.Crossword.Entry;
@@ -99,6 +107,82 @@ public class CrosswordParser {
         return new CrosswordClues(sections);
     }
 
+    public List<CrosswordFormula> getFormulas(Grid grid, Crossword crossword, CrosswordClues clues) {
+        List<Integer> directionColumns = new ArrayList<>();
+        for (int i = 0; i < clues.getSections().size(); i++)
+            directionColumns.add(grid.getNumCols() + 1 + 4 * i);
+
+        Map<ClueKey, Entry> crosswordEntries = Maps.uniqueIndex(
+            crossword.getEntries(),
+            entry -> new ClueKey(entry.getDirection(), entry.getClueNumber()));
+
+        // map from each square in the crossword to the 1 or 2 answers containing it
+        Multimap<Point, AnswerPosition> gridToAnswers = ArrayListMultimap.create();
+
+        List<CrosswordFormula> formulas = new ArrayList<>();
+        for (int i = 0; i < clues.getSections().size(); i++) {
+            ClueSection section = clues.getSections().get(i);
+            for (int j = 0; j < section.getClues().size(); j++) {
+                NumberedClue clue = section.getClues().get(j);
+                formulas.add(new CrosswordFormula(
+                    j, directionColumns.get(i), false, clue.getClue().trim(), null));
+
+                Crossword.Entry crosswordEntry = crosswordEntries.get(new ClueKey(section.getDirection(), clue.getClueNumber()));
+                List<String> relativeRefs = new ArrayList<>();
+                for (int k = 0; k < crosswordEntry.getNumSquares(); k++) {
+                    int row = crosswordEntry.getStartRow();
+                    int col = crosswordEntry.getStartCol();
+                    if (i == 0)
+                        col += k;
+                    else if (i == 1)
+                        row += k;
+                    relativeRefs.add(
+                        String.format("IF(%1$s=\"\", \".\", %1$s)",
+                            String.format("R[%d]C[%d]", row - j, col - (directionColumns.get(i) + 1))));
+                    gridToAnswers.put(
+                        new Point(col, row),
+                        new AnswerPosition(j, directionColumns.get(i) + 2, k, clue.getClueNumber()));
+                }
+                formulas.add(new CrosswordFormula(j, directionColumns.get(i) + 1, true,
+                    String.format(
+                        "=CONCATENATE(%s, \" (%d)\")",
+                        Joiner.on(',').join(relativeRefs),
+                        crosswordEntry.getNumSquares()), null));
+            }
+        }
+
+        for (Point p : gridToAnswers.keySet()) {
+            Collection<AnswerPosition> answers = gridToAnswers.get(p);
+            String refArray = Joiner.on(";").join(answers.stream()
+                .map(answer -> nthCharFormula(answer, p))
+                .collect(Collectors.toList()));
+            String filterArray = Joiner.on(";").join(answers.stream()
+                .map(answer -> nthCharFormula(answer, p) + "<>\"\"")
+                .collect(Collectors.toList()));
+            String allCharsExpression = String.format(
+                "UNIQUE(FILTER({%s},{%s}))",
+                refArray,
+                filterArray);
+            Set<Integer> clueNumbers = answers.stream()
+                .filter(answer -> answer.index == 0)
+                .map(AnswerPosition::getClueNumber)
+                .collect(Collectors.toSet());
+            formulas.add(new CrosswordFormula(p.y, p.x, true,
+                String.format("=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),\"\")",
+                    allCharsExpression),
+                clueNumbers.size() == 1 ? Iterables.getOnlyElement(clueNumbers) : null));
+        }
+        return formulas;
+    }
+
+    private static String nthCharFormula(AnswerPosition answer, Point formulaCell) {
+        // the regex expression takes the nth character of a given string, treating (...) as a single character
+        return String.format(
+            "CONCATENATE(REGEXEXTRACT(%s,\"(?:[^\\(\\)]|\\([^\\)]*\\)){%d}(?:([^\\(\\)])|\\(([^\\)]*)\\))\"))",
+            String.format("R[%d]C[%d]", answer.row - formulaCell.y, answer.col - formulaCell.x),
+            answer.index);
+    }
+
     @Data
     private static class CrosswordSquare {
 
@@ -113,5 +197,21 @@ public class CrosswordParser {
         private final ClueDirection direction;
         private final int clueNumber;
         private final String clue;
+    }
+
+    @Data
+    private static class ClueKey {
+
+        private final ClueDirection direction;
+        private final int clueNumber;
+    }
+
+    @Data
+    private static class AnswerPosition {
+
+        private final int row;
+        private final int col;
+        private final int index;
+        private final int clueNumber;
     }
 }

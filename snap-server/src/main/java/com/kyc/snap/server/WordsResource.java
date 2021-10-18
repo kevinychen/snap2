@@ -10,6 +10,7 @@ import com.kyc.snap.api.WordsService;
 import com.kyc.snap.cromulence.CromulenceSolverResult;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
+import com.kyc.snap.crossword.CrosswordFormula;
 import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.crossword.WordplaysUtil;
 import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
@@ -52,6 +53,13 @@ public class WordsResource implements WordsService {
     public ParseCrosswordCluesResponse parseCrosswordClues(ParseCrosswordCluesRequest request) {
         CrosswordClues clues = crosswordParser.parseClues(request.getUnparsedClues());
         return new ParseCrosswordCluesResponse(clues);
+    }
+
+    @Override
+    public GetCrosswordFormulasResponse getCrosswordFormulas(GetCrosswordFormulasRequest request) {
+        List<CrosswordFormula> formulas = crosswordParser
+            .getFormulas(request.getGrid(), request.getCrossword(), request.getClues());
+        return new GetCrosswordFormulasResponse(formulas);
     }
 
     @Override

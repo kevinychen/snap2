@@ -93,27 +93,26 @@ public class DocumentResource implements DocumentService {
     public Document createDocumentFromUrl(CreateDocumentFromUrlRequest request) throws Exception {
         String url = request.getUrl();
         String urlExtension = url.substring(url.lastIndexOf('.') + 1).toLowerCase();
-        Response response = new OkHttpClient()
-            .newCall(new Request.Builder().url(url).get().build())
-            .execute();
-        String contentType = response.header("Content-Type").toLowerCase();
-        InputStream responseStream = response.body().byteStream();
-        if (contentType.equals("application/pdf") || urlExtension.equals("pdf"))
-            return createDocumentFromPdf(responseStream);
-        else if (contentType.startsWith("image/") || urlExtension.equals("png") || urlExtension.equals("jpg"))
-            return createDocumentFromImage(responseStream);
-        else {
-            File tempPdf = File.createTempFile("snap", ".pdf");
-            try {
-                int exitCode = new ProcessBuilder("google-chrome", "--headless", "--disable-gpu", "--no-margins", "--no-sandbox",
-                    "--print-to-pdf=" + tempPdf.getAbsolutePath(), url).start().waitFor();
-                if (exitCode != 0)
-                    throw new IllegalStateException("Chrome printToPDF failed with exit code " + exitCode);
-                try (FileInputStream in = new FileInputStream(tempPdf)) {
-                    return createDocumentFromPdf(in);
+        try (Response response = new OkHttpClient().newCall(new Request.Builder().url(url).get().build()).execute()) {
+            String contentType = response.header("Content-Type").toLowerCase();
+            InputStream responseStream = response.body().byteStream();
+            if (contentType.equals("application/pdf") || urlExtension.equals("pdf"))
+                return createDocumentFromPdf(responseStream);
+            else if (contentType.startsWith("image/") || urlExtension.equals("png") || urlExtension.equals("jpg"))
+                return createDocumentFromImage(responseStream);
+            else {
+                File tempPdf = File.createTempFile("snap", ".pdf");
+                try {
+                    int exitCode = new ProcessBuilder("google-chrome", "--headless", "--disable-gpu", "--no-margins", "--no-sandbox",
+                        "--print-to-pdf=" + tempPdf.getAbsolutePath(), url).start().waitFor();
+                    if (exitCode != 0)
+                        throw new IllegalStateException("Chrome printToPDF failed with exit code " + exitCode);
+                    try (FileInputStream in = new FileInputStream(tempPdf)) {
+                        return createDocumentFromPdf(in);
+                    }
+                } finally {
+                    tempPdf.delete();
                 }
-            } finally {
-                tempPdf.delete();
             }
         }
     }

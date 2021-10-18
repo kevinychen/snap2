@@ -29,6 +29,7 @@ export default class Parser extends React.Component {
             grid: undefined,
             crossword: undefined,
             crosswordClues: undefined,
+            crosswordFormulas: [],
 
             findGridLinesMode: "EXPLICIT",
 
@@ -65,7 +66,7 @@ export default class Parser extends React.Component {
     }
 
     render() {
-        const { url, document, popupMode, blobs, grid, crossword, loadingGrid, loadingClipboard } = this.state;
+        const { url, document, popupMode, blobs, grid, crosswordFormulas, loadingGrid, loadingClipboard } = this.state;
         return <div className="parser">
             <div className="input">
                 <div className="block">
@@ -125,7 +126,7 @@ export default class Parser extends React.Component {
                     </div>
                 </div>
                 <div id="html-grid" className="block">
-                    <Output grid={grid} crossword={crossword} />
+                    <Output grid={grid} crosswordFormulas={crosswordFormulas} />
                 </div>
                 <div className="block">
                     <div
@@ -321,7 +322,13 @@ export default class Parser extends React.Component {
     }
 
     setCrosswordClues = crosswordClues => {
-        this.setState({ crosswordClues });
+        const { grid, crossword } = this.state;
+        postJson({
+            path: `/words/crosswordFormulas`,
+            body: { grid, crossword, clues: crosswordClues },
+        }, ({ formulas }) => {
+            this.setState({ crosswordClues, crosswordFormulas: formulas });
+        });
     }
 
     findGridLines = callback => {
@@ -366,6 +373,7 @@ export default class Parser extends React.Component {
     findCrossword = callback => {
         const { crossword } = this.state;
         if (crossword !== undefined) {
+            callback();
             return;
         }
         this.findGrid((_, grid) => {
@@ -398,14 +406,13 @@ export default class Parser extends React.Component {
     }
 
     copyGridToClipboard = () => {
-        window.getSelection().removeAllRanges();
-        const range = document.createRange();
-        range.selectNode(document.getElementById('html-grid'));
-        window.getSelection().addRange(range);
-        document.execCommand("copy");
-        window.getSelection().removeAllRanges();
+        const html = document.getElementById('html-grid').innerHTML;
+        const content = new Blob([html], { type: 'text/html' });
+        const data = [new window.ClipboardItem({ [content.type]: content })];
         this.setState({ loadingClipboard: true });
-        setTimeout(() => this.setState({ loadingClipboard: false }), 3000);
+        navigator.clipboard.write(data).then(() => {
+            setTimeout(() => this.setState({ loadingClipboard: false }), 3000);
+        });
     }
 
     copyGridToSheet = () => {

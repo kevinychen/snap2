@@ -26,6 +26,10 @@ public class GridSpreadsheetWrapper {
      * This value represents the correction ratio.
      */
     public static final double WIDTH_CORRECTION = 1.04;
+    /**
+     * If we're inserting a crossword, we need some extra columns for the clues.
+     */
+    public static final int EXTRA_COLS_BUFFER = 14;
 
     private final SpreadsheetManager spreadsheets;
     private final int rowOffset;
@@ -36,8 +40,9 @@ public class GridSpreadsheetWrapper {
         int numColsInSheet = sheetData.getColWidths().size();
         if (numRowsInSheet < rowOffset + pos.getNumRows())
             spreadsheets.insertRowOrColumns(Dimension.ROWS, numRowsInSheet, rowOffset + pos.getNumRows() - numRowsInSheet);
-        if (numColsInSheet < colOffset + pos.getNumCols())
-            spreadsheets.insertRowOrColumns(Dimension.COLUMNS, numColsInSheet, colOffset + pos.getNumCols() - numColsInSheet);
+        if (numColsInSheet < colOffset + pos.getNumCols() + EXTRA_COLS_BUFFER)
+            spreadsheets.insertRowOrColumns(Dimension.COLUMNS, numColsInSheet,
+                colOffset + pos.getNumCols() + EXTRA_COLS_BUFFER - numColsInSheet);
 
         int totalWidth = pos.getCols().stream().mapToInt(GridPosition.Col::getWidth).sum();
         int totalHeight = pos.getRows().stream().mapToInt(GridPosition.Row::getHeight).sum();

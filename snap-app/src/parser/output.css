@@ -3,7 +3,6 @@
     border-spacing: 0;
 }
 
-.parser-output td {
-    width: 20px;
-    height: 20px;
+.parser-output tr, td {
+    padding: 0;
 }
