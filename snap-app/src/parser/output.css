@@ -1,6 +1,8 @@
-.parser-output table {
+table.parser-output {
     border: 1px solid black;
     border-spacing: 0;
+    display: inline-table;
+    margin-right: 40px;
 }
 
 .parser-output tr, td {

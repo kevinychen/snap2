@@ -1,0 +1,9 @@
+.clues-area {
+    display: inline-block;
+}
+
+.clues-area textarea {
+    width: 100%;
+    height: 250px;
+    resize: none;
+}

@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.TreeMultimap;
 import com.kyc.snap.crossword.Crossword.Entry;
 import com.kyc.snap.crossword.CrosswordClues.ClueSection;
 import com.kyc.snap.crossword.CrosswordClues.NumberedClue;
@@ -108,47 +110,54 @@ public class CrosswordParser {
     }
 
     public List<CrosswordFormula> getFormulas(Grid grid, Crossword crossword, CrosswordClues clues) {
-        List<Integer> directionColumns = new ArrayList<>();
-        for (int i = 0; i < clues.getSections().size(); i++)
-            directionColumns.add(grid.getNumCols() + 1 + 4 * i);
+        TreeMultimap<ClueDirection, Integer> numbersByDirection = TreeMultimap.create();
+        for (Entry crosswordEntry : crossword.getEntries())
+            numbersByDirection.put(crosswordEntry.getDirection(), crosswordEntry.getClueNumber());
 
-        Map<ClueKey, Entry> crosswordEntries = Maps.uniqueIndex(
-            crossword.getEntries(),
-            entry -> new ClueKey(entry.getDirection(), entry.getClueNumber()));
+        Map<ClueKey, String> cluesByNumber = new HashMap<>();
+        for (ClueSection section : clues.getSections())
+            for (NumberedClue clue : section.getClues())
+                cluesByNumber.put(
+                    new ClueKey(section.getDirection(), clue.getClueNumber()),
+                    clue.getClue());
+        for (Entry crosswordEntry : crossword.getEntries()) {
+            ClueKey clueKey = new ClueKey(crosswordEntry.getDirection(),
+                crosswordEntry.getClueNumber());
+            if (!cluesByNumber.containsKey(clueKey)) {
+                cluesByNumber.put(clueKey, "Clue " + crosswordEntry.getClueNumber());
+            }
+        }
 
         // map from each square in the crossword to the 1 or 2 answers containing it
         Multimap<Point, AnswerPosition> gridToAnswers = ArrayListMultimap.create();
 
         List<CrosswordFormula> formulas = new ArrayList<>();
-        for (int i = 0; i < clues.getSections().size(); i++) {
-            ClueSection section = clues.getSections().get(i);
-            for (int j = 0; j < section.getClues().size(); j++) {
-                NumberedClue clue = section.getClues().get(j);
-                formulas.add(new CrosswordFormula(
-                    j, directionColumns.get(i), false, clue.getClue().trim(), null));
+        for (Entry crosswordEntry : crossword.getEntries()) {
+            ClueKey clueKey = new ClueKey(crosswordEntry.getDirection(), crosswordEntry.getClueNumber());
+            int clueRow = numbersByDirection.get(clueKey.direction).headSet(clueKey.clueNumber).size();
+            int clueCol = grid.getNumCols() + 1 + 4 * clueKey.direction.ordinal();
+            formulas.add(new CrosswordFormula(clueRow, clueCol, false, cluesByNumber.get(clueKey) , null));
 
-                Crossword.Entry crosswordEntry = crosswordEntries.get(new ClueKey(section.getDirection(), clue.getClueNumber()));
-                List<String> relativeRefs = new ArrayList<>();
-                for (int k = 0; k < crosswordEntry.getNumSquares(); k++) {
-                    int row = crosswordEntry.getStartRow();
-                    int col = crosswordEntry.getStartCol();
-                    if (i == 0)
-                        col += k;
-                    else if (i == 1)
-                        row += k;
-                    relativeRefs.add(
-                        String.format("IF(%1$s=\"\", \".\", %1$s)",
-                            String.format("R[%d]C[%d]", row - j, col - (directionColumns.get(i) + 1))));
-                    gridToAnswers.put(
-                        new Point(col, row),
-                        new AnswerPosition(j, directionColumns.get(i) + 2, k, clue.getClueNumber()));
-                }
-                formulas.add(new CrosswordFormula(j, directionColumns.get(i) + 1, true,
-                    String.format(
-                        "=CONCATENATE(%s, \" (%d)\")",
-                        Joiner.on(',').join(relativeRefs),
-                        crosswordEntry.getNumSquares()), null));
+            List<String> relativeRefs = new ArrayList<>();
+            for (int k = 0; k < crosswordEntry.getNumSquares(); k++) {
+                int row = crosswordEntry.getStartRow();
+                int col = crosswordEntry.getStartCol();
+                if (clueKey.direction == ClueDirection.ACROSS)
+                    col += k;
+                else if (clueKey.direction == ClueDirection.DOWN)
+                    row += k;
+                relativeRefs.add(
+                    String.format("IF(%1$s=\"\", \".\", %1$s)",
+                        String.format("R[%d]C[%d]", row - clueRow, col - (clueCol + 1))));
+                gridToAnswers.put(
+                    new Point(col, row),
+                    new AnswerPosition(clueRow, clueCol + 2, k, clueKey.clueNumber));
             }
+            formulas.add(new CrosswordFormula(clueRow, clueCol + 1, true,
+                String.format(
+                    "=CONCATENATE(%s, \" (%d)\")",
+                    Joiner.on(',').join(relativeRefs),
+                    crosswordEntry.getNumSquares()), null));
         }
 
         for (Point p : gridToAnswers.keySet()) {

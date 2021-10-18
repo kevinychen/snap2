@@ -44,7 +44,7 @@ export function Output({ grid, crosswordFormulas }) {
                 if (formula.formula) {
                     cellProps['data-sheets-formula'] = formula.value;
                 } else {
-                    cellProps['data-sheets-value'] = `{\"1\":2,\"2\":${JSON.stringify(formula.value)}}`;
+                    cellProps['data-sheets-value'] = `{"1":2,"2":${JSON.stringify(formula.value)}}`;
                 }
                 if (formula.clueNumber) {
                     value = formula.clueNumber;
@@ -56,7 +56,7 @@ export function Output({ grid, crosswordFormulas }) {
                 {value}
             </td>);
         }
-        tableRows.push(<tr>{rowCells}</tr>);
+        tableRows.push(<tr key={row}>{rowCells}</tr>);
     }
     return <google-sheets-html-origin>
         <table className='parser-output'>

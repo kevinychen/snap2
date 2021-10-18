@@ -50,7 +50,14 @@ img[src="./wrench.png"] {
 }
 
 .input, .output {
-    width: calc(50% - 50px);
     float: left;
     margin-right: 20px;
+}
+
+.input {
+    width: calc(45% - 50px);
+}
+
+.output {
+    width: calc(55% - 50px);
 }
