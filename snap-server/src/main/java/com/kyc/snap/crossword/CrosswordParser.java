@@ -2,24 +2,27 @@ package com.kyc.snap.crossword;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.TreeMultimap;
 import com.kyc.snap.crossword.Crossword.Entry;
 import com.kyc.snap.crossword.CrosswordClues.ClueSection;
 import com.kyc.snap.crossword.CrosswordClues.NumberedClue;
+import com.kyc.snap.document.Document;
+import com.kyc.snap.document.Document.DocumentPage;
+import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.Grid.Square;
@@ -28,8 +31,6 @@ import com.kyc.snap.image.ImageUtils;
 import lombok.Data;
 
 public class CrosswordParser {
-
-    private static final ClueDirection[] DIRECTIONS = { ClueDirection.ACROSS, ClueDirection.DOWN, ClueDirection.UNKNOWN };
 
     public Crossword parseCrossword(Grid grid) {
         Square[][] squares = grid.getSquares();
@@ -72,44 +73,127 @@ public class CrosswordParser {
     }
 
     public CrosswordClues parseClues(String text) {
-        ClueDirection currentDirection = ClueDirection.UNKNOWN;
-        int currentClueNumber = -1;
-        String currentClue = "";
-        List<Clue> clues = new ArrayList<>();
-        for (String line : text.split("\n")) {
-            String normalizedLine = line.trim().toUpperCase();
-            boolean isDirection = false;
-            for (ClueDirection direction : DIRECTIONS)
-                if (normalizedLine.replaceAll("[^A-Z]", "").equals(direction.toString())) {
-                    clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
-                    currentDirection = direction;
-                    currentClue = "";
-                    isDirection = true;
-                }
-            if (!normalizedLine.isEmpty() && Character.isDigit(normalizedLine.charAt(0))) {
-                clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
-                currentClue = "";
-                currentClueNumber = Integer.parseInt(normalizedLine.split("\\D+")[0]);
-            }
-            if (!normalizedLine.isEmpty() && !isDirection)
-                currentClue += normalizedLine + " ";
-        }
-        clues.add(new Clue(currentDirection, currentClueNumber, currentClue));
+        return parseClues(
+            new CrosswordStats(0, 0, 1000000),
+            List.of(new Block(Arrays.asList(text.split("\n")))));
+    }
 
-        Multimap<ClueDirection, Clue> cluesByDirection = Multimaps.index(clues, clue -> clue.getDirection());
-        List<ClueSection> sections = new ArrayList<>();
-        for (ClueDirection direction : DIRECTIONS) {
-            List<NumberedClue> sectionClues = cluesByDirection.get(direction).stream()
-                .filter(clue -> !clue.clue.isEmpty())
-                .sorted(Comparator.comparing(clue -> clue.clueNumber))
-                .map(clue -> new NumberedClue(clue.clueNumber, clue.clue.trim()))
-                .collect(Collectors.toList());
-            sections.add(new ClueSection(direction, sectionClues));
+    public CrosswordClues parseClues(Document document, Crossword crossword) {
+        List<DocumentText> texts = new ArrayList<>();
+        for (DocumentPage page : document.getPages())
+            texts.addAll(page.getTexts());
+
+        int maxAcrossClueNumber = 0;
+        int maxDownClueNumber = 0;
+        int maxDimension = Math.max(crossword.getNumRows(), crossword.getNumCols());
+        for (Entry crosswordEntry : crossword.getEntries()) {
+            if (crosswordEntry.getDirection() == ClueDirection.ACROSS)
+                maxAcrossClueNumber = Math.max(maxAcrossClueNumber, crosswordEntry.getClueNumber());
+            else if (crosswordEntry.getDirection() == ClueDirection.DOWN)
+                maxDownClueNumber = Math.max(maxDownClueNumber, crosswordEntry.getClueNumber());
         }
+
+        List<Block> blocks = new ArrayList<>();
+        LinkedList<String> lines = new LinkedList<>();
+        StringBuilder currLine = new StringBuilder();
+        for (int i = 0; i < texts.size(); i++) {
+            DocumentText text = texts.get(i);
+            currLine.append(text.getText());
+            if (i == texts.size() - 1) {
+                lines.add(currLine.toString());
+                blocks.add(new Block(lines));
+                continue;
+            }
+            DocumentText nextText = texts.get(i + 1);
+            if (nextText.getBounds().getY() + nextText.getBounds().getHeight() < text.getBounds().getY()) {
+                lines.add(currLine.toString());
+                currLine.setLength(0);
+                while (!lines.isEmpty() && !isClueStart(lines.get(0)))
+                    lines.removeFirst();
+                if (!lines.isEmpty())
+                    blocks.add(new Block(new ArrayList<>(lines)));
+                lines.clear();
+            } else if (nextText.getBounds().getX() + nextText.getBounds().getWidth() < text.getBounds().getX()) {
+                lines.add(currLine.toString());
+                currLine.setLength(0);
+            }
+        }
+
+        return parseClues(new CrosswordStats(maxAcrossClueNumber, maxDownClueNumber, maxDimension), blocks);
+    }
+
+    private static CrosswordClues parseClues(CrosswordStats stats, List<Block> blocks) {
+        AtomicReference<List<Clue>> solution = new AtomicReference<>(new ArrayList<>());
+        if (blocks.size() <= 10)
+            findBestBlockOrder(stats, ClueDirection.UNKNOWN, 0, blocks, 0, new ArrayList<>(), solution);
+        List<ClueSection> sections = new ArrayList<>();
+        for (ClueDirection clueDirection : ClueDirection.values())
+            if (clueDirection != ClueDirection.UNKNOWN) {
+                sections.add(new ClueSection(clueDirection, solution.get().stream()
+                    .filter(clue -> clue.direction == clueDirection)
+                    .map(clue -> new NumberedClue(clue.clueNumber, clue.clue.toString()))
+                    .collect(Collectors.toList())));
+            }
         return new CrosswordClues(sections);
     }
 
-    public List<CrosswordFormula> getFormulas(Grid grid, Crossword crossword, CrosswordClues clues) {
+    private static boolean isClueStart(String line) {
+        return line.equalsIgnoreCase("ACROSS")
+            || line.equalsIgnoreCase("DOWN")
+            || line.matches("^[1-9][0-9]*.{5,}");
+    }
+
+    private static void findBestBlockOrder(
+        CrosswordStats stats,
+        ClueDirection clueDirection,
+        int clueNumber,
+        List<Block> blocks,
+        long usedBitset,
+        List<Clue> clues,
+        AtomicReference<List<Clue>> solution) {
+        if (clueDirection == ClueDirection.DOWN && clueNumber >= stats.maxDownClueNumber - stats.maxDimension) {
+            solution.set(new ArrayList<>(clues));
+            return;
+        }
+        for (int i = 0; i < blocks.size(); i++)
+            if ((usedBitset & (1L << i)) == 0) {
+                List<String> lines = blocks.get(i).getLines();
+                int currCluesSize = clues.size();
+                ClueDirection newClueDirection = clueDirection;
+                int newClueNumber = clueNumber;
+                boolean addedNewClue = false;
+                for (String line : lines) {
+                    if (newClueDirection == ClueDirection.UNKNOWN
+                        && line.equalsIgnoreCase("ACROSS")) {
+                        newClueDirection = ClueDirection.ACROSS;
+                        newClueNumber = 0;
+                    } else if (newClueDirection == ClueDirection.ACROSS
+                        && newClueNumber >= stats.maxAcrossClueNumber - stats.maxDimension
+                        && line.equalsIgnoreCase("DOWN")) {
+                        newClueDirection = ClueDirection.DOWN;
+                        newClueNumber = 0;
+                    } else if (newClueDirection != ClueDirection.UNKNOWN) {
+                        if (!line.isEmpty() && Character.isDigit(line.charAt(0))) {
+                            int num = Integer.parseInt(line.split("\\D+")[0]);
+                            if (num > newClueNumber && num <= newClueNumber + stats.maxDimension) {
+                                newClueNumber = num;
+                                addedNewClue = true;
+                                clues.add(new Clue(newClueDirection, newClueNumber, new StringBuilder(line)));
+                                continue;
+                            }
+                        }
+                        if (addedNewClue)
+                            clues.get(clues.size() - 1).getClue().append(" " + line);
+                    }
+                }
+                if (addedNewClue)
+                    findBestBlockOrder(stats, newClueDirection, newClueNumber, blocks, usedBitset | (1L << i), clues, solution);
+                while (clues.size() > currCluesSize)
+                    clues.remove(clues.size() - 1);
+            }
+    }
+
+    public List<CrosswordFormula> getFormulas(Crossword crossword, CrosswordClues clues) {
         TreeMultimap<ClueDirection, Integer> numbersByDirection = TreeMultimap.create();
         for (Entry crosswordEntry : crossword.getEntries())
             numbersByDirection.put(crosswordEntry.getDirection(), crosswordEntry.getClueNumber());
@@ -132,10 +216,14 @@ public class CrosswordParser {
         Multimap<Point, AnswerPosition> gridToAnswers = ArrayListMultimap.create();
 
         List<CrosswordFormula> formulas = new ArrayList<>();
+        formulas.add(new CrosswordFormula(
+            0, crossword.getNumCols() + 2, false, "Type answers here", null));
+        formulas.add(new CrosswordFormula(
+            0, crossword.getNumCols() + 5, false, "and here", null));
         for (Entry crosswordEntry : crossword.getEntries()) {
             ClueKey clueKey = new ClueKey(crosswordEntry.getDirection(), crosswordEntry.getClueNumber());
-            int clueRow = numbersByDirection.get(clueKey.direction).headSet(clueKey.clueNumber).size();
-            int clueCol = grid.getNumCols() + 1 + 4 * clueKey.direction.ordinal();
+            int clueRow = numbersByDirection.get(clueKey.direction).headSet(clueKey.clueNumber).size() + 1;
+            int clueCol = crossword.getNumCols() + 3 * clueKey.direction.ordinal();
             formulas.add(new CrosswordFormula(clueRow, clueCol, false, cluesByNumber.get(clueKey) , null));
 
             List<String> relativeRefs = new ArrayList<>();
@@ -201,11 +289,25 @@ public class CrosswordParser {
     }
 
     @Data
+    private static class CrosswordStats {
+
+        private final int maxAcrossClueNumber;
+        private final int maxDownClueNumber;
+        private final int maxDimension;
+    }
+
+    @Data
     private static class Clue {
 
         private final ClueDirection direction;
         private final int clueNumber;
-        private final String clue;
+        private final StringBuilder clue;
+    }
+
+    @Data
+    private static class Block {
+
+        private final List<String> lines;
     }
 
     @Data

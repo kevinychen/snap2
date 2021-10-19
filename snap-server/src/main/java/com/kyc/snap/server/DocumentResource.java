@@ -12,6 +12,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
+import com.kyc.snap.crossword.CrosswordClues;
+import com.kyc.snap.crossword.CrosswordFormula;
+import com.kyc.snap.crossword.CrosswordParser;
 import javax.imageio.ImageIO;
 
 import com.google.common.collect.ImmutableList;
@@ -53,6 +56,7 @@ public class DocumentResource implements DocumentService {
     private final Store store;
     private final GoogleAPIManager googleApi;
     private final GridParser gridParser;
+    private final CrosswordParser crosswordParser;
     private final ForkJoinPool pool = new ForkJoinPool(8);
 
     @Override
@@ -153,6 +157,13 @@ public class DocumentResource implements DocumentService {
         if (request.getOcrOptions() != null)
             gridParser.findGridText(image.getImage(), gridPosition, grid, request.getOcrOptions());
         return new FindGridResponse(gridPosition, grid);
+    }
+
+    @Override
+    public FindCrosswordCluesResponse findCrosswordClues(String documentId, FindCrosswordCluesRequest request) {
+        CrosswordClues clues = crosswordParser.parseClues(getDocument(documentId), request.getCrossword());
+        List<CrosswordFormula> formulas = crosswordParser.getFormulas(request.getCrossword(), clues);
+        return new FindCrosswordCluesResponse(clues, formulas);
     }
 
     @Override

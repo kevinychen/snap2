@@ -58,6 +58,11 @@ public class GridParser {
                 verticalLines.add((int) line.getX1());
         }
 
+        if (horizontalLines.isEmpty())
+            horizontalLines.addAll(List.of(0, image.getHeight()));
+        if (verticalLines.isEmpty())
+            verticalLines.addAll(List.of(0, image.getWidth()));
+
         double horizontalPeriod = Utils.findApproxPeriod(horizontalLines);
         double verticalPeriod = Utils.findApproxPeriod(verticalLines);
         return new GridLines(
@@ -211,6 +216,8 @@ public class GridParser {
         Clusters clusters = null;
         List<Tuple> centers = null;
         for (int numClusters = Style.values().length - 1; numClusters >= 1; numClusters--) {
+            if (borderWidths.size() < numClusters)
+                continue;
             clusters = openCv.findClusters(borderWidths, numClusters);
             centers = clusters.getCenters();
             double minDistance = Double.MAX_VALUE;

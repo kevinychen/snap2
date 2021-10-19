@@ -59,7 +59,7 @@ public class SnapServer extends Application<Configuration> {
         environment.jersey().register(new MultiPartFeature());
         environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver, dictionary, wikinet));
         environment.jersey().register(new FileResource(store));
-        environment.jersey().register(new DocumentResource(store, googleApi, gridParser));
+        environment.jersey().register(new DocumentResource(store, googleApi, gridParser, crosswordParser));
     }
 
     static class SinglePageAppAssetsBundle extends AssetsBundle {

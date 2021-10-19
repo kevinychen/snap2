@@ -77,10 +77,10 @@ export default class Solver extends React.Component {
                 Capital letters denote letters you're sure about, lowercase letters denote about 80% confidence, and periods ('.') are wildcards.
                 <br />
                 You can also use{" "}
-                <span className="parsed">()</span> for groups,{" "}
-                <span className="parsed">[]</span> for one of several possible letters,{" "}
-                <span className="parsed">{"<>"}</span> for (nested) anagrams,{" "}
-                <span className="parsed">""</span> to forbid spaces,{" "}
+                <span className="parsed">(ABC)</span> for ABC in that order,{" "}
+                <span className="parsed">[ABC]</span> for A, B, or C,{" "}
+                <span className="parsed">{"<ABC>"}</span> for ABC in any order (anagram),{" "}
+                <span className="parsed">"ABC"</span> to forbid spaces,{" "}
                 and <span className="parsed">{"{}, ?, +"}</span> as in regular expressions.
             </div>
             <div className="block">

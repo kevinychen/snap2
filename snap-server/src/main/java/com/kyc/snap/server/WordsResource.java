@@ -58,7 +58,7 @@ public class WordsResource implements WordsService {
     @Override
     public GetCrosswordFormulasResponse getCrosswordFormulas(GetCrosswordFormulasRequest request) {
         List<CrosswordFormula> formulas = crosswordParser
-            .getFormulas(request.getGrid(), request.getCrossword(), request.getClues());
+            .getFormulas(request.getCrossword(), request.getClues());
         return new GetCrosswordFormulasResponse(formulas);
     }
 

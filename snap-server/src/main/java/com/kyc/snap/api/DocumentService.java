@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import com.kyc.snap.crossword.CrosswordFormula;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -126,6 +127,26 @@ public interface DocumentService {
 
         private final GridPosition gridPosition;
         private final Grid grid;
+    }
+
+    @POST
+    @Path("/{documentId}/clues")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    FindCrosswordCluesResponse findCrosswordClues(
+            @PathParam("documentId") String documentId, FindCrosswordCluesRequest request);
+
+    @Data
+    class FindCrosswordCluesRequest {
+
+        private final Crossword crossword;
+    }
+
+    @Data
+    class FindCrosswordCluesResponse {
+
+        private final CrosswordClues clues;
+        private final List<CrosswordFormula> formulas;
     }
 
     @POST

@@ -29,6 +29,7 @@ export default class Parser extends React.Component {
             grid: undefined,
             crossword: undefined,
             crosswordClues: undefined,
+            crosswordCluesInferred: false,
             crosswordFormulas: [],
 
             findGridLinesMode: "EXPLICIT",
@@ -66,7 +67,7 @@ export default class Parser extends React.Component {
     }
 
     render() {
-        const { url, popupMode, blobs, grid, crossword, crosswordFormulas, loadingClipboard } = this.state;
+        const { url, popupMode, blobs, grid, crossword, crosswordClues, crosswordCluesInferred, crosswordFormulas, loadingClipboard } = this.state;
         return <div className="parser">
             <div className="input">
                 <div className="block">
@@ -74,7 +75,7 @@ export default class Parser extends React.Component {
                         className="inline"
                         style={{ width: "400px" }}
                         type="text"
-                        placeholder="Enter URL of image/PDF/HTML containing crossword/grid/blobs..."
+                        placeholder="Enter URL of image/PDF/HTML..."
                         value={url}
                         onKeyUp={this.setUrl}
                         onChange={this.setUrl}
@@ -102,9 +103,11 @@ export default class Parser extends React.Component {
                                 </td>
                                 <td>
                                     <div className={classNames({ hidden: crossword === undefined })}>
-                                        <CluesArea setCrosswordClues={crosswordClues => {
-                                            this.findCrosswordFormulas(() => this.setState({ crosswordClues }));
-                                        }} />
+                                        <CluesArea
+                                            crosswordClues={crosswordClues}
+                                            crosswordCluesInferred={crosswordCluesInferred}
+                                            parseCrosswordClues={(unparsedClues, callback) => this.findCrosswordFormulas(unparsedClues, callback)}
+                                        />
                                     </div>
                                 </td>
                             </tr>
@@ -234,7 +237,7 @@ export default class Parser extends React.Component {
                 onClick={() => {
                     if (!this.state.loadingGrid) {
                         this.setState({ loadingGrid: true });
-                        this.findCrosswordFormulas(() => this.setState({ loadingGrid: false }));
+                        this.findCrosswordFormulas(undefined, () => this.setState({ loadingGrid: false }));
                     }
                 }}
             >
@@ -344,7 +347,11 @@ export default class Parser extends React.Component {
     }
 
     setCrossword = crossword => {
-        this.setState({ crossword, crosswordClues: { sections: [] }, crosswordFormulas: undefined });
+        this.setState({ crossword, crosswordClues: undefined, crosswordFormulas: undefined });
+    }
+
+    setCrosswordFormulas = (crosswordClues, crosswordCluesInferred, crosswordFormulas) => {
+        this.setState({ crosswordClues, crosswordCluesInferred, crosswordFormulas });
     }
 
     findGridLines = callback => {
@@ -394,7 +401,7 @@ export default class Parser extends React.Component {
         }
         this.findGrid((_, grid) => {
             postJson({
-                path: `/words/findCrossword`,
+                path: "/words/findCrossword",
                 body: { grid },
             }, ({ crossword }) => {
                 this.setCrossword(crossword);
@@ -403,16 +410,31 @@ export default class Parser extends React.Component {
         });
     }
 
-    findCrosswordFormulas = callback => {
-        const { crosswordClues } = this.state;
+    findCrosswordFormulas = (unparsedClues, callback) => {
+        const { document } = this.state;
         this.findCrossword((grid, crossword) => {
-            postJson({
-                path: `/words/crosswordFormulas`,
-                body: { grid, crossword, clues: crosswordClues },
-            }, ({ formulas }) => {
-                this.setState({ crosswordFormulas: formulas });
-                callback();
-            });
+            if (unparsedClues !== undefined) {
+                postJson({
+                    path: "/words/parseCrosswordClues",
+                    body: { unparsedClues },
+                }, ({ clues }) => {
+                    postJson({
+                        path: "/words/crosswordFormulas",
+                        body: { crossword, clues },
+                    }, ({ formulas }) => {
+                        this.setCrosswordFormulas(clues, false, formulas);
+                        callback(crossword, clues);
+                    });
+                });
+            } else {
+                postJson({
+                    path: `/documents/${document.id}/clues`,
+                    body: { crossword },
+                }, ({ clues, formulas }) => {
+                    this.setCrosswordFormulas(clues, clues.sections.some(section => section.clues.length > 0), formulas);
+                    callback(grid, crossword, clues);
+                });
+            }
         });
     }
 

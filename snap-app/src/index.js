@@ -80,6 +80,9 @@ function App() {
             <Route path="/document.html">
                 <Redirect to="/parser" />
             </Route>
+            <Route path="/wordsearch.html">
+                <Redirect to="/wordsearch" />
+            </Route>
             <Route path="/solver.html">
                 <Redirect to="/solver" />
             </Route>

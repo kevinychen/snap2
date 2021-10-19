@@ -96,7 +96,6 @@ public interface WordsService {
     @Data
     class GetCrosswordFormulasRequest {
 
-        private final Grid grid;
         private final Crossword crossword;
         private final CrosswordClues clues;
     }

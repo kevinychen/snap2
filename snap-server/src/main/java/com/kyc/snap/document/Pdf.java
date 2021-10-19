@@ -80,7 +80,7 @@ public class Pdf implements Closeable {
         }
 
         @Override
-        protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
+        protected void writeString(String text, List<TextPosition> textPositions) {
             for (TextPosition position : textPositions)
                 allText.add(new DocumentText(position.getUnicode(), new Rectangle(
                     position.getX() * RENDER_SCALE,
