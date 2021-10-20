@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
@@ -33,15 +36,22 @@ import lombok.Data;
 public class CrosswordParser {
 
     public Crossword parseCrossword(Grid grid) {
+        return Stream.of(Style.THIN, Style.THICK)
+            .map(maxBorderStyle -> parseCrossword(grid, maxBorderStyle))
+            .max(Comparator.comparing(crossword -> crossword.getEntries().size()))
+            .get();
+    }
+
+    private Crossword parseCrossword(Grid grid, Style maxBorderStyle) {
         Square[][] squares = grid.getSquares();
         CrosswordSquare[][] crosswordSquares = new CrosswordSquare[grid.getNumRows()][grid.getNumCols()];
         for (int i = 0; i < grid.getNumRows(); i++)
             for (int j = 0; j < grid.getNumCols(); j++) {
                 boolean isOpen = ImageUtils.isLight(squares[i][j].getRgb());
                 boolean canGoAcross = isOpen && j < grid.getNumCols() - 1 && ImageUtils.isLight(squares[i][j + 1].getRgb())
-                        && squares[i][j].getRightBorder().getStyle().compareTo(Style.THIN) <= 0;
+                        && squares[i][j].getRightBorder().getStyle().compareTo(maxBorderStyle) <= 0;
                 boolean canGoDown = isOpen && i < grid.getNumRows() - 1 && ImageUtils.isLight(squares[i + 1][j].getRgb())
-                        && squares[i][j].getBottomBorder().getStyle().compareTo(Style.THIN) <= 0;
+                        && squares[i][j].getBottomBorder().getStyle().compareTo(maxBorderStyle) <= 0;
                 crosswordSquares[i][j] = new CrosswordSquare(isOpen, canGoAcross, canGoDown);
             }
 
@@ -92,29 +102,31 @@ public class CrosswordParser {
             else if (crosswordEntry.getDirection() == ClueDirection.DOWN)
                 maxDownClueNumber = Math.max(maxDownClueNumber, crosswordEntry.getClueNumber());
         }
+        return parseClues(maxAcrossClueNumber, maxDownClueNumber, maxDimension, texts);
+    }
 
+    @VisibleForTesting
+    CrosswordClues parseClues(int maxAcrossClueNumber, int maxDownClueNumber,
+        int maxDimension, List<DocumentText> texts) {
         List<Block> blocks = new ArrayList<>();
         LinkedList<String> lines = new LinkedList<>();
         StringBuilder currLine = new StringBuilder();
         for (int i = 0; i < texts.size(); i++) {
             DocumentText text = texts.get(i);
             currLine.append(text.getText());
-            if (i == texts.size() - 1) {
-                lines.add(currLine.toString());
-                blocks.add(new Block(lines));
-                continue;
-            }
-            DocumentText nextText = texts.get(i + 1);
-            if (nextText.getBounds().getY() + nextText.getBounds().getHeight() < text.getBounds().getY()) {
-                lines.add(currLine.toString());
+            DocumentText nextText = i + 1 == texts.size() ? null : texts.get(i + 1);
+            if (nextText == null
+                || nextText.getBounds().getY() + nextText.getBounds().getHeight() < text.getBounds().getY()
+                || nextText.getBounds().getX() > text.getBounds().getX() + 10 * text.getBounds().getWidth()) {
+                lines.add(currLine.toString().replaceAll("(^\\h*)|(\\h*$)",""));
                 currLine.setLength(0);
                 while (!lines.isEmpty() && !isClueStart(lines.get(0)))
                     lines.removeFirst();
                 if (!lines.isEmpty())
                     blocks.add(new Block(new ArrayList<>(lines)));
                 lines.clear();
-            } else if (nextText.getBounds().getX() + nextText.getBounds().getWidth() < text.getBounds().getX()) {
-                lines.add(currLine.toString());
+            } else if (nextText.getBounds().getY() > text.getBounds().getY() + text.getBounds().getHeight()) {
+                lines.add(currLine.toString().replaceAll("(^\\h*)|(\\h*$)",""));
                 currLine.setLength(0);
             }
         }
@@ -140,7 +152,7 @@ public class CrosswordParser {
     private static boolean isClueStart(String line) {
         return line.equalsIgnoreCase("ACROSS")
             || line.equalsIgnoreCase("DOWN")
-            || line.matches("^[1-9][0-9]*.{5,}");
+            || line.matches("^[1-9][0-9]*[^0-9].{3,}");
     }
 
     private static void findBestBlockOrder(
@@ -151,9 +163,10 @@ public class CrosswordParser {
         long usedBitset,
         List<Clue> clues,
         AtomicReference<List<Clue>> solution) {
-        if (clueDirection == ClueDirection.DOWN && clueNumber >= stats.maxDownClueNumber - stats.maxDimension) {
+        if (clueDirection == ClueDirection.DOWN
+            && clueNumber >= stats.maxDownClueNumber - stats.maxDimension
+            && clues.size() > solution.get().size()) {
             solution.set(new ArrayList<>(clues));
-            return;
         }
         for (int i = 0; i < blocks.size(); i++)
             if ((usedBitset & (1L << i)) == 0) {
@@ -186,7 +199,7 @@ public class CrosswordParser {
                             clues.get(clues.size() - 1).getClue().append(" " + line);
                     }
                 }
-                if (addedNewClue)
+                if (newClueDirection != clueDirection || newClueNumber != clueNumber)
                     findBestBlockOrder(stats, newClueDirection, newClueNumber, blocks, usedBitset | (1L << i), clues, solution);
                 while (clues.size() > currCluesSize)
                     clues.remove(clues.size() - 1);

@@ -3,6 +3,7 @@ package com.kyc.snap.grid;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,12 +13,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.TreeMultiset;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Rectangle;
 import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
+import com.kyc.snap.image.ImageAnnotater;
 import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.opencv.OpenCvManager;
@@ -45,23 +48,34 @@ public class GridParser {
             Math.PI / 2,
             (image.getWidth() + image.getHeight()) / 100);
 
+        if (cardinalLines.size() >= 10000)
+            return new GridLines(
+                new TreeSet<>(List.of(0, image.getHeight())),
+                new TreeSet<>(List.of(0, image.getWidth())));
+
+        List<List<Line>> connectedComponents = Utils.findConnectedComponents(cardinalLines,
+            (line1, line2) -> Math.max(line1.getX1(), line1.getX2()) + 32 > Math.min(line2.getX1(), line2.getX2())
+                && Math.max(line2.getX1(), line2.getX2()) + 32 > Math.min(line1.getX1(), line1.getX2())
+                && Math.max(line1.getY1(), line1.getY2()) + 32 > Math.min(line2.getY1(), line2.getY2())
+                && Math.max(line2.getY1(), line2.getY2()) + 32 > Math.min(line1.getY1(), line1.getY2()));
+
         TreeSet<Integer> horizontalLines = new TreeSet<>();
         TreeSet<Integer> verticalLines = new TreeSet<>();
-        for (Line line : cardinalLines) {
-            boolean horizontal = line.getY1() == line.getY2();
-            boolean vertical = line.getX1() == line.getX2();
-            Preconditions.checkArgument(horizontal != vertical,
-                "Expected horizontal or vertical line but got %s", line);
-            if (horizontal)
-                horizontalLines.add((int) line.getY1());
-            else
-                verticalLines.add((int) line.getX1());
-        }
+        for (List<Line> component : connectedComponents)
+            if (component.size() >= 8) {
+                for (Line line : component)
+                    if (line.getY1() == line.getY2())
+                        horizontalLines.add((int) line.getY1());
+                    else if (line.getX1() == line.getX2())
+                        verticalLines.add((int) line.getX1());
+                    else
+                        throw new IllegalStateException("Expected horizontal or vertical line");
+            }
 
-        if (horizontalLines.isEmpty())
-            horizontalLines.addAll(List.of(0, image.getHeight()));
-        if (verticalLines.isEmpty())
-            verticalLines.addAll(List.of(0, image.getWidth()));
+        if (horizontalLines.isEmpty() || verticalLines.isEmpty())
+            return new GridLines(
+                new TreeSet<>(List.of(0, image.getHeight())),
+                new TreeSet<>(List.of(0, image.getWidth())));
 
         double horizontalPeriod = Utils.findApproxPeriod(horizontalLines);
         double verticalPeriod = Utils.findApproxPeriod(verticalLines);

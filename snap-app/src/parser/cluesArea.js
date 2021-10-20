@@ -17,7 +17,7 @@ export class CluesArea extends React.Component {
         return <div className="clues-area">
             <h3>Enter crossword clues</h3>
             {crosswordCluesInferred
-                ? <p>Clues found from document! Make any fixes if needed here.</p>
+                ? <p>Clues automatically found! Make any fixes if needed here.</p>
                 : <p>The format is flexible, so copying and pasting directly from the puzzle probably works.</p>}
             <textarea
                 style={{ fontFamily: localChanges !== undefined ? "auto" : "monospace" }}

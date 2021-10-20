@@ -27,6 +27,7 @@ public class GridParserTests {
         testFindGridLinesHelper("kitchen_rush.pdf", 17, 17);
         testFindGridLinesHelper("pit.pdf", 12, 12);
         testFindGridLinesHelper("meatballs.pdf", 17, 17);
+        testFindGridLinesHelper("hugs.pdf", 19, 13);
     }
 
     @Test

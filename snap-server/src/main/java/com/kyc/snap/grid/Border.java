@@ -16,7 +16,7 @@ public class Border {
      */
     private Style style = Style.NONE;
 
-    public static enum Style {
+    public enum Style {
         NONE,
         THIN,
         MEDIUM,

@@ -1,12 +1,15 @@
 
 package com.kyc.snap.util;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -102,6 +105,29 @@ public class Utils {
                 }
             }
         return bestSequence;
+    }
+
+    public static <T> List<List<T>> findConnectedComponents(List<T> items, BiPredicate<T, T> areNeighbors) {
+        boolean[] visited = new boolean[items.size()];
+        List<List<T>> components = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++)
+            if (!visited[i]) {
+                Deque<Integer> queue = new ArrayDeque<>();
+                List<T> component = new ArrayList<>();
+                visited[i] = true;
+                queue.add(i);
+                while (!queue.isEmpty()) {
+                    int j = queue.pop();
+                    component.add(items.get(j));
+                    for (int k = 0; k < items.size(); k++)
+                        if (!visited[k] && areNeighbors.test(items.get(j), items.get(k))) {
+                            visited[k] = true;
+                            queue.add(k);
+                        }
+                }
+                components.add(component);
+            }
+        return components;
     }
 
     private Utils() {

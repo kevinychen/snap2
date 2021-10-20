@@ -73,18 +73,30 @@ export default class Parser extends React.Component {
                 <div className="block">
                     <input
                         className="inline"
-                        style={{ width: "400px" }}
+                        style={{ width: "300px" }}
                         type="text"
                         placeholder="Enter URL of image/PDF/HTML..."
                         value={url}
-                        onKeyUp={this.setUrl}
-                        onChange={this.setUrl}
+                        onKeyUp={e => this.setUrl(e.target.value, () => {})}
+                        onChange={e => this.setUrl(e.target.value, () => {})}
                     />
                     <span className="inline">or</span>
                     <input
                         className="inline"
                         type="file"
                         onChange={e => this.setFile(e.target.files[0])}
+                    />
+                    <input
+                        type="button"
+                        value="Demo"
+                        onClick={() => this.setUrl("https://www.pandamagazine.com/island7/puzzles/pb7_dont_drop_the_meatballs_kdjk.pdf", () => {
+                            setTimeout(() => {
+                                if (!this.state.loadingGrid) {
+                                    this.setState({ loadingGrid: true });
+                                    this.findCrosswordFormulas(undefined, () => this.setState({ loadingGrid: false }));
+                                }
+                            }, 1000);
+                        })}
                     />
                 </div>
                 {this.maybeRenderToolbar()}
@@ -149,35 +161,30 @@ export default class Parser extends React.Component {
             return;
         }
         return <div className="block">
-            <button
-                className="inline"
-                onClick={this.reset}
-            >
-                {"Reset"}
-            </button>
-            <button
-                className="inline"
-                onClick={() => this.setState({ popupMode: "ADVANCED_SETTINGS" })}
-            >
-                {"Advanced..."}
-            </button>
             {this.maybeRenderNav()}
+            <span className="hidden">.</span>
             <div className="toolbar_options">
                 {selectedAll ? <span className="inline">Entire image selected.</span> : undefined}
                 <div className="inline">
                     <span
                         className={classNames({ selected: mode === "SELECT_REGION" }, "radio")}
-                        onClick={() => this.setState({ mode: "SELECT_REGION" })}
+                        onClick={() => this.setState({ mode: this.state.mode === "SELECT_REGION" ? undefined : "SELECT_REGION" })}
                     >
                         {"Select region"}
                     </span>
                     <span
                         className={classNames({ selected: mode === "EDIT_GRID_LINES" }, "radio")}
-                        onClick={() => this.setState({ mode: "EDIT_GRID_LINES" })}
+                        onClick={() => this.setState({ mode: this.state.mode === "EDIT_GRID_LINES" ? undefined : "EDIT_GRID_LINES" })}
                     >
-                        {"Edit grid lines"}
+                        {"Edit grid"}
                     </span>
                 </div>
+                <button
+                    className="inline button"
+                    onClick={this.reset}
+                >
+                    {"Reset"}
+                </button>
             </div>
         </div>;
     }
@@ -230,10 +237,25 @@ export default class Parser extends React.Component {
         if (loadingGrid) {
             return <span className="loading" />;
         }
-        const hidden = document === undefined || blobs !== undefined || grid !== undefined;
+        if (blobs !== undefined || grid !== undefined) {
+            return <div className="block">
+                <button
+                    className="button"
+                    onClick={() => {
+                        this.setBlobs(undefined);
+                        this.setGrid(undefined);
+                    }}
+                >
+                    {"Go back"}
+                </button>
+            </div>;
+        }
+        if (document === undefined) {
+            return null;
+        }
         return <div className="block">
             <div
-                className={classNames({ hidden }, "big button")}
+                className="big button"
                 onClick={() => {
                     if (!this.state.loadingGrid) {
                         this.setState({ loadingGrid: true });
@@ -244,7 +266,7 @@ export default class Parser extends React.Component {
                 Parse crossword
             </div>
             <div
-                className={classNames({ hidden }, "big button")}
+                className="big button"
                 onClick={() => {
                     if (!this.state.loadingGrid) {
                         this.setState({ loadingGrid: true });
@@ -255,7 +277,7 @@ export default class Parser extends React.Component {
                 Parse grid
             </div>
             <div
-                className={classNames({ hidden }, "big button")}
+                className="big button"
                 onClick={() => {
                     if (!this.state.loadingGrid) {
                         this.setState({ loadingGrid: true });
@@ -265,6 +287,12 @@ export default class Parser extends React.Component {
             >
                 Parse blobs
             </div>
+            <button
+                className="advanced button"
+                onClick={() => this.setState({ popupMode: "ADVANCED_SETTINGS" })}
+            >
+                {"Advanced options"}
+            </button>
         </div>;
     }
 
@@ -275,11 +303,15 @@ export default class Parser extends React.Component {
         }
     }
 
-    setUrl = e => {
-        const url = e.target.value;
+    setUrl = (url, callback) => {
         if (url && url !== this.state.url) {
             this.setState({ url, loadingDocument: true });
-            postJson({ path: '/documents/url', body: { url } }, this.setDocument);
+            postJson({ path: '/documents/url', body: { url } }, document => {
+                this.setDocument(document);
+                callback();
+            });
+        } else {
+            callback();
         }
     }
 

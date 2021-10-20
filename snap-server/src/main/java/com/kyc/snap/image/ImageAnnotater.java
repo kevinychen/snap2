@@ -38,6 +38,11 @@ public class ImageAnnotater {
         return image;
     }
 
+    public void drawLine(int x1, int y1, int x2, int y2) {
+        g.setColor(Color.red);
+        g.drawLine(x1, y1, x2, y2);
+    }
+
     public void markLines(GridLines lines) {
         g.setColor(Color.red);
         for (int y : lines.getHorizontalLines())
