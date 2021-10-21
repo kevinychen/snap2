@@ -10,17 +10,25 @@ export default class Wordsearch extends React.Component {
         this.state = {
             editMode: true,
             grid: '',
-            boggleMode: false,
+            boggle: false,
             results: [],
-            highlightedWord: undefined,
+            highlightedIndex: undefined,
             highlightedPositions: [],
 
             loading: false,
         };
     }
 
+    componentDidMount() {
+        const hash = window.location.hash.substr(1);
+        if (hash !== '') {
+            this.setState({ ...JSON.parse(Buffer.from(hash, 'base64')) });
+            setTimeout(this.solve, 100);
+        }
+    }
+
     render() {
-        const { editMode, boggleMode, results, highlightedWord, highlightedPositions, loading } = this.state;
+        const { editMode, boggle, results, highlightedIndex, highlightedPositions, loading } = this.state;
         const grid = this.getGrid();
         return <div className="wordsearch">
             <div className="input">
@@ -42,8 +50,8 @@ export default class Wordsearch extends React.Component {
                         value={this.state.grid}
                     />
                     <div className="block">
-                        <input type="radio" checked={!boggleMode} onChange={() => this.setState({ boggleMode: !boggleMode })} />Straight
-                        <input type="radio" checked={boggleMode} onChange={() => this.setState({ boggleMode: !boggleMode })} />Boggle
+                        <input type="radio" checked={!boggle} onChange={() => this.setState({ boggle: !boggle })} />Straight
+                        <input type="radio" checked={boggle} onChange={() => this.setState({ boggle: !boggle })} />Boggle
                     </div>
                     <input
                         type="button"
@@ -56,7 +64,10 @@ export default class Wordsearch extends React.Component {
                         <div className="block">
                             <span
                                 className="button"
-                                onClick={() => this.setState({ editMode: true })}
+                                onClick={() => {
+                                    this.setState({ editMode: true, results: [], highlightedIndex: undefined, highlightedPositions: undefined });
+                                    window.location.hash = '';
+                                }}
                             >
                                 {"< Edit grid"}
                             </span>
@@ -76,8 +87,8 @@ export default class Wordsearch extends React.Component {
                 </>}
             </div>
             <div className="output">
-                {results.map(({ word, positions }) => <input
-                    className={classNames("link", { hovering: word === highlightedWord })}
+                {results.map(({ word, positions }, index) => <input
+                    className={classNames("link", { hovering: index === highlightedIndex })}
                     value={word}
                     readOnly={true}
                     onMouseEnter={() => {
@@ -85,7 +96,7 @@ export default class Wordsearch extends React.Component {
                         for (const { x, y } of positions) {
                             highlightedPositions[`${x}-${y}`] = true;
                         }
-                        this.setState({ highlightedWord: word, highlightedPositions });
+                        this.setState({ highlightedIndex: index, highlightedPositions });
                     }}
                 />)}
             </div>
@@ -97,8 +108,9 @@ export default class Wordsearch extends React.Component {
     }
 
     solve = () => {
-        const { boggle } = this.state;
+        const { grid, boggle } = this.state;
         this.setState({ loading: true });
+        window.location.hash = Buffer.from(JSON.stringify({ grid, boggle })).toString('base64');
         postJson({
             path: '/words/search', body: {
                 grid: this.getGrid(),

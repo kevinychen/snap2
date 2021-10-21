@@ -3,6 +3,11 @@
     height: calc(100vh - 250px);
 }
 
+.wordsearch .output {
+    height: calc(100vh - 150px);
+    overflow: scroll;
+}
+
 .wordsearch .hovering {
     background-color: #cccccc;
 }

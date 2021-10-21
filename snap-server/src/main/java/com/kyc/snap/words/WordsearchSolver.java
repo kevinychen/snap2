@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,14 +22,14 @@ public class WordsearchSolver {
     public List<Result> find(List<String> grid, boolean boggle) {
         int width = grid.stream().mapToInt(String::length).max().orElse(0);
         for (int i = 0; i < grid.size(); i++)
-            grid.set(i, Strings.padEnd(grid.get(i), width, '.'));
+            grid.set(i, Strings.padEnd(grid.get(i).toUpperCase(), width, '.'));
 
-        Set<String> words = dictionary.getWords();
+        Map<String, Long> wordFrequencies = dictionary.getWordFrequencies();
         List<Point> positions = new ArrayList<>();
         List<Result> results = new ArrayList<>();
         if (boggle) {
             boolean[][] used = new boolean[grid.size()][width];
-            for (String word : words)
+            for (String word : wordFrequencies.keySet())
                 for (int i = 0; i < grid.size(); i++)
                     for (int j = 0; j < width; j++)
                         if (grid.get(i).charAt(j) == word.charAt(0))
@@ -44,14 +45,14 @@ public class WordsearchSolver {
                                         && col < width; row += di, col += dj) {
                                     word += grid.get(row).charAt(col);
                                     positions.add(new Point(col, row));
-                                    if (words.contains(word))
+                                    if (word.length() >= 2 && wordFrequencies.containsKey(word))
                                         results.add(new Result(word, new ArrayList<>(positions)));
                                 }
                                 positions.clear();
                             }
         }
         return results.stream()
-                .sorted(Comparator.comparing(result -> -result.positions.size()))
+                .sorted(Comparator.comparing(result -> -Math.sqrt(wordFrequencies.get(result.word)) * Math.pow(26, result.word.length())))
                 .limit(MAX_RESULTS)
                 .collect(Collectors.toList());
     }
