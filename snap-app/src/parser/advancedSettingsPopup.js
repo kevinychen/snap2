@@ -11,7 +11,7 @@ export class AdvancedSettingsPopup extends Popup {
     }
 
     renderContent() {
-        const { setAdvancedSetting, findGridLinesMode } = this.props;
+        const { setAdvancedSetting, findGridLinesMode, interpolateSetting } = this.props;
         return (
             <div>
                 <div className="center">Advanced settings</div>
@@ -42,6 +42,21 @@ export class AdvancedSettingsPopup extends Popup {
                             title="Look for whitespace in the image as implicit lines"
                         >
                             {"Implicit grid lines"}
+                        </label>
+                    </div>
+                </div>
+                <div className="block">
+                    <div className="inline">
+                        <input
+                            id="interpolate-setting"
+                            type="checkbox"
+                            checked={interpolateSetting}
+                            onChange={() => setAdvancedSetting("interpolateSetting", !interpolateSetting)}
+                        />
+                        <label
+                            htmlFor="interpolate-setting"
+                        >
+                            {"Ensure grid is evenly spaced"}
                         </label>
                     </div>
                 </div>

@@ -1,24 +1,28 @@
 Snap
 ====
 
-Snap provides advanced tooling for puzzle hunts. Try Snap at [util.in](https://util.in), or follow the instructions [here](#install-add-on) to install the add-on and use Snap directly in Google Sheets.
+Snap provides advanced tooling for puzzle hunts. Try Snap at [util.in](https://util.in).
 
 Features
 --------
 
-### Crossword tool
+### [Crossword tool](https://util.in/parser)
 
-Given an image of a crossword, Snap can hook up your Google Sheet so that filling in a clue answer automatically fills in the grid and orthogonal clues.
+Given a crossword puzzle page, Snap automatically detects the crossword grid and clues.
+
+![Parsing a crossword](docs/parse_crossword.gif)
+
+Snap then hooks up your Google Sheet so that filling in a clue answer automatically fills in the grid and letters in orthogonal clues.
 
 ![Exported crossword](docs/crossword.gif)
 
-### Parse grids
+### [Parse grids](https://util.in/parser)
 
 Snap can handle many types of images. For example, here is an image of a grid with borders:
 
 ![Bordered grid](docs/bordered-grid.gif)
 
-### Parse blobs
+### [Parse blobs](https://util.in/parser)
 
 Easily import jigsaw pieces or other moving components into Google Sheets.
 
@@ -40,9 +44,10 @@ Find words in a grid. Both straight words and boggle mode are supported.
 Instructions
 ------------
 
-Instructions for the crossword tool [here](wiki/Crossword-tool-tutorial).
+Instructions for the crossword tool [here](../../wiki/Crossword-tool-tutorial).
 
-Instructions for parsing grids and blobs are the similar to that of the crossword tool; instead of clicking "Parse crossword", choose "Parse grid" or "Parse blobs".
+Instructions for parsing grids and blobs are similar to that of the crossword tool; instead of clicking "Parse crossword", choose "Parse grid" or "Parse blobs".
 
-Instructions for the anagram solver [here](wiki/Heavy-duty-anagram-solver).
+Instructions for the anagram solver [here](../../wiki/Heavy-duty-anagram-solver).
 
+Snap also comes with a Google Sheet add-on for advanced users. You can find instructions for installing it [here](../../wiki/Google-Sheet-add-on).

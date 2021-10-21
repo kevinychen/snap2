@@ -33,6 +33,7 @@ export default class Parser extends React.Component {
             crosswordFormulas: [],
 
             findGridLinesMode: "EXPLICIT",
+            interpolateSetting: true,
 
             loadingDocument: false,
             loadingGrid: false,
@@ -387,7 +388,7 @@ export default class Parser extends React.Component {
     }
 
     findGridLines = callback => {
-        const { document, page, rectangle, gridLines, findGridLinesMode } = this.state;
+        const { document, page, rectangle, gridLines, findGridLinesMode, interpolateSetting } = this.state;
         if (gridLines.horizontalLines.length > 2 || gridLines.verticalLines.length > 2) {
             callback(gridLines);
             return;
@@ -397,7 +398,7 @@ export default class Parser extends React.Component {
             body: {
                 section: { page, rectangle },
                 findGridLinesMode,
-                interpolate: true,
+                interpolate: interpolateSetting,
             }
         }, gridLines => {
             this.setGridLines(gridLines);

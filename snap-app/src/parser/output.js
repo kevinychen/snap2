@@ -6,10 +6,9 @@ export function Output({ grid, crosswordFormulas }) {
     }
     const { squares } = grid;
 
-    let numRows = squares.length, numCols = 0;
-
+    let numRows = squares.length + 1, numCols = 0;
     for (const row of squares) {
-        numCols = Math.max(numCols, row.length);
+        numCols = Math.max(numCols, row.length + 1);
     }
 
     const formulasByPoint = {};
@@ -29,15 +28,23 @@ export function Output({ grid, crosswordFormulas }) {
             let value = undefined;
             const square = squares[row] && squares[row][col];
             if (square !== undefined) {
-                const { rgb, text, rightBorder, bottomBorder } = square;
+                const { rgb, text, topBorder, leftBorder } = square;
                 cellProps.style = {
                     backgroundColor: '#' + rgb.toString(16).padStart(6, '0'),
-                    borderRight: `${borderToHtml(rightBorder)}px solid black`,
-                    borderBottom: `${borderToHtml(bottomBorder)}px solid black`,
+                    borderTop: borderToHtml(topBorder),
+                    borderLeft: borderToHtml(leftBorder),
                     width: 20,
                     height: 20,
                 };
                 value = text;
+            } else if (row === squares.length && col < squares[row - 1].length) {
+                cellProps.style = {
+                    borderTop: borderToHtml(squares[row - 1][col].bottomBorder),
+                };
+            } else if (row < squares.length && col === squares[row].length) {
+                cellProps.style = {
+                    borderLeft: borderToHtml(squares[row][col -  1].rightBorder),
+                };
             }
             const formula = formulasByPoint[`${row}-${col}`];
             if (formula !== undefined) {
@@ -67,10 +74,10 @@ export function Output({ grid, crosswordFormulas }) {
 
 function borderToHtml(border) {
     switch (border.style) {
-        case 'NONE': return 0;
-        case 'THIN': return 1;
-        case 'MEDIUM': return 2;
-        case 'THICK': return 3;
+        case 'NONE': return undefined;
+        case 'THIN': return "1px solid black";
+        case 'MEDIUM': return "2px solid black";
+        case 'THICK': return "3px solid black";
         default: throw Error();
     }
 }

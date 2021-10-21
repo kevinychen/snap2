@@ -3,7 +3,6 @@ package com.kyc.snap.grid;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,16 +10,13 @@ import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.TreeMultiset;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Rectangle;
 import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
-import com.kyc.snap.image.ImageAnnotater;
 import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.opencv.OpenCvManager;
@@ -228,7 +224,7 @@ public class GridParser {
             }
 
         Clusters clusters = null;
-        List<Tuple> centers = null;
+        List<Tuple> centers = new ArrayList<>();
         for (int numClusters = Style.values().length - 1; numClusters >= 1; numClusters--) {
             if (borderWidths.size() < numClusters)
                 continue;
@@ -256,7 +252,7 @@ public class GridParser {
                 for (Border border : square.borders()) {
                     int width = border.getWidth();
                     int styleLevel;
-                    if (width == 0 || centers.size() == 1)
+                    if (width == 0)
                         styleLevel = 0;
                     else {
                         int label = clusters.getLabels().get(new Tuple(width));
