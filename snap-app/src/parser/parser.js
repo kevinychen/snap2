@@ -136,9 +136,9 @@ export default class Parser extends React.Component {
                     </div>
                     <div
                         className={classNames({ hidden: blobs === undefined && grid === undefined }, "big button")}
-                        onClick={this.copyGridToSheet}
+                        onClick={() => this.setState({ popupMode: "EXPORT" })}
                     >
-                        {"Export to Sheets"}
+                        {`Export to ${blobs !== undefined ? "Slides" : "Sheets"}`}
                     </div>
                 </div>
             </div>
@@ -496,9 +496,5 @@ export default class Parser extends React.Component {
         navigator.clipboard.write(data).then(() => {
             setTimeout(() => this.setState({ loadingClipboard: false }), 3000);
         });
-    }
-
-    copyGridToSheet = () => {
-        this.setState({ popupMode: "EXPORT" });
     }
 }

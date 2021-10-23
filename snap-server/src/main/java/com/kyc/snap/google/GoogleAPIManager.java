@@ -3,7 +3,6 @@ package com.kyc.snap.google;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.List;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -11,13 +10,9 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
-import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.Permission;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
-import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.slides.v1.Slides;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.kyc.snap.server.ServerProperties;
 
@@ -27,10 +22,8 @@ public class GoogleAPIManager {
 
     private static final String APPLICATION_NAME = "Snap";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-    private static final int DEFAULT_SHEET_ID = 0;
 
     private final GoogleCredential credential;
-    private final Drive drive;
     private final Sheets sheets;
     private final Slides slides;
     private final String serverScriptUrl;
@@ -40,9 +33,6 @@ public class GoogleAPIManager {
             HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             credential = GoogleCredential.fromStream(new FileInputStream(CREDENTIALS_FILE))
                 .createScoped(ImmutableSet.of(SheetsScopes.DRIVE));
-            drive = new Drive.Builder(httpTransport, JSON_FACTORY, credential)
-                .setApplicationName(APPLICATION_NAME)
-                .build();
             sheets = new Sheets.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();

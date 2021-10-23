@@ -5,7 +5,9 @@ function fetchBackend(path, args, onSuccess, onError) {
         if (response.ok) {
             onSuccess && onSuccess(response);
         } else {
-            (onError || alert)(response);
+            response.json().then(body => {
+                alert(body.message);
+            });
         }
     });
 }

@@ -322,30 +322,17 @@ public class SpreadsheetManager {
         WebAppService webApp = Feign.builder()
                 .encoder(new JacksonEncoder())
                 .target(WebAppService.class, serverScriptBase);
-        try {
-            String response = webApp.insertImage(getAccessToken(), InsertImageRequest.builder()
-                .spreadsheetId(spreadsheetId)
-                .sheetName(findSheet(getSpreadsheet(), sheetId).getProperties().getTitle())
-                .url(ImageUtils.toDataURL(image))
-                .column(col + 1)
-                .row(row + 1)
-                .offsetX(offsetX)
-                .offsetY(offsetY)
-                .width(width)
-                .height(height)
-                .build());
-            if (!response.contains("The script completed"))
-                throw new RuntimeException(response);
-        } catch (FeignException e) {
-            throw new ClientErrorException(
-                String.format(
-                    "Failed to execute the script at '%s'. Verify that your Google script is published and supports requests from '%s'.",
-                    serverScriptUrl, credential.getServiceAccountId()),
-                Response.Status.fromStatusCode(e.status()),
-                e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        webApp.insertImage(getAccessToken(), InsertImageRequest.builder()
+            .spreadsheetId(spreadsheetId)
+            .sheetName(findSheet(getSpreadsheet(), sheetId).getProperties().getTitle())
+            .url(ImageUtils.toDataURL(image))
+            .column(col + 1)
+            .row(row + 1)
+            .offsetX(offsetX)
+            .offsetY(offsetY)
+            .width(width)
+            .height(height)
+            .build());
     }
 
     interface WebAppService {
@@ -406,11 +393,15 @@ public class SpreadsheetManager {
         }
     }
 
-    private synchronized String getAccessToken() throws IOException {
-        if (credential.getAccessToken() == null) {
-            credential.refreshToken();
+    private synchronized String getAccessToken() {
+        try {
+            if (credential.getAccessToken() == null) {
+                credential.refreshToken();
+            }
+            return credential.getAccessToken();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return credential.getAccessToken();
     }
 
     private DimensionRange getRange(Dimension dimension, int startIndex, int endIndex) {
