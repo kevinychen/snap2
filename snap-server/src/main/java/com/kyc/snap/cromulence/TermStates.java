@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.Data;
@@ -124,7 +125,7 @@ class TermStates {
     static class ChoiceState implements TermState {
 
         final TermState parent;
-        final List<TermNode> children;
+        final Set<TermNode> children;
         final boolean used;
 
         @Override

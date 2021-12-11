@@ -14,9 +14,11 @@ import com.kyc.snap.words.DictionaryManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -86,10 +88,17 @@ public class CromulenceSolver {
             while (bestFinalStates.size() > NUM_RESULTS)
                 bestFinalStates.pollLastEntry();
         }
-        return bestFinalStates.stream()
-            .limit(NUM_RESULTS)
-            .map(state -> new CromulenceSolverResult(state.words, state.score))
-            .collect(Collectors.toList());
+        Set<List<String>> seenWords = new HashSet<>();
+        List<CromulenceSolverResult> results = new ArrayList<>();
+        for (State state : bestFinalStates) {
+            if (seenWords.contains(state.words))
+                continue;
+            seenWords.add(state.words);
+            results.add(new CromulenceSolverResult(state.words, state.score));
+            if (results.size() == NUM_RESULTS)
+                break;
+        }
+        return results;
     }
 
     private double approxScoreThreshold(List<State> states) {
