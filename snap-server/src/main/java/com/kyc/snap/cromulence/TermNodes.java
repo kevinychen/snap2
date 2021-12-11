@@ -22,6 +22,7 @@ import com.kyc.snap.cromulence.TermStates.QuoteState;
 import com.kyc.snap.cromulence.TermStates.SymbolState;
 import com.kyc.snap.cromulence.TermStates.TermState;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Data;
 
@@ -64,7 +65,7 @@ class TermNodes {
 
     @Data
     static class ChoiceNode implements TermNode {
-        final List<TermNode> children;
+        final Set<TermNode> children;
 
         @Override
         public int complexity() {
@@ -166,7 +167,7 @@ class TermNodes {
         if (context instanceof ChoiceContext) {
             return new ChoiceNode(((ChoiceContext) context).terms().term().stream()
                 .map(TermNodes::fromAntlr)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toSet()));
         }
         if (context instanceof CountContext) {
             CountContext countContext = (CountContext) context;
@@ -186,7 +187,7 @@ class TermNodes {
         }
         if (context instanceof OrContext) {
             OrContext orContext = (OrContext) context;
-            return new ChoiceNode(List.of(fromAntlr(orContext.term(0)), fromAntlr(orContext.term(1))));
+            return new ChoiceNode(Set.of(fromAntlr(orContext.term(0)), fromAntlr(orContext.term(1))));
         }
         if (context instanceof QuoteContext) {
             return new QuoteNode(((QuoteContext) context).terms().term().stream()

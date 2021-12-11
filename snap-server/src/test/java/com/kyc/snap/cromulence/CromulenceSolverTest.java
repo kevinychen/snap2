@@ -79,4 +79,13 @@ public class CromulenceSolverTest {
         assertThat(result.getWords()).containsExactly("THE", "LARGEST", "NATURAL", "BODY", "OF", "LAND", "IN", "ICE",
             "WATER");
     }
+
+    @Test
+    public void testSolveNoDuplicates() {
+        List<CromulenceSolverResult> result = cromulence.solve("[BC][AA]T", null);
+        assertThat(result)
+            .extracting(CromulenceSolverResult::getWords)
+            .contains(List.of("BAT"), List.of("CAT"))
+            .doesNotHaveDuplicates();
+    }
 }
