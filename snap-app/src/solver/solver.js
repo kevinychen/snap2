@@ -1,8 +1,10 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React from "react";
 import { postJson } from "../fetch";
 import "./solver.css";
+import { withRouter } from "react-router-dom"
 
-export default class Solver extends React.Component {
+class Solver extends React.Component {
 
     constructor(props) {
         super(props);
@@ -10,7 +12,6 @@ export default class Solver extends React.Component {
             query: '',
             wordLengths: '',
             canRearrange: false,
-
             loading: false,
             results: [],
         };
@@ -18,6 +19,26 @@ export default class Solver extends React.Component {
 
     componentDidMount() {
         window.addEventListener("keyup", this.handleKey);
+        const searchParams = new URLSearchParams(this.props.location.search);
+        if (searchParams.get("q")) {
+            this.setState({
+                query: decodeURI(searchParams.get("q"))
+            })
+        }
+        if (searchParams.get("r") === '1') {
+            this.setState({
+                canRearrange: true
+            })
+        }
+        if (searchParams.get("wl")) {
+            const wl = decodeURI(searchParams.get("wl"));
+            const wordLengths =  wl.split(/[^0-9]+/);
+            if (wordLengths.length > 0) {
+                this.setState({
+                    wordLengths: wordLengths.join(" ").trim()
+                })
+            }
+        }
     }
 
     componentWillUnmount() {
@@ -136,6 +157,26 @@ export default class Solver extends React.Component {
         e.preventDefault();
     }
 
+    setSearchParams = () => {
+        const { query, wordLengths, canRearrange } = this.state;
+        const searchParams = new URLSearchParams({
+            q: encodeURI(query)
+        });
+        if (canRearrange) {
+            searchParams.set("r", "1");
+        }
+        if (wordLengths.length > 0) {
+            const wl = wordLengths.split(/[^0-9]+/).join(" ").trim();
+            if (wl.length > 0) {
+                searchParams.set("wl", encodeURI(wl));
+            }
+        }
+        this.props.history.push({
+            pathname: '/solver',
+            search: `?${searchParams.toString()}`
+        });
+    }
+
     solve = () => {
         const { query, wordLengths, canRearrange } = this.state;
         this.setState({ loading: true });
@@ -146,5 +187,8 @@ export default class Solver extends React.Component {
                 canRearrange,
             }
         }, ({ results }) => this.setState({ results, loading: false }));
+        this.setSearchParams();
     }
 }
+
+export default withRouter(Solver);
