@@ -16,6 +16,8 @@ export default class Wordsearch extends React.Component {
             highlightedIndex: undefined,
             highlightedPositions: {},
             highlightedWords: {},
+            highlightingAllWordbank: false,
+            highlightingDifferentColors: false,
 
             loading: false,
         };
@@ -29,7 +31,17 @@ export default class Wordsearch extends React.Component {
     }
 
     render() {
-        const { editMode, boggle, results, highlightedIndex, highlightedPositions, highlightedWords, loading } = this.state;
+        const {
+            editMode,
+            boggle,
+            results,
+            highlightedIndex,
+            highlightedPositions,
+            highlightedWords,
+            highlightingAllWordbank,
+            highlightingDifferentColors,
+            loading
+        } = this.state;
         const grid = this.getGrid();
         return <div className="wordsearch">
             <div className="input">
@@ -57,12 +69,12 @@ export default class Wordsearch extends React.Component {
                             value="Demo"
                             onClick={() => this.setState({
                                 grid: 'MENIMDLORAIREIMMUSKD\nWALUIGIGSOPAWTAADALH\nTERRNAEEWATOELRETTEC\n'
-                                +     'ROIRODRIBYSFORIPOMEA\nANDILETTOPEACROFEINE\nCDRTPAMYWOCLHGTUEAHB\n'
-                                +     'EANILASORSACLASATOCP\nWDFLSERYORNDORSSPEAH\nAYBOWSACTTOLVDENEOCB\n'
-                                +     'PSRESSFFLEDAEKPIPOOO\nYSIADSEIOTESLSDGPIPK\nCROGDTONHFSONBNITOIU\n'
-                                +     'ASTLAFSIOSETROMURGTC\nLIPEOSQOOBOTKEPLDAMR\nESEDSTUORRYYEFSDVIGI\n'
-                                +     'RINRERAIDTERERNWVSYC\nTOADAIOCOKTGDSASOCNI\nHOSIUCTMNCKMOULTEBRE\n'
-                                +     'RILLSEEOUSDLKINGBOOH\nDRREOTDTMALENRITAINS',
+                                    + 'ROIRODRIBYSFORIPOMEA\nANDILETTOPEACROFEINE\nCDRTPAMYWOCLHGTUEAHB\n'
+                                    + 'EANILASORSACLASATOCP\nWDFLSERYORNDORSSPEAH\nAYBOWSACTTOLVDENEOCB\n'
+                                    + 'PSRESSFFLEDAEKPIPOOO\nYSIADSEIOTESLSDGPIPK\nCROGDTONHFSONBNITOIU\n'
+                                    + 'ASTLAFSIOSETROMURGTC\nLIPEOSQOOBOTKEPLDAMR\nESEDSTUORRYYEFSDVIGI\n'
+                                    + 'RINRERAIDTERERNWVSYC\nTOADAIOCOKTGDSASOCNI\nHOSIUCTMNCKMOULTEBRE\n'
+                                    + 'RILLSEEOUSDLKINGBOOH\nDRREOTDTMALENRITAINS',
                                 wordbank: [
                                     "Luigi Circuit", "Mario Circuit", "Daisy Circuit", "Dry Dry Ruins",
                                     "Moo Moo Meadows", "Coconut Mall", "Koopa Cape", "Moonview Highway",
@@ -102,27 +114,24 @@ export default class Wordsearch extends React.Component {
                                 }}
                             >
                                 {"< Edit grid"}
-                            </span>&nbsp;&nbsp;
-                            {results.find(result => result.inWordbank) && <span
-                                className="button"
-                                onClick={() => {
-                                    const highlightedWords = {};
-                                    const highlightedPositions = {};
-                                    results.filter((result) => result.inWordbank).forEach(({ positions, word }, index) => {
-                                        const color = this.hashStringToColor(word);
-                                        highlightedWords[index] = { color };
-                                        positions.forEach(({ x, y }) => {
-                                            const key = `${x}-${y}`;
-                                            if (!highlightedPositions.hasOwnProperty(key)) {
-                                                highlightedPositions[key] = { color };
-                                            }
-                                        });
-                                    });
-                                    this.setState({ highlightedPositions, highlightedWords, highlightedIndex: undefined });
-                                }}
-                            >
-                                {"Highlight all in wordbank"}
-                            </span>}
+                            </span><br/><br/>
+                            {results.find(result => result.inWordbank) && <>
+                            <input
+                                type="checkbox"
+                                checked={highlightingAllWordbank}
+                                onChange={() => this.setState({ highlightingAllWordbank: !highlightingAllWordbank }, this.onHighlightWordbankChange)}
+                            />
+                            {"Highlight all wordbank"}
+                            {highlightingAllWordbank && <>
+                            <input
+                                type="checkbox"
+                                checked={highlightingDifferentColors}
+                                onChange={() => this.setState({ highlightingDifferentColors: !highlightingDifferentColors }, this.onHighlightWordbankChange)}
+                            />
+                            {"Highlight different colors"}
+                            </>}
+                            </>
+                            }
                         </div>
                         <table className="block">
                             <tbody>
@@ -140,6 +149,18 @@ export default class Wordsearch extends React.Component {
                                 </tr>)}
                             </tbody>
                         </table>
+                        {highlightingAllWordbank && <>
+                            <p>Unused letters: </p>
+                            <textarea className="unused"
+                                readOnly={true}
+                                value={grid.reduce((unused, row, y) =>
+                                    unused + [...row].reduce((s, c, x) =>
+                                        s + (highlightedPositions[`${x}-${y}`] === undefined ? c : '')
+                                    , '')
+                                , '')}>
+                            </textarea>
+                        </>
+                        }
                 </>}
             </div>
             <div className="output">
@@ -150,16 +171,23 @@ export default class Wordsearch extends React.Component {
                     value={word}
                     readOnly={true}
                     onMouseEnter={() => {
-                        const highlightedPositions = {};
-                        const highlightedWords = {};
-                        for (const { x, y } of positions) {
-                            highlightedPositions[`${x}-${y}`] = { inWordbank };
+                        if (!highlightingAllWordbank) {
+                            const highlightedPositions = {};
+                            const highlightedWords = {};
+                            for (const { x, y } of positions) {
+                                highlightedPositions[`${x}-${y}`] = { inWordbank };
+                            }
+                            this.setState({ highlightedIndex: index, highlightedPositions, highlightedWords });
                         }
-                        this.setState({ highlightedIndex: index, highlightedPositions, highlightedWords });
                     }}
                 />)}
             </div>
         </div>;
+    }
+
+    hashLocation() {
+        const { grid, wordbank, boggle, highlightingAllWordbank, highlightingDifferentColors } = this.state;
+        window.location.hash = Buffer.from(JSON.stringify({ grid, wordbank, boggle, highlightingAllWordbank, highlightingDifferentColors })).toString('base64');
     }
 
     hashStringToColor(str) {
@@ -176,6 +204,28 @@ export default class Wordsearch extends React.Component {
         return colour;
     }
 
+    onHighlightWordbankChange() {
+        const { highlightingAllWordbank, highlightingDifferentColors, results } = this.state;
+        const highlightedWords = {};
+        const highlightedPositions = {};
+        if (highlightingAllWordbank) {
+            results.filter(result => result.inWordbank).forEach(
+                ({ positions, word }, index
+            ) => {
+                const color = highlightingDifferentColors ? this.hashStringToColor(word) : '#f9ce70';
+                highlightedWords[index] = { color };
+                positions.forEach(({ x, y }) => {
+                    const key = `${x}-${y}`;
+                    if (!highlightedPositions.hasOwnProperty(key)) {
+                        highlightedPositions[key] = { color };
+                    }
+                });
+            });
+        }
+        this.setState({ highlightedPositions, highlightedWords, highlightedIndex: undefined });
+        this.hashLocation();
+    }
+
     getGrid() {
         return this.state.grid.trim().toUpperCase().split('\n').map(word => word.replace(/\s/g, ''));
     }
@@ -185,9 +235,9 @@ export default class Wordsearch extends React.Component {
     }
 
     solve = () => {
-        const { grid, boggle, wordbank } = this.state;
+        const { boggle } = this.state;
+        this.hashLocation();
         this.setState({ loading: true });
-        window.location.hash = Buffer.from(JSON.stringify({ grid, wordbank, boggle })).toString('base64');
         postJson({
             path: '/words/search',
             body: {
@@ -196,7 +246,10 @@ export default class Wordsearch extends React.Component {
                 boggle,
             }
         }, ({ results }) => {
-            this.setState({ editMode: false, results, highlightedPositions: [], loading: false });
+            this.setState({ editMode: false, results, highlightedPositions: [], loading: false }, this.onHighlightWordbankChange);
+            if (!results.find(result => result.inWordbank)) {
+                this.setState({ highlightingAllWordbank: false });
+            }
         });
     }
 }
