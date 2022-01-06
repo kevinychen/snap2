@@ -48,6 +48,7 @@ public interface WordsService {
     class SolveWordsearchRequest {
 
         private List<String> grid;
+        private List<String> wordbank;
         private boolean boggle = false;
     }
 

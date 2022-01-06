@@ -1,6 +1,11 @@
-.wordsearch textarea {
+.wordsearch .grid {
     width: 100%;
-    height: calc(100vh - 250px);
+    height: calc(100vh - 400px);
+}
+
+.wordsearch .wordbank {
+    width: 100%;
+    height: 150px;
 }
 
 .wordsearch .output {
@@ -10,4 +15,20 @@
 
 .wordsearch .hovering {
     background-color: #cccccc;
+}
+
+.wordsearch .in-wordbank {
+    background-color: #fbdfa3;
+}
+
+.wordsearch .in-wordbank.hovering {
+    background-color: #f9ce70;
+}
+
+.wordsearch .input table td {
+    text-align: center;
+    font-family: monospace;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
 }
