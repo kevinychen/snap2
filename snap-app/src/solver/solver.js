@@ -1,7 +1,7 @@
 import React from "react";
+import { withRouter } from "react-router-dom";
 import { postJson } from "../fetch";
 import "./solver.css";
-import { withRouter } from "react-router-dom"
 
 class Solver extends React.Component {
 
@@ -19,24 +19,24 @@ class Solver extends React.Component {
     componentDidMount() {
         window.addEventListener("keyup", this.handleKey);
         const searchParams = new URLSearchParams(this.props.location.search);
-        if (searchParams.get("q")) {
-            this.setState({
-                query: decodeURI(searchParams.get("q"))
-            })
-        }
         if (searchParams.get("r") === '1') {
             this.setState({
                 canRearrange: true
-            })
+            });
         }
         if (searchParams.get("wl")) {
             const wl = decodeURI(searchParams.get("wl"));
-            const wordLengths =  wl.split(/[^0-9]+/);
+            const wordLengths = wl.split(/[^0-9]+/);
             if (wordLengths.length > 0) {
                 this.setState({
                     wordLengths: wordLengths.join(" ").trim()
-                })
+                });
             }
+        }
+        if (searchParams.get("q")) {
+            this.setState({
+                query: decodeURI(searchParams.get("q"))
+            }, this.solve);
         }
     }
 
