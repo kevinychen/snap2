@@ -13,11 +13,25 @@
     overflow: scroll;
 }
 
+.wordsearch .output .link {
+    display: inline-flex;
+    font-family: monospace;
+    border: solid 3px transparent;
+    border-radius: 0;
+    margin: 2px;
+    padding: 3px 5px;
+    width: 180px;
+}
+
+.wordsearch .output .link.in-wordbank {
+    border-color: #fbdfa3;
+}
+
 .wordsearch .hovering {
     background-color: #cccccc;
 }
 
-.wordsearch .in-wordbank {
+.wordsearch .grid .in-wordbank {
     background-color: #fbdfa3;
 }
 
@@ -28,9 +42,9 @@
 .wordsearch .input table td {
     text-align: center;
     font-family: monospace;
-    font-size: 18px;
-    height: 18px;
-    width: 18px;
+    font-size: 17px;
+    height: 20px;
+    width: 20px;
 }
 
 .wordsearch .unused {

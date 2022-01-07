@@ -54,7 +54,9 @@ export default class Wordsearch extends React.Component {
                             onClick={() => this.setState({
                                 grid: 'OHQRECTANGLEP\nDVQIMHESQWRAK\nICAVULQNTHRKO\nOPXLQUOROAINN\n'
                                     + 'ZNPPAGIMLCHYO\nERURAABLHREDG\nPYETNUEZEFXSA\nAICGSLCDEHAPT\n'
-                                    + 'ROLPOINYBEGHN\nTELGRIPHUIOEE\nSURCLATYCONRP\nGALYLMECRJAEK\nMECZHFDIMARYP'
+                                    + 'ROLPOINYBEGHN\nTELGRIPHUIOEE\nSURCLATYCONRP\nGALYLMECRJAEK\nMECZHFDIMARYP',
+                                wordbank: '',
+                                boggle: false
                             })}
                         />
                     </div>
@@ -62,7 +64,7 @@ export default class Wordsearch extends React.Component {
                         onChange={e => this.setState({ grid: e.target.value })}
                         value={this.state.grid}
                     />
-                     <div>
+                    <div>
                         {"Optional wordbank (split by tab and/or newline; non-alphanumeric chars ignored): "}
                         <input
                             type="button"
@@ -89,7 +91,7 @@ export default class Wordsearch extends React.Component {
                             })}
                         />
                     </div>
-                     <textarea className="wordbank"
+                    <textarea className="wordbank"
                         onChange={e => this.setState({ wordbank: e.target.value })}
                         value={this.state.wordbank}
                     />
@@ -153,23 +155,17 @@ export default class Wordsearch extends React.Component {
                             <p>Unused letters: </p>
                             <textarea className="unused"
                                 readOnly={true}
-                                value={grid.reduce((unused, row, y) =>
-                                    unused + [...row].reduce((s, c, x) =>
-                                        s + (highlightedPositions[`${x}-${y}`] === undefined ? c : '')
-                                    , '')
-                                , '')}>
-                            </textarea>
+                                value={grid.flatMap((row, y) => [...row].filter((c, x) => highlightedPositions[`${x}-${y}`] === undefined)).join('')}
+                            />
                         </>
                         }
                 </>}
             </div>
             <div className="output">
-                {results.map(({ word, positions, inWordbank }, index) => <input
+                {results.map(({ word, positions, inWordbank }, index) => <div
                     key={index}
                     className={classNames("link", { hovering: index === highlightedIndex, "in-wordbank": inWordbank })}
                     style={{ backgroundColor: highlightedWords[index]?.color }}
-                    value={word}
-                    readOnly={true}
                     onMouseEnter={() => {
                         if (!highlightingAllWordbank) {
                             const highlightedPositions = {};
@@ -180,7 +176,7 @@ export default class Wordsearch extends React.Component {
                             this.setState({ highlightedIndex: index, highlightedPositions, highlightedWords });
                         }
                     }}
-                />)}
+                >{word}</div>)}
             </div>
         </div>;
     }
@@ -191,17 +187,19 @@ export default class Wordsearch extends React.Component {
     }
 
     hashStringToColor(str) {
-        var hash = 0;
+        let hash = 0;
         for (let i = 0; i < str.length; i++) {
             hash = str.charCodeAt(i) + ((hash << 5) - hash);
         }
-        let colour = '#';
+        let color = '#';
         for (let i = 0; i < 3; i++) {
-            const value = (hash >> (i * 8)) & 0xFF;
-            colour += ('00' + value.toString(16)).substr(-2);
+            let value = (hash >> (i * 8)) & 0xFF;
+            if (value < 100) {
+                value += 100;
+            }
+            color += ('80' + value.toString(16)).substr(-2);
         }
-        colour += 'aa';
-        return colour;
+        return color;
     }
 
     onHighlightWordbankChange() {
@@ -231,7 +229,7 @@ export default class Wordsearch extends React.Component {
     }
 
     getWordbank() {
-        return this.state.wordbank.trim().toUpperCase().split(/\n|\t/).map(word => word.replace(/[^A-Z0-9]/g, '')).filter(word => word.length > 1);
+        return this.state.wordbank.trim().toUpperCase().split(/\n|\t/).map(word => word.replace(/[^A-Z0-9]/g, '')).filter(word => word.length >= 1);
     }
 
     solve = () => {
@@ -246,7 +244,7 @@ export default class Wordsearch extends React.Component {
                 boggle,
             }
         }, ({ results }) => {
-            this.setState({ editMode: false, results, highlightedPositions: [], loading: false }, this.onHighlightWordbankChange);
+            this.setState({ editMode: false, results, highlightedPositions: {}, loading: false }, this.onHighlightWordbankChange);
             if (!results.find(result => result.inWordbank)) {
                 this.setState({ highlightingAllWordbank: false });
             }
