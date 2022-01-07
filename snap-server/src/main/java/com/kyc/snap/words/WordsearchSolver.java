@@ -17,7 +17,7 @@ import lombok.Data;
 public class WordsearchSolver {
 
     private static final int MAX_RESULTS = 500;
-    private static final int WORDBANK_WEIGHT = -100000000;
+    private static final double WORDBANK_WEIGHT = -Math.pow(26, 30);
 
     private final DictionaryManager dictionary;
 
@@ -58,7 +58,10 @@ public class WordsearchSolver {
                             }
         }
         return results.stream()
-                .sorted(Comparator.comparing(result -> (result.inWordbank ? WORDBANK_WEIGHT : -Math.sqrt(wordFrequencies.get(result.word))) * Math.pow(26, result.word.length())))
+                .sorted(Comparator.comparing(result -> (
+                		result.inWordbank ? (WORDBANK_WEIGHT * result.word.length()) : 
+                			-Math.sqrt(wordFrequencies.get(result.word)) * Math.pow(26, result.word.length())
+                		)))
                 .limit(MAX_RESULTS)
                 .collect(Collectors.toList());
     }
