@@ -39,7 +39,7 @@ public class WordsResource implements WordsService {
 
     @Override
     public SolveWordsearchResponse solveWordsearch(SolveWordsearchRequest request) {
-        List<WordsearchSolver.Result> results = wordsearchSolver.find(request.getGrid(), request.isBoggle());
+        List<WordsearchSolver.Result> results = wordsearchSolver.find(request.getGrid(), request.getWordbank(), request.isBoggle());
         return new SolveWordsearchResponse(results);
     }
 

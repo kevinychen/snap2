@@ -1,6 +1,7 @@
 package com.kyc.snap.api;
 
 import java.util.List;
+import java.util.Set;
 
 import com.kyc.snap.crossword.CrosswordFormula;
 import javax.ws.rs.Consumes;
@@ -48,6 +49,7 @@ public interface WordsService {
     class SolveWordsearchRequest {
 
         private List<String> grid;
+        private Set<String> wordbank;
         private boolean boggle = false;
     }
 
