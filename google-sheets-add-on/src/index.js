@@ -3,7 +3,6 @@ import { UploadPage } from "./upload/uploadPage";
 import { WordBankPage } from "./wordBank/wordBankPage";
 import { CustomFunctionPage } from "./customFunction/customFunctionPage";
 import { FindWordsPage } from "./findWords/findWordsPage";
-import { ReshapePage } from "./reshape/reshapePage";
 
 class Snap extends React.Component {
     constructor(props) {
@@ -40,13 +39,6 @@ class Snap extends React.Component {
                     </div>
                     <div className="block">
                         <button
-                            onClick={() => this.setState({ route: "reshape" })}
-                        >
-                            {"Reshape values in a range"}
-                        </button>
-                    </div>
-                    <div className="block">
-                        <button
                             onClick={() => this.setState({ route: "custom-function" })}
                         >
                             {"Quick define custom function"}
@@ -79,8 +71,6 @@ class Snap extends React.Component {
             return <CustomFunctionPage />
         } else if (route === "find-words") {
             return <FindWordsPage />
-        } else if (route === "reshape") {
-            return <ReshapePage />
         }
     }
 }

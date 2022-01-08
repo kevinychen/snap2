@@ -169,59 +169,6 @@ function saveCustomFunction(customFunction) {
   }
 }
 
-/**
- * Rearranges the values in the currently selected range as follows.
- * First, divide the range into rectangular regions with the given starting width and height.
- * Then, change these rectangular regions into a shape with the given ending width and height.
- * The reading order of the values in each region remain the same.
- * For example, resize(range, 1, 2, 2, 1) would do the following:
- *
- * A B
- * C D      A C B D
- * E F  =>  E G F H
- * G H      I   J
- * I J
- */
-function reshape(startWidth, startHeight, endWidth, endHeight) {
-  var range = SpreadsheetApp.getActiveSheet().getActiveRange();
-  var values = range.getValues();
-  var blankValues = [];
-  for (var i = 0; i < values.length; i++) {
-    blankValues.push([]);
-    for (var j = 0; j < values[i].length; j++) {
-      blankValues[i].push("");
-    }
-  }
-  range.setValues(blankValues);
-
-  var numRegionsX = Math.ceil(values[0].length / startWidth);
-  var numRegionsY = Math.ceil(values.length / startHeight);
-  var newValues = [];
-  for (var i = 0; i < numRegionsY * endHeight; i++) {
-    newValues.push([]);
-  }
-  for (var i = 0; i < numRegionsY; i++) {
-    for (var j = 0; j < numRegionsX; j++) {
-      var regionValues = [];
-      for (var ii = i * startHeight; ii < (i + 1) * startHeight; ii++) {
-        for (var jj = j * startWidth; jj < (j + 1) * startWidth; jj++) {
-          regionValues.push(ii < values.length && jj < values[ii].length ? values[ii][jj] : "");
-        }
-      }
-      var index = 0;
-      for (var ii = i * endHeight; ii < (i + 1) * endHeight; ii++) {
-        for (var jj = j * endWidth; jj < (j + 1) * endWidth; jj++) {
-          newValues[ii].push(index < regionValues.length ? regionValues[index] : "");
-          index++;
-        }
-      }
-    }
-  }
-  var newRange = SpreadsheetApp.getActiveSheet().getRange(range.getRow(), range.getColumn(), numRegionsY * endHeight, numRegionsX * endWidth)
-  newRange.setValues(newValues);
-  SpreadsheetApp.setActiveRange(newRange);
-}
-
 /********************
  * CUSTOM FUNCTIONS *
  ********************/
@@ -282,16 +229,17 @@ function REMOVE(string, toRemove) {
       return REMOVE(stringItem, toRemove.map ? toRemove[i] : toRemove);
     });
   }
+  var newString = string;
   for (var i = 0; i < toRemove.length; i++) {
     var c = toRemove.charAt(i);
-    var index = string.indexOf(c);
+    var index = newString.indexOf(c);
     if (index === -1) {
-      return 'No (' + c + ')';
+      return 'No "' + c + '" in "' + string + '"';
     } else {
-      string = string.substring(0, index) + string.substring(index + 1);
+      newString = newString.substring(0, index) + newString.substring(index + 1);
     }
   }
-  return string;
+  return newString;
 }
 
 /**
@@ -359,6 +307,44 @@ function FLIP_HORIZ(range) {
  */
 function FLIP_VERT(range) {
   return range.reverse();
+}
+
+/**
+ * Reshapes each startWidth x startHeight rectangle in the range to a new rectangle of dimensions endWidth x endHeight.
+ *
+ * @param {range} range The range of values to reshape.
+ * @param {number=} startWidth The start width.
+ * @param {number=} startHeight The start height.
+ * @param {number=} endWidth The end width.
+ * @param {number=} endHeight The end height.
+ * @return The reshaped values.
+ * @customfunction
+ */
+function reshape(range, startWidth, startHeight, endWidth, endHeight) {
+  var numRegionsX = Math.ceil(range[0].length / startWidth);
+  var numRegionsY = Math.ceil(range.length / startHeight);
+  var newRange = [];
+  for (var i = 0; i < numRegionsY * endHeight; i++) {
+    newRange.push([]);
+  }
+  for (var i = 0; i < numRegionsY; i++) {
+    for (var j = 0; j < numRegionsX; j++) {
+      var regionValues = [];
+      for (var ii = i * startHeight; ii < (i + 1) * startHeight; ii++) {
+        for (var jj = j * startWidth; jj < (j + 1) * startWidth; jj++) {
+          regionValues.push(ii < range.length && jj < range[ii].length ? range[ii][jj] : "");
+        }
+      }
+      var index = 0;
+      for (var ii = i * endHeight; ii < (i + 1) * endHeight; ii++) {
+        for (var jj = j * endWidth; jj < (j + 1) * endWidth; jj++) {
+          newRange[ii].push(index < regionValues.length ? regionValues[index] : "");
+          index++;
+        }
+      }
+    }
+  }
+  return newRange;
 }
 
 var ELEMENTS = [
