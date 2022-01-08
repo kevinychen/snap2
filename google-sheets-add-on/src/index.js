@@ -1,5 +1,6 @@
 import "./style.css"
 import { UploadPage } from "./upload/uploadPage";
+import { WordBankPage } from "./wordBank/wordBankPage";
 import { CustomFunctionPage } from "./customFunction/customFunctionPage";
 import { FindWordsPage } from "./findWords/findWordsPage";
 import { ReshapePage } from "./reshape/reshapePage";
@@ -28,6 +29,13 @@ class Snap extends React.Component {
                             onClick={() => this.setState({ route: "find-words" })}
                         >
                             {"Heavy-duty message solver"}
+                        </button>
+                    </div>
+                    <div className="block">
+                        <button
+                            onClick={() => this.setState({ route: "word-bank" })}
+                        >
+                            {"Highlight used words in a word bank"}
                         </button>
                     </div>
                     <div className="block">
@@ -65,6 +73,8 @@ class Snap extends React.Component {
         const { route } = this.state;
         if (route === "upload") {
             return <UploadPage />;
+        } else if (route === "word-bank") {
+            return <WordBankPage />
         } else if (route === "custom-function") {
             return <CustomFunctionPage />
         } else if (route === "find-words") {
