@@ -1,7 +1,7 @@
 Snap Server
 ===========
 
-To develop on and run the Snap server, you need JDK 8+. All commands should be run in this directory (snap-server).
+To develop on and run the Snap server, you need JDK 11+. All commands should be run in this directory (snap-server).
 
 - Snap requires a Google API service user in order to edit Google Drive documents. To create a new service user, visit the [Google Cloud Platform](https://console.cloud.google.com/home) and create a project. In the "IAM & admin" tab, select "Service accounts" and click "Create service account". You can use "sheets-creator" as the name. Note the service account ID; this is the email address that you must share your Google Sheets with to use Snap.
 
@@ -20,18 +20,6 @@ To develop on and run the Snap server, you need JDK 8+. All commands should be r
 - Start the Snap server by running `./gradlew run`.
 
 - Visit the app at `http://localhost:8080`, or whatever address your server is hosted at.
-
-When running Snap on the server with NGINX, make sure to allow access control headers from other origins (so that the Google Sheet add-on can talk to it). In `/etc/nginx/conf.d/nginx.conf`:
-
-    server {
-        server_name util.in;
-
-        location / {
-            proxy_pass http://localhost:8080;
-            add_header Access-Control-Allow-Origin *;
-            add_header Access-Control-Allow-Headers *;
-        }
-    }
 
 You can develop on Snap by running `./gradlew eclipse` and then importing "Existing Projects into Workspace" in Eclipse. Files are in the standard Java project layout, with the entry point at [SnapServer.java](src/main/java/com/kyc/snap/server/SnapServer.java) and web assets under [assets](src/main/resources/assets).
 

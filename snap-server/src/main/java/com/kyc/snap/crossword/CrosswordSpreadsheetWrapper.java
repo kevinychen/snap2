@@ -28,9 +28,6 @@ import lombok.Data;
 @Data
 public class CrosswordSpreadsheetWrapper {
 
-    private static final int BLANK_MARKER_ROW = 500;
-    private static final int UNKNOWN_MARKER_ROW = 501;
-    private static final int MARKER_COL = 25;
     private static final int[] DROW = { 0, 1 };
     private static final int[] DCOL = { 1, 0 };
 
@@ -48,7 +45,6 @@ public class CrosswordSpreadsheetWrapper {
         Multimap<Point, PointAndIndex> gridToAnswers = ArrayListMultimap.create();
 
         List<ValueCell> valueCells = new ArrayList<>();
-        valueCells.add(new ValueCell(UNKNOWN_MARKER_ROW, MARKER_COL, "."));
         List<ValueCell> formulaCells = new ArrayList<>();
         for (int i = 0; i < clues.getSections().size(); i++) {
             ClueSection section = clues.getSections().get(i);
@@ -63,10 +59,8 @@ public class CrosswordSpreadsheetWrapper {
                     int row = crosswordEntry.getStartRow() + k * DROW[i] + rowOffset;
                     int col = crosswordEntry.getStartCol() + k * DCOL[i] + colOffset;
                     gridRefs.add(String.format(
-                        "IF(%1$s=%2$s, %3$s, %1$s)",
-                        spreadsheets.getRef(row, col),
-                        spreadsheets.getRef(BLANK_MARKER_ROW, MARKER_COL),
-                        spreadsheets.getRef(UNKNOWN_MARKER_ROW, MARKER_COL)));
+                        "IF(%1$s=\"\", \".\", %1$s)",
+                        spreadsheets.getRef(row, col)));
                     gridToAnswers.put(new Point(col, row), new PointAndIndex(j + rowOffset, directionColumns.get(i) + 2, k));
                 }
                 formulaCells.add(new ValueCell(
@@ -84,7 +78,6 @@ public class CrosswordSpreadsheetWrapper {
             "CONCATENATE(REGEXEXTRACT(%s,\"(?:[^\\(\\)]|\\([^\\)]*\\)){%d}(?:([^\\(\\)])|\\(([^\\)]*)\\))\"))",
             spreadsheets.getRef(answer.row, answer.col),
             answer.index);
-        Map<Point, String> references = spreadsheets.getReferences(gridToAnswers.keySet());
         for (Point p : gridToAnswers.keySet()) {
             Collection<PointAndIndex> answers = gridToAnswers.get(p);
             String refArray = Joiner.on(";").join(answers.stream()
@@ -100,9 +93,9 @@ public class CrosswordSpreadsheetWrapper {
             formulaCells.add(new ValueCell(
                 p.y,
                 p.x,
-                String.format("=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),%2$s)",
-                    allCharsExpression,
-                    references.get(p))));
+                String.format(
+                    "=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),\"\")",
+                    allCharsExpression)));
         }
 
         spreadsheets.setProtectedRange(rowOffset, grid.getNumRows(), colOffset, grid.getNumCols());
