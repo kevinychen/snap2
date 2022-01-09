@@ -33,6 +33,7 @@ public class CrosswordSpreadsheetWrapper {
     private static final int MARKER_COL = 25;
     private static final int[] DROW = { 0, 1 };
     private static final int[] DCOL = { 1, 0 };
+    private static final String MONOSPACE_FONT = "Roboto Mono";
 
     private final SpreadsheetManager spreadsheets;
     private final int rowOffset;
@@ -104,12 +105,18 @@ public class CrosswordSpreadsheetWrapper {
                     allCharsExpression,
                     references.get(p))));
         }
-
+        
+        spreadsheets.setFont(rowOffset, grid.getNumRows(), colOffset, grid.getNumCols(), MONOSPACE_FONT);
+        spreadsheets.setTextAlignment(rowOffset, grid.getNumRows(), colOffset, grid.getNumCols(), "CENTER", "MIDDLE");
         spreadsheets.setProtectedRange(rowOffset, grid.getNumRows(), colOffset, grid.getNumCols());
         for (int i = 0; i < clues.getSections().size(); i++) {
             int numRows = clues.getSections().get(i).getClues().size();
             if (numRows > 0)
                 spreadsheets.setProtectedRange(0, numRows, directionColumns.get(i), 2);
+            	// Ensure that any long clues are auto-wrapped
+            	spreadsheets.setWrapStrategy(0, numRows, directionColumns.get(i), 1, "WRAP");
+            	// Format columns for enumerations and user-input to monospace
+            	spreadsheets.setFont(0, numRows, directionColumns.get(i) + 1, 2, MONOSPACE_FONT);
         }
 
         spreadsheets.setValues(valueCells);

@@ -36,10 +36,12 @@ import com.google.api.services.sheets.v4.model.GridData;
 import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.InsertDimensionRequest;
 import com.google.api.services.sheets.v4.model.ProtectedRange;
+import com.google.api.services.sheets.v4.model.RepeatCellRequest;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.RowData;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.TextFormat;
 import com.google.api.services.sheets.v4.model.UpdateBordersRequest;
 import com.google.api.services.sheets.v4.model.UpdateCellsRequest;
 import com.google.api.services.sheets.v4.model.UpdateDimensionPropertiesRequest;
@@ -308,6 +310,53 @@ public class SpreadsheetManager {
                         .setColor(toColor(cell.leftBorder.getRgb())))
                     .setRange(getRange(cell.row, cell.col))))
             .collect(Collectors.toList()));
+    }
+    
+    public void setTextAlignment(int rowIndex, int numRows, int colIndex, int numCols, String horizontalAlignment, String verticalAlignment) {
+    	executeRequests(new Request()
+                .setRepeatCell(new RepeatCellRequest()
+                    .setRange(new GridRange()
+                            .setSheetId(sheetId)
+                            .setStartRowIndex(rowIndex)
+                            .setEndRowIndex(rowIndex + numRows)
+                            .setStartColumnIndex(colIndex)
+                            .setEndColumnIndex(colIndex + numCols))
+                    .setCell(new CellData()
+                    		.setUserEnteredFormat(new CellFormat()
+                    				.setHorizontalAlignment(horizontalAlignment)
+                    				.setVerticalAlignment(verticalAlignment)))
+                    .setFields("userEnteredFormat(horizontalAlignment,verticalAlignment)")));
+    }
+    
+    public void setWrapStrategy(int rowIndex, int numRows, int colIndex, int numCols, String wrapStrategy) {
+    	executeRequests(new Request()
+                .setRepeatCell(new RepeatCellRequest()
+                    .setRange(new GridRange()
+                            .setSheetId(sheetId)
+                            .setStartRowIndex(rowIndex)
+                            .setEndRowIndex(rowIndex + numRows)
+                            .setStartColumnIndex(colIndex)
+                            .setEndColumnIndex(colIndex + numCols))
+                    .setCell(new CellData()
+                    		.setUserEnteredFormat(new CellFormat()
+                    				.setWrapStrategy(wrapStrategy)))
+                    .setFields("userEnteredFormat.wrapStrategy")));
+    }
+    
+    public void setFont(int rowIndex, int numRows, int colIndex, int numCols, String fontFamily) {
+    	executeRequests(new Request()
+                .setRepeatCell(new RepeatCellRequest()
+                    .setRange(new GridRange()
+                            .setSheetId(sheetId)
+                            .setStartRowIndex(rowIndex)
+                            .setEndRowIndex(rowIndex + numRows)
+                            .setStartColumnIndex(colIndex)
+                            .setEndColumnIndex(colIndex + numCols))
+                    .setCell(new CellData()
+                    		.setUserEnteredFormat(new CellFormat()
+                    				.setTextFormat(new TextFormat()
+                    						.setFontFamily(fontFamily))))
+                    .setFields("userEnteredFormat.textFormat.fontFamily")));
     }
 
     /**
