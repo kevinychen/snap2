@@ -102,6 +102,8 @@ class Solver extends React.Component {
                 <span className="parsed">{"<ABC>"}</span> for ABC in any order (anagram),{" "}
                 <span className="parsed">"ABC"</span> to forbid spaces,{" "}
                 and <span className="parsed">{"{}, ?, +"}</span> as in regular expressions.
+                <br />
+                See <a href="https://github.com/kevinychen/snap2/wiki/Heavy-duty-anagram-solver#syntax">this page</a> for more details on the syntax.
             </div>
             <div className="block">
                 <div>

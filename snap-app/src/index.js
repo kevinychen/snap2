@@ -24,7 +24,7 @@ function Index() {
         <div className="block">
             <Link to="/parser"><span className="link">GRID PARSER</span></Link>
             <br />
-            Parse grids, text, and crosswords in PDFs and images to Google Sheets
+            Parse grids and crosswords in images and PDFs
         </div>
         <div className="block">
             <Link to="/wordsearch"><span className="link">WORD SEARCH</span></Link>
