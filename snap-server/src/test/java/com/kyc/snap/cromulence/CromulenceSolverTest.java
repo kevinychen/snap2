@@ -37,6 +37,12 @@ public class CromulenceSolverTest {
     }
 
     @Test
+    public void testSolveWithLengthsAndFlexibleStart() {
+        CromulenceSolverResult result = cromulence.solve(".....MENON", List.of(10)).get(0);
+        assertThat(result.getWords()).containsExactly("PHENOMENON");
+    }
+
+    @Test
     public void testSolveAnagram() {
         CromulenceSolverResult result = cromulence.solve("\"<CRROA.UL>\"", null).get(0);
         assertThat(result.getWords()).containsExactly("ORACULAR");

@@ -36,8 +36,8 @@ public class CromulenceSolver {
     private static final int NUM_RESULTS = 100;
 
     private final DictionaryManager dictionaryManager;
-    private final Cache<StringPair, double[]> nextLetterFreqsCache;
-    private final Cache<String, double[]> singlePrefixFreqsCache;
+    private final Cache<NextLetterFreqsKey, double[]> nextLetterFreqsCache;
+    private final Cache<SinglePrefixFreqsKey, double[]> singlePrefixFreqsCache;
     private final Random random = new Random(0);
 
     public CromulenceSolver(DictionaryManager dictionaryManager) {
@@ -124,21 +124,30 @@ public class CromulenceSolver {
     }
 
     @Data
-    static class StringPair {
+    static class NextLetterFreqsKey {
         final String prevWord;
-        final String currWord;
+        final String prefix;
+        final Integer wordLength;
+    }
+
+    @Data
+    static class SinglePrefixFreqsKey {
+        final String prefix;
+        final Integer wordLength;
     }
 
     @Data
     class Context {
 
-        double[] getNextLetterProbabilities(List<String> words, String prefix) {
-            return nextLetterFreqsCache.get(new StringPair(words.isEmpty() ? null : words.get(words.size() - 1), prefix), key -> {
-                double[] freqs = Arrays.copyOf(getCachedFrequencies(prefix), NUM_LETTERS + 1);
+        double[] getNextLetterProbabilities(List<String> words, String prefix, List<Integer> wordLengths) {
+            String prevWord = words.isEmpty() ? null : words.get(words.size() - 1);
+            Integer wordLength = wordLengths == null ? null : wordLengths.get(0);
+            return nextLetterFreqsCache.get(new NextLetterFreqsKey(prevWord, prefix, wordLength), key -> {
+                double[] freqs = Arrays.copyOf(getCachedFrequencies(prefix, wordLength), NUM_LETTERS + 1);
 
                 // bias toward words that appear in the biword list after the previous word
-                if (key.prevWord != null)
-                    updateFrequencies(dictionaryManager.getWordFrequencies(key.prevWord, prefix), prefix, freqs);
+                if (prevWord != null)
+                    updateFrequencies(dictionaryManager.getWordFrequencies(prevWord, prefix), prefix, wordLength, freqs);
                 double totalProb = 0;
                 for (double prob : freqs)
                     totalProb += prob;
@@ -148,16 +157,18 @@ public class CromulenceSolver {
             });
         }
 
-        double[] getCachedFrequencies(String prefix) {
-            return singlePrefixFreqsCache.get(prefix, key -> {
+        double[] getCachedFrequencies(String prefix, Integer wordLength) {
+            return singlePrefixFreqsCache.get(new SinglePrefixFreqsKey(prefix, wordLength), key -> {
                 double[] freqs = new double[NUM_LETTERS + 1];
-                updateFrequencies(dictionaryManager.getWordFrequencies(prefix), prefix, freqs);
+                updateFrequencies(dictionaryManager.getWordFrequencies(prefix), prefix, wordLength, freqs);
                 return freqs;
             });
         }
 
-        private void updateFrequencies(Map<String, Long> wordFreqs, String prefix, double[] freqs) {
+        private void updateFrequencies(Map<String, Long> wordFreqs, String prefix, Integer wordLength, double[] freqs) {
             wordFreqs.forEach((word, frequency) -> {
+                if (wordLength != null && word.length() != wordLength)
+                    return;
                 if (word.equals(prefix))
                     freqs[NUM_LETTERS] += frequency;
                 else

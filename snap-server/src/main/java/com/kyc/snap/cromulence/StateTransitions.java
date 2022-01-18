@@ -30,15 +30,16 @@ class StateTransitions {
 
         @Override
         public List<State> newStates(State state, Context context) {
+            if (List.of().equals(state.wordLengths))
+                return List.of(state.toBuilder().termState(null).build());
+
             double[] probs = Arrays.copyOf(
-                context.getNextLetterProbabilities(state.words, state.prefix),
+                context.getNextLetterProbabilities(state.words, state.prefix, state.wordLengths),
                 NUM_LETTERS + 1);
             if (state.quoteLevel > 0)
                 probs[NUM_LETTERS] = 0;
 
             if (state.wordLengths != null) {
-                if (state.wordLengths.isEmpty())
-                    return List.of(state.toBuilder().termState(null).build());
                 if (state.wordLengths.get(0) == state.prefix.length())
                     for (int i = 0; i < NUM_LETTERS; i++)
                         probs[i] = 0;
