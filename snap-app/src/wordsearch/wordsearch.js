@@ -191,15 +191,7 @@ export default class Wordsearch extends React.Component {
         for (let i = 0; i < str.length; i++) {
             hash = str.charCodeAt(i) + ((hash << 5) - hash);
         }
-        let color = '#';
-        for (let i = 0; i < 3; i++) {
-            let value = (hash >> (i * 8)) & 0xFF;
-            if (value < 100) {
-                value += 100;
-            }
-            color += ('80' + value.toString(16)).substr(-2);
-        }
-        return color;
+        return `hsl(${hash % 359}, 50%, 75%)`;
     }
 
     onHighlightWordbankChange() {

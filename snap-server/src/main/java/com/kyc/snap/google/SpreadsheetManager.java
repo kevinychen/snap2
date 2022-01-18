@@ -1,15 +1,11 @@
 
 package com.kyc.snap.google;
 
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.ClientErrorException;
@@ -26,7 +22,6 @@ import com.google.api.services.sheets.v4.model.Border;
 import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.Color;
-import com.google.api.services.sheets.v4.model.DataFilter;
 import com.google.api.services.sheets.v4.model.DeleteProtectedRangeRequest;
 import com.google.api.services.sheets.v4.model.DimensionProperties;
 import com.google.api.services.sheets.v4.model.DimensionRange;
@@ -52,7 +47,6 @@ import com.kyc.snap.grid.Border.Style;
 import com.kyc.snap.image.ImageUtils;
 
 import feign.Feign;
-import feign.FeignException;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -106,24 +100,24 @@ public class SpreadsheetManager {
 
             List<Integer> rowHeights = new ArrayList<>();
             List<DimensionProperties> rowMetadata = gridData.getRowMetadata();
-            for (int i = 0; i < rowMetadata.size(); i++)
-                rowHeights.add(rowMetadata.get(i).getPixelSize());
+            for (DimensionProperties row : rowMetadata)
+                rowHeights.add(row.getPixelSize());
 
             List<Integer> colWidths = new ArrayList<>();
             List<DimensionProperties> colMetadata = gridData.getColumnMetadata();
-            for (int i = 0; i < colMetadata.size(); i++)
-                colWidths.add(colMetadata.get(i).getPixelSize());
+            for (DimensionProperties col : colMetadata)
+                colWidths.add(col.getPixelSize());
 
             List<List<String>> content = new ArrayList<>();
             List<RowData> rowData = gridData.getRowData();
             if (rowData != null)
-                for (int i = 0; i < rowData.size(); i++) {
+                for (RowData row : rowData) {
                     List<String> contentRow = new ArrayList<>();
-                    List<CellData> cellData = rowData.get(i).getValues();
+                    List<CellData> cellData = row.getValues();
                     if (cellData != null)
-                        for (int j = 0; j < cellData.size(); j++) {
+                        for (CellData cell : cellData) {
                             String contentCell = "";
-                            ExtendedValue value = cellData.get(j).getEffectiveValue();
+                            ExtendedValue value = cell.getEffectiveValue();
                             if (value != null) {
                                 if (value.getBoolValue() != null)
                                     contentCell = value.getBoolValue().toString();
@@ -145,45 +139,6 @@ public class SpreadsheetManager {
         }
     }
 
-    /**
-     * Returns references for each cell, which can be used in another formula.
-     */
-    public Map<Point, String> getReferences(Collection<Point> coordinates) {
-        try {
-            List<Point> orderedCoordinates = new ArrayList<>(coordinates);
-            Spreadsheet spreadsheet = spreadsheets.getByDataFilter(
-                spreadsheetId,
-                new GetSpreadsheetByDataFilterRequest()
-                    .setIncludeGridData(true)
-                    .setDataFilters(orderedCoordinates.stream()
-                        .map(coordinate -> new DataFilter().setGridRange(getRange(coordinate.y, coordinate.x)))
-                        .collect(Collectors.toList())))
-                .execute();
-            List<GridData> data = findSheet(spreadsheet, sheetId).getData();
-            Map<Point, String> values = new HashMap<>();
-            for (int i = 0; i < orderedCoordinates.size(); i++) {
-                Point coordinate = orderedCoordinates.get(i);
-                ExtendedValue value = data.get(i).getRowData().get(0).getValues().get(0).getUserEnteredValue();
-                String reference = "";
-                if (value != null) {
-                    if (value.getBoolValue() != null)
-                        reference = value.getBoolValue().toString().toUpperCase();
-                    else if (value.getFormulaValue() != null) {
-                        if (value.getFormulaValue().startsWith("="))
-                            reference = value.getFormulaValue().substring(1);
-                    } else if (value.getNumberValue() != null)
-                        reference = value.getNumberValue().toString();
-                    else if (value.getStringValue() != null)
-                        reference = String.format("\"%s\"", value.getStringValue());
-                }
-                values.put(coordinate, reference);
-            }
-            return values;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public void insertRowOrColumns(Dimension dimension, int index, int numRowOrColumns) {
         executeRequests(
             new Request()
@@ -194,18 +149,6 @@ public class SpreadsheetManager {
                         .setDimension(dimension.name())
                         .setStartIndex(index)
                         .setEndIndex(index + numRowOrColumns))));
-    }
-
-    public void setAllRowOrColumnSizes(Dimension dimension, int size) {
-        executeRequests(
-            new Request()
-                .setUpdateDimensionProperties(new UpdateDimensionPropertiesRequest()
-                    .setProperties(new DimensionProperties()
-                        .setPixelSize(size))
-                    .setFields("pixelSize")
-                    .setRange(new DimensionRange()
-                        .setSheetId(sheetId)
-                        .setDimension(dimension.name()))));
     }
 
     public void setRowOrColumnSizes(Dimension dimension, List<SizedRowOrColumn> rowOrColumns) {
@@ -311,52 +254,35 @@ public class SpreadsheetManager {
                     .setRange(getRange(cell.row, cell.col))))
             .collect(Collectors.toList()));
     }
-    
+
     public void setTextAlignment(int rowIndex, int numRows, int colIndex, int numCols, String horizontalAlignment, String verticalAlignment) {
-    	executeRequests(new Request()
-                .setRepeatCell(new RepeatCellRequest()
-                    .setRange(new GridRange()
-                            .setSheetId(sheetId)
-                            .setStartRowIndex(rowIndex)
-                            .setEndRowIndex(rowIndex + numRows)
-                            .setStartColumnIndex(colIndex)
-                            .setEndColumnIndex(colIndex + numCols))
-                    .setCell(new CellData()
-                    		.setUserEnteredFormat(new CellFormat()
-                    				.setHorizontalAlignment(horizontalAlignment)
-                    				.setVerticalAlignment(verticalAlignment)))
-                    .setFields("userEnteredFormat(horizontalAlignment,verticalAlignment)")));
+        executeRequests(new Request()
+            .setRepeatCell(new RepeatCellRequest()
+                .setRange(new GridRange()
+                    .setSheetId(sheetId)
+                    .setStartRowIndex(rowIndex)
+                    .setEndRowIndex(rowIndex + numRows)
+                    .setStartColumnIndex(colIndex)
+                    .setEndColumnIndex(colIndex + numCols))
+                .setCell(new CellData()
+                    .setUserEnteredFormat(new CellFormat()
+                        .setHorizontalAlignment(horizontalAlignment)
+                        .setVerticalAlignment(verticalAlignment)))
+                .setFields("userEnteredFormat(horizontalAlignment,verticalAlignment)")));
     }
-    
-    public void setWrapStrategy(int rowIndex, int numRows, int colIndex, int numCols, String wrapStrategy) {
-    	executeRequests(new Request()
-                .setRepeatCell(new RepeatCellRequest()
-                    .setRange(new GridRange()
-                            .setSheetId(sheetId)
-                            .setStartRowIndex(rowIndex)
-                            .setEndRowIndex(rowIndex + numRows)
-                            .setStartColumnIndex(colIndex)
-                            .setEndColumnIndex(colIndex + numCols))
-                    .setCell(new CellData()
-                    		.setUserEnteredFormat(new CellFormat()
-                    				.setWrapStrategy(wrapStrategy)))
-                    .setFields("userEnteredFormat.wrapStrategy")));
-    }
-    
+
     public void setFont(int rowIndex, int numRows, int colIndex, int numCols, String fontFamily) {
-    	executeRequests(new Request()
-                .setRepeatCell(new RepeatCellRequest()
-                    .setRange(new GridRange()
-                            .setSheetId(sheetId)
-                            .setStartRowIndex(rowIndex)
-                            .setEndRowIndex(rowIndex + numRows)
-                            .setStartColumnIndex(colIndex)
-                            .setEndColumnIndex(colIndex + numCols))
-                    .setCell(new CellData()
-                    		.setUserEnteredFormat(new CellFormat()
-                    				.setTextFormat(new TextFormat()
-                    						.setFontFamily(fontFamily))))
-                    .setFields("userEnteredFormat.textFormat.fontFamily")));
+        executeRequests(new Request()
+            .setRepeatCell(new RepeatCellRequest()
+                .setRange(new GridRange()
+                    .setSheetId(sheetId)
+                    .setStartRowIndex(rowIndex)
+                    .setEndRowIndex(rowIndex + numRows)
+                    .setStartColumnIndex(colIndex)
+                    .setEndColumnIndex(colIndex + numCols))
+                .setCell(new CellData().setUserEnteredFormat(new CellFormat()
+                    .setTextFormat(new TextFormat().setFontFamily(fontFamily))))
+                .setFields("userEnteredFormat.textFormat.fontFamily")));
     }
 
     /**
@@ -505,7 +431,7 @@ public class SpreadsheetManager {
         private final List<List<String>> content;
     }
 
-    public static enum Dimension {
+    public enum Dimension {
 
         ROWS,
         COLUMNS,
