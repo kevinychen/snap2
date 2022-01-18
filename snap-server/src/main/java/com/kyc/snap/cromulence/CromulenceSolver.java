@@ -14,15 +14,17 @@ import com.kyc.snap.words.DictionaryManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
+import one.util.streamex.StreamEx;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -31,7 +33,7 @@ public class CromulenceSolver {
     static final int NUM_LETTERS = 26;
 
     private static final int SEARCH_LIMIT = 2000;
-    private static final int NUM_RESULTS = 50;
+    private static final int NUM_RESULTS = 100;
 
     private final DictionaryManager dictionaryManager;
     private final Cache<StringPair, double[]> nextLetterFreqsCache;
@@ -87,17 +89,10 @@ public class CromulenceSolver {
             while (bestFinalStates.size() > NUM_RESULTS)
                 bestFinalStates.pollLastEntry();
         }
-        Set<List<String>> seenWords = new HashSet<>();
-        List<CromulenceSolverResult> results = new ArrayList<>();
-        for (State state : bestFinalStates) {
-            if (seenWords.contains(state.words))
-                continue;
-            seenWords.add(state.words);
-            results.add(new CromulenceSolverResult(state.words, state.score));
-            if (results.size() == NUM_RESULTS)
-                break;
-        }
-        return results;
+        return StreamEx.of(bestFinalStates.stream())
+            .distinct(State::getWords)
+            .map(state -> new CromulenceSolverResult(state.words, state.score))
+            .collect(Collectors.toList());
     }
 
     private double approxScoreThreshold(List<State> states) {
