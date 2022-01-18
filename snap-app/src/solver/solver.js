@@ -182,7 +182,7 @@ class Solver extends React.Component {
         postJson({
             path: '/words/cromulence', body: {
                 parts: query.split(/[ ,]+/),
-                wordLengths: wordLengths.length > 0 ? wordLengths.split(/[^0-9]+/) : undefined,
+                wordLengths: wordLengths.length > 0 ? wordLengths.trim().split(/[^0-9]+/) : undefined,
                 canRearrange,
             }
         }, ({ results }) => this.setState({ results, loading: false }));
