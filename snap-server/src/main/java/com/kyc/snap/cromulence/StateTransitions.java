@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.Data;
 
-class TermStates {
+class StateTransitions {
 
     private static final double MIDDLE_CONFIDENCE = .8;
 
@@ -35,14 +35,17 @@ class TermStates {
                 NUM_LETTERS + 1);
             if (state.quoteLevel > 0)
                 probs[NUM_LETTERS] = 0;
-            boolean hasWordLengths = state.wordLengths != null && !state.wordLengths.isEmpty();
-            if (hasWordLengths) {
+
+            if (state.wordLengths != null) {
+                if (state.wordLengths.isEmpty())
+                    return List.of(state.toBuilder().termState(null).build());
                 if (state.wordLengths.get(0) == state.prefix.length())
                     for (int i = 0; i < NUM_LETTERS; i++)
                         probs[i] = 0;
                 else
                     probs[NUM_LETTERS] = 0;
             }
+
             if (c == ' ') {
                 for (int i = 0; i < NUM_LETTERS; i++)
                     probs[i] = 0;
@@ -81,7 +84,9 @@ class TermStates {
                     .words(newWords)
                     .prefix("")
                     .score(state.score + Math.log(probs[NUM_LETTERS]))
-                    .wordLengths(hasWordLengths ? state.wordLengths.subList(1, state.wordLengths.size()) : null)
+                    .wordLengths(state.wordLengths == null
+                        ? null
+                        : state.wordLengths.subList(1, state.wordLengths.size()))
                     .build());
             }
             return newStates;
