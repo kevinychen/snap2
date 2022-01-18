@@ -5,7 +5,6 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -98,18 +97,16 @@ public class CrosswordSpreadsheetWrapper {
                     "=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),\"\")",
                     allCharsExpression)));
         }
-        
+
         spreadsheets.setFont(rowOffset, grid.getNumRows(), colOffset, grid.getNumCols(), MONOSPACE_FONT);
         spreadsheets.setTextAlignment(rowOffset, grid.getNumRows(), colOffset, grid.getNumCols(), "CENTER", "MIDDLE");
         spreadsheets.setProtectedRange(rowOffset, grid.getNumRows(), colOffset, grid.getNumCols());
         for (int i = 0; i < clues.getSections().size(); i++) {
             int numRows = clues.getSections().get(i).getClues().size();
-            if (numRows > 0)
+            if (numRows > 0) {
                 spreadsheets.setProtectedRange(0, numRows, directionColumns.get(i), 2);
-            	// Ensure that any long clues are auto-wrapped
-            	spreadsheets.setWrapStrategy(0, numRows, directionColumns.get(i), 1, "WRAP");
-            	// Format columns for enumerations and user-input to monospace
-            	spreadsheets.setFont(0, numRows, directionColumns.get(i) + 1, 2, MONOSPACE_FONT);
+                spreadsheets.setFont(0, numRows, directionColumns.get(i) + 1, 2, MONOSPACE_FONT);
+            }
         }
 
         spreadsheets.setValues(valueCells);
