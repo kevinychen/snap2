@@ -11,5 +11,6 @@
 data
 google-api-credentials.json
 out
+src/main/java/com/kyc/snap/antlr
 src/main/resources/assets
 

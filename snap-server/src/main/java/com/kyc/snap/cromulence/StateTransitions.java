@@ -167,6 +167,38 @@ class StateTransitions {
     }
 
     @Data
+    static class InterleaveState implements TermState {
+
+        final TermState parent;
+        final List<TermState> childStates;
+
+        static InterleaveState of(TermState parent, List<TermNode> children) {
+            return new InterleaveState(parent, children.stream()
+                .map(child -> child.toTermState(null))
+                .collect(Collectors.toList()));
+        }
+
+        @Override
+        public List<State> newStates(State state, Context context) {
+            if (childStates.stream().allMatch(child -> child == null))
+                return List.of(state.toBuilder().termState(parent).build());
+            List<State> newStates = new ArrayList<>();
+            for (int i = 0; i < childStates.size(); i++) {
+                TermState childState = childStates.get(i);
+                if (childState != null)
+                    for (State newState : childState.newStates(state, context)) {
+                        List<TermState> newChildStates = new ArrayList<>(childStates);
+                        newChildStates.set(i, newState.termState);
+                        newStates.add(newState.toBuilder()
+                            .termState(new InterleaveState(parent, newChildStates))
+                            .build());
+                    }
+            }
+            return newStates;
+        }
+    }
+
+    @Data
     static class ListState implements TermState {
 
         final TermState parent;

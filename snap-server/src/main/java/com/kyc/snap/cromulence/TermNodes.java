@@ -5,6 +5,7 @@ import static com.kyc.snap.cromulence.CromulenceSolver.NUM_LETTERS;
 import com.kyc.snap.antlr.PregexParser.AnagramContext;
 import com.kyc.snap.antlr.PregexParser.ChoiceContext;
 import com.kyc.snap.antlr.PregexParser.CountContext;
+import com.kyc.snap.antlr.PregexParser.InterleaveContext;
 import com.kyc.snap.antlr.PregexParser.ListContext;
 import com.kyc.snap.antlr.PregexParser.MaybeContext;
 import com.kyc.snap.antlr.PregexParser.OneOrMoreContext;
@@ -15,6 +16,7 @@ import com.kyc.snap.antlr.PregexParser.TermContext;
 import com.kyc.snap.cromulence.StateTransitions.AnagramState;
 import com.kyc.snap.cromulence.StateTransitions.ChoiceState;
 import com.kyc.snap.cromulence.StateTransitions.CountState;
+import com.kyc.snap.cromulence.StateTransitions.InterleaveState;
 import com.kyc.snap.cromulence.StateTransitions.ListState;
 import com.kyc.snap.cromulence.StateTransitions.MaybeState;
 import com.kyc.snap.cromulence.StateTransitions.OrMoreState;
@@ -91,6 +93,21 @@ class TermNodes {
         @Override
         public TermState toTermState(TermState parent) {
             return new CountState(parent, child, count);
+        }
+    }
+
+    @Data
+    static class InterleaveNode implements TermNode {
+        final List<TermNode> children;
+
+        @Override
+        public int complexity() {
+            return children.stream().mapToInt(TermNode::complexity).sum();
+        }
+
+        @Override
+        public TermState toTermState(TermState parent) {
+            return InterleaveState.of(parent, children);
         }
     }
 
@@ -173,6 +190,12 @@ class TermNodes {
             CountContext countContext = (CountContext) context;
             return new CountNode(fromAntlr(countContext.term()),
                 Integer.parseInt(countContext.COUNT().getSymbol().getText()));
+        }
+        if (context instanceof InterleaveContext) {
+            InterleaveContext interleaveContext = (InterleaveContext) context;
+            return new InterleaveNode(List.of(
+                fromAntlr(interleaveContext.term(0)),
+                fromAntlr(interleaveContext.term(1))));
         }
         if (context instanceof ListContext) {
             return new ListNode(((ListContext) context).terms().term().stream()
