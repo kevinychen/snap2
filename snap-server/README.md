@@ -28,6 +28,8 @@ This is needed for running the crossword tool or grid parser with HTML URLs (it 
 
 #### Setup IDE
 
+Run `./gradlew generateGrammarSource` to generate Antlr files.
+
 For IntelliJ, run `./gradlew idea` and open the project.
 
 For Eclipse, run `./gradlew eclipse` and then import "Existing Projects into Workspace". You will also need to setup [Lombok](https://projectlombok.org/setup/eclipse).

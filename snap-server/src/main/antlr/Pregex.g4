@@ -15,6 +15,7 @@ term
   | '<' terms '>'       #Anagram
   | '[' terms ']'       #Choice
   | term '{' COUNT '}'  #Count
+  | term '~' term       #Interleave
   | '(' terms ')'       #List
   | term '?'            #Maybe
   | term '+'            #OneOrMore

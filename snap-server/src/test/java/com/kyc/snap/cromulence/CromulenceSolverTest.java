@@ -95,6 +95,12 @@ public class CromulenceSolverTest {
     }
 
     @Test
+    public void testSolveInterleave() {
+        CromulenceSolverResult result = cromulence.solve("(TREVE)~(INELA)", null).get(0);
+        assertThat(result.getWords()).containsExactly("INTERLEAVE");
+    }
+
+    @Test
     public void testSolveNoDuplicates() {
         List<CromulenceSolverResult> result = cromulence.solve("[BC][AA]T", null);
         assertThat(result)
