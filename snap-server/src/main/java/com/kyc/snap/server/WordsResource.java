@@ -12,8 +12,6 @@ import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordFormula;
 import com.kyc.snap.crossword.CrosswordParser;
-import com.kyc.snap.crossword.WordplaysUtil;
-import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
 import com.kyc.snap.wikinet.Wikinet;
 import com.kyc.snap.words.DictionaryManager;
 import com.kyc.snap.words.StringUtil;
@@ -30,12 +28,6 @@ public class WordsResource implements WordsService {
     private final CromulenceSolver cromulenceSolver;
     private final DictionaryManager dictionary;
     private final Wikinet wikinet;
-
-    @Override
-    public FetchCrosswordClueSuggestionsResponse fetchCrosswordClueSuggestions(FetchCrosswordClueSuggestionsRequest request) {
-        List<ClueSuggestion> suggestions = WordplaysUtil.fetchCrosswordClueSuggestions(request.getClue(), request.getNumLetters());
-        return new FetchCrosswordClueSuggestionsResponse(suggestions);
-    }
 
     @Override
     public SolveWordsearchResponse solveWordsearch(SolveWordsearchRequest request) {

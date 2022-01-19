@@ -1,7 +1,5 @@
 package com.kyc.snap.crossword;
 
-import java.util.List;
-
 import lombok.Data;
 
 @Data

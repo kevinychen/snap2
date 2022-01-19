@@ -13,7 +13,6 @@ import javax.ws.rs.core.MediaType;
 import com.kyc.snap.cromulence.CromulenceSolverResult;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
-import com.kyc.snap.crossword.WordplaysUtil.ClueSuggestion;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.words.WordsearchSolver;
 
@@ -23,23 +22,6 @@ import lombok.Data;
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/")
 public interface WordsService {
-
-    @POST
-    @Path("words/crossword")
-    FetchCrosswordClueSuggestionsResponse fetchCrosswordClueSuggestions(FetchCrosswordClueSuggestionsRequest request);
-
-    @Data
-    class FetchCrosswordClueSuggestionsRequest {
-
-        private final String clue;
-        private final int numLetters;
-    }
-
-    @Data
-    class FetchCrosswordClueSuggestionsResponse {
-
-        private final List<ClueSuggestion> suggestions;
-    }
 
     @POST
     @Path("words/search")
@@ -146,7 +128,7 @@ public interface WordsService {
     }
 
     enum Dictionary {
-        NORMAL, WIKIPEDIA_TITLES;
+        NORMAL, WIKIPEDIA_TITLES
     }
 
     @Data
