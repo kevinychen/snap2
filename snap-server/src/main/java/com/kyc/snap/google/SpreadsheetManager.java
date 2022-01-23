@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.api.services.sheets.v4.model.CopySheetToAnotherSpreadsheetRequest;
+import com.kyc.snap.server.ServerProperties;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.core.Response;
@@ -58,7 +60,6 @@ import lombok.Data;
 public class SpreadsheetManager {
 
     private final GoogleCredential credential;
-    private final String serverScriptUrl;
     private final Spreadsheets spreadsheets;
     private final String spreadsheetId;
     private final int sheetId;
@@ -285,32 +286,60 @@ public class SpreadsheetManager {
                 .setFields("userEnteredFormat.textFormat.fontFamily")));
     }
 
-    /**
-     * Runs a published Google script that adds an image to a sheet. See the code in snap-server/WebApp.gs.
-     */
-    public void insertImage(BufferedImage image, int row, int col, int width, int height, int offsetX, int offsetY) {
-        /*
-         * Passing the full URL here with an empty path in the Feign interface declaration doesn't work because there's
-         * an extra ending slash, so we clip off the ending "/exec" and declare it in the Feign interface instead.
-         */
-        String serverScriptBase = serverScriptUrl.replaceAll("/exec$", "");
+    public void createNewSheetWithImages(int row, int col, List<OverlayImage> images) {
+        ServerProperties properties = ServerProperties.get();
+
+        // Passing the full URL here with an empty path in the Feign interface declaration doesn't work because there's
+        // an extra ending slash, so we clip off the ending "/exec" and declare it in the Feign interface instead.
+        String serverScriptBase = properties.getGoogleServerScriptUrl().replaceAll("/exec$", "");
         WebAppService webApp = Feign.builder()
-                .encoder(new JacksonEncoder())
-                .target(WebAppService.class, serverScriptBase);
-        webApp.insertImage(getAccessToken(), InsertImageRequest.builder()
-            .spreadsheetId(spreadsheetId)
-            .sheetName(findSheet(getSpreadsheet(), sheetId).getProperties().getTitle())
-            .url(ImageUtils.toDataURL(image))
-            .column(col + 1)
-            .row(row + 1)
-            .offsetX(offsetX)
-            .offsetY(offsetY)
-            .width(width)
-            .height(height)
-            .build());
+            .encoder(new JacksonEncoder())
+            .target(WebAppService.class, serverScriptBase);
+
+        // Grab global lock because everything uses the same draft spreadsheet
+        synchronized (SpreadsheetManager.class) {
+            webApp.removeAllImages(getAccessToken(), RemoveAllImagesRequest.builder()
+                .spreadsheetId(properties.getDraftSpreadsheetId())
+                .sheetId(0)
+                .build());
+            images.stream()
+                // images may be large, so add in parallel
+                .parallel()
+                .forEach(image -> webApp.insertImage(getAccessToken(), InsertImageRequest.builder()
+                    .spreadsheetId(properties.getDraftSpreadsheetId())
+                    .sheetId(0)
+                    .url(ImageUtils.toDataURL(image.image))
+                    .column(col + 1)
+                    .row(row + 1)
+                    .offsetX(image.offsetX)
+                    .offsetY(image.offsetY)
+                    .width(image.image.getWidth())
+                    .height(image.image.getHeight())
+                    .build()));
+            try {
+                spreadsheets.sheets()
+                    .copyTo(properties.getDraftSpreadsheetId(), 0, new CopySheetToAnotherSpreadsheetRequest()
+                        .setDestinationSpreadsheetId(spreadsheetId))
+                    .execute();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Data
+    public static class OverlayImage {
+
+        final BufferedImage image;
+        final int offsetX;
+        final int offsetY;
     }
 
     interface WebAppService {
+
+        @RequestLine("POST /exec")
+        @Headers("Authorization: Bearer {token}")
+        String removeAllImages(@Param("token") String token, RemoveAllImagesRequest request);
 
         @RequestLine("POST /exec")
         @Headers("Authorization: Bearer {token}")
@@ -319,11 +348,20 @@ public class SpreadsheetManager {
 
     @Data
     @Builder
+    public static class RemoveAllImagesRequest {
+
+        final String command = "removeAllImages";
+        final String spreadsheetId;
+        final int sheetId;
+    }
+
+    @Data
+    @Builder
     public static class InsertImageRequest {
 
         final String command = "insertImage";
         final String spreadsheetId;
-        final String sheetName;
+        final int sheetId;
         final String url;
         final int column;
         final int row;
