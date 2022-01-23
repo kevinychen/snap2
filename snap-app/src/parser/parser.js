@@ -138,7 +138,7 @@ export default class Parser extends React.Component {
                         className={classNames({ hidden: blobs === undefined && grid === undefined }, "big button")}
                         onClick={() => this.setState({ popupMode: "EXPORT" })}
                     >
-                        {`Export to ${blobs !== undefined ? "Slides" : "Sheets"}`}
+                        {"Export to Sheets"}
                     </div>
                 </div>
             </div>

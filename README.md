@@ -22,6 +22,12 @@ Snap can handle many types of images. For example, here is an image of a grid wi
 
 ![Bordered grid](docs/bordered-grid.gif)
 
+### [Parse blobs](https://util.in/parser)
+
+Easily import jigsaw pieces or other moving components into Google Sheets.
+
+![Blobs](docs/blobs.gif)
+
 ### [Heavy duty anagram solver](https://util.in/solver)
 
 Snap has a powerful solver engine with a deep understanding of English. This allows it to solve for phrases and even sentences, which traditional tools cannot do.

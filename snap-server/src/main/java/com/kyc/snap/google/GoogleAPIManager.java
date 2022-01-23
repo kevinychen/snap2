@@ -13,7 +13,6 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.slides.v1.Slides;
 import com.google.common.collect.ImmutableSet;
-import com.kyc.snap.server.ServerProperties;
 
 public class GoogleAPIManager {
 
@@ -25,7 +24,6 @@ public class GoogleAPIManager {
     private final GoogleCredential credential;
     private final Sheets sheets;
     private final Slides slides;
-    private final String serverScriptUrl;
 
     public GoogleAPIManager() {
         try {
@@ -38,14 +36,13 @@ public class GoogleAPIManager {
             slides = new Slides.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-            serverScriptUrl = ServerProperties.get().getGoogleServerScriptUrl();
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
     }
 
     public SpreadsheetManager getSheet(String spreadsheetId, int sheetId) {
-        return new SpreadsheetManager(credential, serverScriptUrl, sheets.spreadsheets(), spreadsheetId, sheetId);
+        return new SpreadsheetManager(credential, sheets.spreadsheets(), spreadsheetId, sheetId);
     }
 
     public PresentationManager getPresentation(String presentationId, String slideId) {

@@ -19,7 +19,7 @@ export class ExportPopup extends Popup {
         const { url } = this.state;
         return (
             <div>
-                <div className="center">{`Export to Google ${blobs !== undefined ? 'Slides' : 'Sheets'}`}</div>
+                <div className="center">{"Export to Google Sheets"}</div>
                 <div className="block">
                     First, add <code>sheets-creator@snap-187301.iam.gserviceaccount.com</code> as an Editor to your Google document (or parent folder).
                 </div>
@@ -28,7 +28,7 @@ export class ExportPopup extends Popup {
                         className="inline"
                         style={{ width: "100%" }}
                         type="text"
-                        placeholder={`Enter URL of Google ${blobs !== undefined ? 'Slide' : 'Sheet'}...`}
+                        placeholder={`Enter URL of Google ${blobs !== undefined ? 'Sheet/Slide' : 'Sheet'}...`}
                         value={url}
                         onChange={this.setUrl}
                     />
