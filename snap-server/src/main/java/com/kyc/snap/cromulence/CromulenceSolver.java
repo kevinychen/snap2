@@ -76,7 +76,7 @@ public class CromulenceSolver {
             .wordLengths(wordLengths)
             .build());
         TreeMultiset<State> bestFinalStates = TreeMultiset.create(scoreComparator);
-        while (!statesByLength.isEmpty()) {
+        for (int i = 0; i < 1000 && !statesByLength.isEmpty(); i++) {
             List<State> currStates = statesByLength.remove(statesByLength.firstKey());
             double scoreThreshold = Math.max(approxScoreThreshold(currStates), minScoreThreshold(bestFinalStates));
             for (State state : currStates)
