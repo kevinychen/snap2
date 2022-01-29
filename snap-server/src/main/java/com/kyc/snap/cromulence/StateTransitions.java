@@ -73,7 +73,7 @@ class StateTransitions {
                         .termState(parent)
                         .prefix(state.prefix + (char) ('A' + i))
                         .len(state.len + 1)
-                        .score(state.score + Math.log(probs[i]))
+                        .score(state.score + Math.log(probs[i]) + 2)
                         .build());
                 }
             if (probs[NUM_LETTERS] > 0) {
@@ -100,27 +100,37 @@ class StateTransitions {
         final TermState parent;
         final List<TermNode> sortedChildren;
         final long usedBitset;
+        final int prevWordsHash;
+        final boolean goInOrder;
 
         static AnagramState of(TermState parent, List<TermNode> children) {
             List<TermNode> sortedChildren = children.stream()
                 .sorted(Comparator.comparing(TermNode::hashCode))
                 .collect(Collectors.toList());
-            return new AnagramState(parent, sortedChildren, 0);
+            return new AnagramState(parent, sortedChildren, 0, -1, false);
         }
 
         @Override
         public List<State> newStates(State state, Context context) {
             if (usedBitset + 1 == (1L << sortedChildren.size()))
                 return List.of(state.toBuilder().termState(parent).build());
+
+            int wordsHash = (state.words.size() << 16) + state.prefix.length();
+            boolean newGoInOrder = wordsHash == prevWordsHash || goInOrder;
             return IntStream.range(0, sortedChildren.size())
                 .filter(i -> (usedBitset >> i) % 2 == 0)
-                // optimization: only return the first child if multiple are identical
+                // optimization: only process the first child if multiple are identical
                 .filter(i -> i == 0
                     || ((usedBitset >> (i - 1)) % 2 == 1)
                     || !sortedChildren.get(i).equals(sortedChildren.get(i - 1)))
+                // optimization: if the previous child didn't add any letters, then process the
+                // remaining children in order. This is fine because we could've just processed that
+                // child last. This is important to avoid processing tons of permutations of empty
+                // strings.
+                .filter(i -> !newGoInOrder || (1L << i) == Long.lowestOneBit(~usedBitset))
                 .mapToObj(i -> state.toBuilder()
-                    .termState(sortedChildren.get(i).toTermState(
-                        new AnagramState(parent, sortedChildren, usedBitset | (1L << i))))
+                    .termState(sortedChildren.get(i).toTermState(new AnagramState(
+                        parent, sortedChildren, usedBitset | (1L << i), wordsHash, newGoInOrder)))
                     .build())
                 .flatMap(newState -> newState.termState.newStates(newState, context).stream())
                 .collect(Collectors.toList());

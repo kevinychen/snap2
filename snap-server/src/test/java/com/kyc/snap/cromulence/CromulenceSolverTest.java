@@ -81,9 +81,17 @@ public class CromulenceSolverTest {
     @Test
     public void testSolveRearrangementWithIncompleteLengths() {
         CromulenceSolverResult result = cromulence.solve(
-            "<(AR)(EL)(EM)(EN)(EN)(ET)(GT)(HI)(HS)(IT)(NC)(NG)(OM)(PL)(RA)(RE)(TW)",
+            "<(AR)(EL)(EM)(EN)(EN)(ET)(GT)(HI)(HS)(IT)(NC)(NG)(OM)(PL)(RA)(RE)(TW)>",
             List.of(13, 4)).get(0);
         assertThat(result.getWords()).containsExactly("REARRANGEMENT", "WITH");
+    }
+
+    @Test
+    public void testSolveRearrangementWithQuestionMarks() {
+        CromulenceSolverResult result = cromulence.solve(
+            "<(MEN)?(NGE)?(NMA)?(REA)?(RKS)?(RRA)?(THQ)?(TIO)?(TWI)?(UES)?>",
+            null).get(0);
+        assertThat(result.getWords()).containsExactly("REARRANGEMENT", "WITH", "QUESTION", "MARKS");
     }
 
     @Test

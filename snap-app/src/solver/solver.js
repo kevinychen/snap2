@@ -142,7 +142,7 @@ class Solver extends React.Component {
                         </tr> : undefined}
                         {results.map(({ words, score }) => <tr>
                             <td>{words.join(' ')}</td>
-                            <td>{(score + 100).toFixed(2)}</td>
+                            <td>{score.toFixed(2)}</td>
                         </tr>)}
                     </tbody>
                 </table>
