@@ -3,9 +3,11 @@ package com.kyc.snap.scraper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.jsoup.nodes.Element;
 import org.junit.Test;
 
@@ -41,5 +43,16 @@ public class ScraperTest extends Scraper {
         }
         assertThat(ids.size()).isGreaterThan(60000);
         assertThat(ids).contains("AAALL", "LAMBY", "ZZYZX");
+    }
+
+    String getHtml() {
+        try {
+            Process process = Runtime.getRuntime().exec(new String[]{"osascript", "-e",
+                "tell application \"Google Chrome\" to set sourceHTML to execute "
+                    + "front window's active tab javascript \"document.documentElement.outerHTML\""});
+            return IOUtils.toString(process.getInputStream(), "UTF-8");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

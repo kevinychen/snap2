@@ -2,7 +2,7 @@ import de.undercouch.gradle.tasks.download.Download
 
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
     }
 }
 
@@ -18,40 +18,43 @@ apply plugin: 'antlr'
 sourceCompatibility = 11
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+    implementation "org.projectlombok:lombok:1.18.24"
+
     antlr "org.antlr:antlr4:4.9.2"
 
-    compile "com.fasterxml.jackson.core:jackson-annotations:2.7.5"
-    compile "com.github.ben-manes.caffeine:caffeine:3.0.3"
-    compile "com.github.kklisura.cdt:cdt-java-client:2.0.0"
-    compile "com.google.apis:google-api-services-drive:v3-rev129-1.25.0"
-    compile "com.google.apis:google-api-services-sheets:v4-rev492-1.23.0"
-    compile "com.google.apis:google-api-services-slides:v1-rev294-1.23.0"
-    compile "com.squareup.okhttp3:okhttp:3.11.0"
-    compile "commons-io:commons-io:2.6"
-    compile "io.dropwizard:dropwizard-assets:1.2.1"
-    compile "io.github.openfeign:feign-jackson:10.0.1"
-    compile "io.github.openfeign.form:feign-form:3.3.0"
-    compile "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2"
-    compile "one.util:streamex:0.7.2"
-    compile "org.apache.commons:commons-text:1.4"
-    compile "org.apache.httpcomponents:httpmime:4.5.6"
-    compile "org.apache.pdfbox:pdfbox:2.0.11"
-    compile "org.bytedeco.javacpp-presets:leptonica:1.75.3-1.4.1:$platform"
-    compile "org.bytedeco.javacpp-presets:opencv:3.4.1-1.4.1"
-    compile "org.bytedeco.javacpp-presets:opencv:3.4.1-1.4.1:$platform"
-    compile "org.bytedeco.javacpp-presets:tesseract:3.05.01-1.4.1"
-    compile "org.bytedeco.javacpp-presets:tesseract:3.05.01-1.4.1:$platform"
-    compile "org.glassfish.jaxb:jaxb-runtime:2.3.2"
-    compile "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
-    compile "org.jsoup:jsoup:1.10.3"
-    compile "org.projectlombok:lombok:1.18.20"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:2.7.5"
+    implementation "com.github.ben-manes.caffeine:caffeine:3.0.3"
+    implementation "com.github.kklisura.cdt:cdt-java-client:2.0.0"
+    implementation "com.google.apis:google-api-services-drive:v3-rev129-1.25.0"
+    implementation "com.google.apis:google-api-services-sheets:v4-rev492-1.23.0"
+    implementation "com.google.apis:google-api-services-slides:v1-rev294-1.23.0"
+    implementation "com.squareup.okhttp3:okhttp:3.11.0"
+    implementation "commons-io:commons-io:2.6"
+    implementation "io.dropwizard:dropwizard-assets:1.2.1"
+    implementation "io.github.openfeign:feign-jackson:10.0.1"
+    implementation "io.github.openfeign.form:feign-form:3.3.0"
+    implementation "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2"
+    implementation "one.util:streamex:0.7.2"
+    implementation "org.apache.commons:commons-text:1.4"
+    implementation "org.apache.httpcomponents:httpmime:4.5.6"
+    implementation "org.apache.pdfbox:pdfbox:2.0.11"
+    implementation "org.bytedeco.javacpp-presets:leptonica:1.75.3-1.4.1:$platform"
+    implementation "org.bytedeco.javacpp-presets:opencv:3.4.1-1.4.1"
+    implementation "org.bytedeco.javacpp-presets:opencv:3.4.1-1.4.1:$platform"
+    implementation "org.bytedeco.javacpp-presets:tesseract:3.05.01-1.4.1"
+    implementation "org.bytedeco.javacpp-presets:tesseract:3.05.01-1.4.1:$platform"
+    implementation "org.glassfish.jaxb:jaxb-runtime:2.3.2"
+    implementation "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
+    implementation "org.jsoup:jsoup:1.10.3"
 
-    testCompile "junit:junit:4.12"
-    testCompile "org.assertj:assertj-core:3.11.0"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.assertj:assertj-core:3.11.0"
 }
 
 generateGrammarSource {
@@ -77,12 +80,12 @@ task downloadTesseractFiles(type: Download) {
 task downloadFiles(dependsOn: [downloadWordFiles, downloadTesseractFiles]) {}
 
 task run(type: JavaExec) {
-    classpath project.sourceSets.main.runtimeClasspath
-    main "com.kyc.snap.server.SnapServer"
+    classpath = project.sourceSets.main.runtimeClasspath
+    mainClass = "com.kyc.snap.server.SnapServer"
 }
 
 task generateWikinet(type: JavaExec) {
-    classpath project.sourceSets.main.runtimeClasspath
-    main "com.kyc.snap.wikinet.Wikinet"
+    classpath = project.sourceSets.main.runtimeClasspath
+    mainClass = "com.kyc.snap.wikinet.Wikinet"
 }
 

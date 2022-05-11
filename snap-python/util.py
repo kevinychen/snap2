@@ -148,3 +148,11 @@ def factor(n):
 def gcd(a, b):
     return a if b == 0 else gcd(b, a % b)
 
+def nCr(a, b):
+    if b < 0:
+        return 0
+    n = 1
+    for i in range(b):
+        n *= a - i
+        n //= i + 1
+    return n
