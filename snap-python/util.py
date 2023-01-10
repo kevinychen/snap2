@@ -142,7 +142,7 @@ def factor(n):
     while n > 1:
         d = find_factor(n)
         l.append(d)
-        n /= d
+        n //= d
     return l
 
 def gcd(a, b):

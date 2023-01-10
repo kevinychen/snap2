@@ -10,15 +10,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
+import com.kyc.snap.api.DocumentService;
+import com.kyc.snap.api.DocumentService.FindGridLinesRequest.FindGridLinesMode;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordFormula;
 import com.kyc.snap.crossword.CrosswordParser;
-import com.kyc.snap.google.SpreadsheetManager.OverlayImage;
-import javax.imageio.ImageIO;
-
-import com.google.common.collect.ImmutableList;
-import com.kyc.snap.api.DocumentService;
-import com.kyc.snap.api.DocumentService.FindGridLinesRequest.FindGridLinesMode;
 import com.kyc.snap.crossword.CrosswordSpreadsheetWrapper;
 import com.kyc.snap.document.Document;
 import com.kyc.snap.document.Document.DocumentPage;
@@ -30,6 +28,7 @@ import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.google.PresentationManager;
 import com.kyc.snap.google.PresentationManager.PositionedImage;
 import com.kyc.snap.google.SpreadsheetManager;
+import com.kyc.snap.google.SpreadsheetManager.OverlayImage;
 import com.kyc.snap.google.SpreadsheetManager.SheetData;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.GridLines;
@@ -39,7 +38,7 @@ import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
-
+import javax.imageio.ImageIO;
 import lombok.Data;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -47,6 +46,8 @@ import okhttp3.Response;
 
 @Data
 public class DocumentResource implements DocumentService {
+
+    private static final int DOCUMENT_SIZE_LIMIT = 10_000_000;
 
     private final Store store;
     private final GoogleAPIManager googleApi;
@@ -62,7 +63,7 @@ public class DocumentResource implements DocumentService {
     public Document createDocumentFromPdf(InputStream pdfStream) throws IOException {
         String id = UUID.randomUUID().toString();
         List<DocumentPage> pages = new ArrayList<>();
-        try (Pdf pdf = new Pdf(pdfStream)) {
+        try (Pdf pdf = new Pdf(ByteStreams.limit(pdfStream, DOCUMENT_SIZE_LIMIT))) {
             for (int page = 0; page < pdf.getNumPages(); page++) {
                 BufferedImage image = pdf.toImage(page);
                 String imageId = store.storeBlob(ImageUtils.toBytes(image));
@@ -79,7 +80,7 @@ public class DocumentResource implements DocumentService {
     @Override
     public Document createDocumentFromImage(InputStream imageStream) throws IOException {
         String id = UUID.randomUUID().toString();
-        BufferedImage image = ImageIO.read(imageStream);
+        BufferedImage image = ImageIO.read(ByteStreams.limit(imageStream, DOCUMENT_SIZE_LIMIT));
         String imageId = store.storeBlob(ImageUtils.toBytes(image));
         String compressedImageId = store.storeBlob(ImageUtils.toBytesCompressed(image));
         Document doc = new Document(id, ImmutableList.of(new DocumentPage(imageId, compressedImageId, 1, ImmutableList.of())));
