@@ -13,10 +13,10 @@ import java.util.Map;
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.IntPointer;
 import org.bytedeco.javacpp.Loader;
-import org.bytedeco.javacpp.lept;
-import org.bytedeco.javacpp.lept.PIX;
-import org.bytedeco.javacpp.opencv_java;
-import org.bytedeco.javacpp.tesseract.TessBaseAPI;
+import org.bytedeco.leptonica.PIX;
+import org.bytedeco.leptonica.global.leptonica;
+import org.bytedeco.opencv.opencv_java;
+import org.bytedeco.tesseract.TessBaseAPI;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -107,7 +107,7 @@ public class OpenCvManager {
                 MatOfByte bytes = new MatOfByte();
                 Imgcodecs.imencode(".tif", toMat(image), bytes);
                 ByteBuffer buffer = ByteBuffer.wrap(bytes.toArray());
-                try (PIX pix = lept.pixReadMem(buffer, buffer.capacity())) {
+                try (PIX pix = leptonica.pixReadMem(buffer, buffer.capacity())) {
                     api.SetImage(pix);
                     api.SetRectangle(
                         (int) (image.getWidth() * (1 - options.fullness) / 2),

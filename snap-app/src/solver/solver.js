@@ -1,7 +1,15 @@
 import React from "react";
-import { withRouter } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { postJson } from "../fetch";
 import "./solver.css";
+
+export const withRouter = Component => {
+	const Wrapper = props => {
+		const history = useNavigate();
+		return <Component history={history} {...props} />;
+	};
+	return Wrapper;
+};
 
 class Solver extends React.Component {
 
@@ -18,7 +26,7 @@ class Solver extends React.Component {
 
     componentDidMount() {
         window.addEventListener("keyup", this.handleKey);
-        const searchParams = new URLSearchParams(this.props.location.search);
+        const searchParams = new URLSearchParams(this.props.location?.search);
         if (searchParams.get("r") === '1') {
             this.setState({
                 canRearrange: true

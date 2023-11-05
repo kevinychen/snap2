@@ -26,7 +26,7 @@ export default class Wordsearch extends React.Component {
     componentDidMount() {
         const hash = window.location.hash.substr(1);
         if (hash !== '') {
-            this.setState({ ...JSON.parse(Buffer.from(hash, 'base64')) }, this.solve);
+            this.setState({ ...JSON.parse(atob(hash)) }, this.solve);
         }
     }
 
@@ -183,7 +183,7 @@ export default class Wordsearch extends React.Component {
 
     hashLocation() {
         const { grid, wordbank, boggle, highlightingAllWordbank, highlightingDifferentColors } = this.state;
-        window.location.hash = Buffer.from(JSON.stringify({ grid, wordbank, boggle, highlightingAllWordbank, highlightingDifferentColors })).toString('base64');
+        window.location.hash = btoa(JSON.stringify({ grid, wordbank, boggle, highlightingAllWordbank, highlightingDifferentColors }));
     }
 
     hashStringToColor(str) {

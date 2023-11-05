@@ -1,13 +1,13 @@
 import classNames from "classnames";
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from "react-dom/client";
 import GithubCorner from 'react-github-corner';
 import {
     BrowserRouter as Router,
-    Redirect,
-    Switch,
+    Navigate,
+    Routes,
     Route,
-    Link
+    Link,
 } from 'react-router-dom';
 import FindWords from './findwords';
 import Parser from './parser';
@@ -57,48 +57,24 @@ function Header({ mode }) {
 function App() {
     return <Router>
         <GithubCorner href="https://github.com/kevinychen/snap2" />
-        <Switch>
-            <Route path="/parser">
-                <Header mode="parser" />
-                <Parser />
-            </Route>
-            <Route path="/wordsearch">
-                <Header mode="wordsearch" />
-                <Wordsearch />
-            </Route>
-            <Route path="/solver">
-                <Header mode="solver" />
-                <Solver />
-            </Route>
-            <Route path="/findwords">
-                <Header mode="findwords" />
-                <FindWords />
-            </Route>
-            <Route path="/index.html">
-                <Redirect to="/" />
-            </Route>
-            <Route path="/document.html">
-                <Redirect to="/parser" />
-            </Route>
-            <Route path="/wordsearch.html">
-                <Redirect to="/wordsearch" />
-            </Route>
-            <Route path="/solver.html">
-                <Redirect to="/solver" />
-            </Route>
-            <Route path="/findwords.html">
-                <Redirect to="/findwords" />
-            </Route>
-            <Route path="/">
-                <Index />
-            </Route>
-        </Switch>
+        <Routes>
+            <Route path="/parser" element={<><Header mode="parser" /><Parser /></>} />
+            <Route path="/wordsearch" element={<><Header mode="wordsearch" /><Wordsearch /></>} i/>
+            <Route path="/solver" element={<><Header mode="solver" /><Solver /></>}/>
+            <Route path="/findwords" element={<><Header mode="findwords" /><FindWords /></>} />
+            <Route path="/index.html" element={<Navigate to="/" />} />
+            <Route path="/document.html" element={<Navigate to="/parser" />} />
+            <Route path="/wordsearch.html" element={<Navigate to="/wordsearch" />} />
+            <Route path="/solver.html" element={<Navigate to="/solver" />} />
+            <Route path="/findwords.html" element={<Navigate to="/findwords" />} />
+            <Route path="/" element={<Index />} />
+        </Routes>
     </Router>;
 }
 
-ReactDOM.render(
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
     <React.StrictMode>
         <App />
-    </React.StrictMode>,
-    document.getElementById('root')
+    </React.StrictMode>
 );

@@ -7,7 +7,7 @@ buildscript {
 }
 
 plugins {
-    id "de.undercouch.download" version "3.3.0"
+    id "de.undercouch.download" version "5.4.0"
 }
 
 apply plugin: 'java'
@@ -44,11 +44,12 @@ dependencies {
     implementation "org.apache.commons:commons-text:1.4"
     implementation "org.apache.httpcomponents:httpmime:4.5.6"
     implementation "org.apache.pdfbox:pdfbox:2.0.11"
-    implementation "org.bytedeco.javacpp-presets:leptonica:1.75.3-1.4.1:$platform"
-    implementation "org.bytedeco.javacpp-presets:opencv:3.4.1-1.4.1"
-    implementation "org.bytedeco.javacpp-presets:opencv:3.4.1-1.4.1:$platform"
-    implementation "org.bytedeco.javacpp-presets:tesseract:3.05.01-1.4.1"
-    implementation "org.bytedeco.javacpp-presets:tesseract:3.05.01-1.4.1:$platform"
+    implementation "org.bytedeco:leptonica:1.83.0-1.5.9:$platform"
+    implementation "org.bytedeco:openblas:0.3.23-1.5.9:$platform"
+    implementation "org.bytedeco:opencv:4.7.0-1.5.9"
+    implementation "org.bytedeco:opencv:4.7.0-1.5.9:$platform"
+    implementation "org.bytedeco:tesseract:5.3.1-1.5.9"
+    implementation "org.bytedeco:tesseract:5.3.1-1.5.9:$platform"
     implementation "org.glassfish.jaxb:jaxb-runtime:2.3.2"
     implementation "org.glassfish.jersey.media:jersey-media-multipart:2.25.1"
     implementation "org.jsoup:jsoup:1.10.3"
@@ -89,3 +90,6 @@ task generateWikinet(type: JavaExec) {
     mainClass = "com.kyc.snap.wikinet.Wikinet"
 }
 
+test {
+    maxHeapSize = "8192m"
+}
