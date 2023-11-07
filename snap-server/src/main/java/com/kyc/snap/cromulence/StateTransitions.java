@@ -257,12 +257,16 @@ class StateTransitions {
         @Override
         public List<State> newStates(State state, Context context) {
             List<State> newStates = new ArrayList<>();
-            if (atLeast == 0)
+            if (atLeast <= 0)
                 newStates.add(state.toBuilder().termState(parent).build());
-            State newState = state.toBuilder()
-                .termState(child.toTermState(new OrMoreState(parent, child, Math.max(atLeast - 1, 0))))
+            State childState = state.toBuilder()
+                .termState(child.toTermState(new OrMoreState(parent, child, atLeast - 1)))
                 .build();
-            newStates.addAll(newState.termState.newStates(newState, context));
+            for (State newState : childState.termState.newStates(childState, context)) {
+                newStates.add(newState.toBuilder()
+                        .score(newState.score + Math.min(atLeast + 3, 0))
+                        .build());
+            }
             return newStates;
         }
     }
