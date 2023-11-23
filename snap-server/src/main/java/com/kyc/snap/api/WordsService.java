@@ -3,6 +3,7 @@ package com.kyc.snap.api;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Splitter;
 import com.kyc.snap.crossword.CrosswordFormula;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -10,10 +11,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.kyc.snap.cromulence.CromulenceSolverResult;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.grid.Grid;
+import com.kyc.snap.solver.GenericSolver;
 import com.kyc.snap.words.WordsearchSolver;
 
 import lombok.Data;
@@ -91,11 +92,20 @@ public interface WordsService {
     }
 
     @POST
+    @Path("words/pregex")
+    PregexResponse pregex(PregexRequest request);
+
+    @Deprecated
+    @POST
     @Path("words/cromulence")
-    OptimizeCromulenceResponse optimizeCromulence(OptimizeCromulenceRequest request);
+    default CromulenceResponse cromulence(PregexRequest request) {
+        return new CromulenceResponse(pregex(request).results.stream()
+                .map(result -> new CromulenceResult(Splitter.on(' ').splitToList(result.getMessage()), result.getScore()))
+                .toList());
+    }
 
     @Data
-    class OptimizeCromulenceRequest {
+    class PregexRequest {
 
         private final List<String> parts;
         private boolean canRearrange;
@@ -103,9 +113,22 @@ public interface WordsService {
     }
 
     @Data
-    class OptimizeCromulenceResponse {
+    class PregexResponse {
 
-        private final List<CromulenceSolverResult> results;
+        private final List<GenericSolver.Result> results;
+    }
+
+    @Data
+    class CromulenceResponse {
+
+        private final List<CromulenceResult> results;
+    }
+
+    @Data
+    class CromulenceResult {
+
+        private final List<String> words;
+        private final double score;
     }
 
     @POST

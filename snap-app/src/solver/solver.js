@@ -1,14 +1,14 @@
 import React from "react";
-import { useNavigate } from "react-router";
+import { useSearchParams } from "react-router-dom";
 import { postJson } from "../fetch";
 import "./solver.css";
 
-export const withRouter = Component => {
-	const Wrapper = props => {
-		const history = useNavigate();
-		return <Component history={history} {...props} />;
-	};
-	return Wrapper;
+export const wrapper = Component => {
+       const Wrapper = props => {
+               const [searchParams, setSearchParams] = useSearchParams();
+               return <Component searchParams={searchParams} setSearchParams={setSearchParams} {...props} />;
+       };
+       return Wrapper;
 };
 
 class Solver extends React.Component {
@@ -26,7 +26,7 @@ class Solver extends React.Component {
 
     componentDidMount() {
         window.addEventListener("keyup", this.handleKey);
-        const searchParams = new URLSearchParams(this.props.location?.search);
+        const { searchParams } = this.props;
         if (searchParams.get("r") === '1') {
             this.setState({
                 canRearrange: true
@@ -148,8 +148,8 @@ class Solver extends React.Component {
                             <td>Words</td>
                             <td>Score</td>
                         </tr> : undefined}
-                        {results.map(({ words, score }) => <tr>
-                            <td>{words.join(' ')}</td>
+                        {results.map(({ message, score }) => <tr>
+                            <td>{message}</td>
                             <td>{score.toFixed(2)}</td>
                         </tr>)}
                     </tbody>
@@ -180,17 +180,14 @@ class Solver extends React.Component {
                 searchParams.set("wl", encodeURI(wl));
             }
         }
-        this.props.history.push({
-            pathname: '/solver',
-            search: `?${searchParams.toString()}`
-        });
+        this.props.setSearchParams(searchParams);
     }
 
     solve = () => {
         const { query, wordLengths, canRearrange } = this.state;
         this.setState({ loading: true });
         postJson({
-            path: '/words/cromulence', body: {
+            path: '/words/pregex', body: {
                 parts: query.split(/[ ,]+/),
                 wordLengths: wordLengths.length > 0 ? wordLengths.trim().split(/[^0-9]+/) : undefined,
                 canRearrange,
@@ -200,4 +197,4 @@ class Solver extends React.Component {
     }
 }
 
-export default withRouter(Solver);
+export default wrapper(Solver);

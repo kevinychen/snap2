@@ -1,17 +1,17 @@
 package com.kyc.snap.server;
 
-import com.kyc.snap.cromulence.CromulenceSolver;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
 import com.kyc.snap.api.WordsService;
-import com.kyc.snap.cromulence.CromulenceSolverResult;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordFormula;
 import com.kyc.snap.crossword.CrosswordParser;
+import com.kyc.snap.solver.GenericSolver;
+import com.kyc.snap.solver.PregexSolver;
 import com.kyc.snap.wikinet.Wikinet;
 import com.kyc.snap.words.DictionaryManager;
 import com.kyc.snap.words.StringUtil;
@@ -25,7 +25,7 @@ public class WordsResource implements WordsService {
 
     private final WordsearchSolver wordsearchSolver;
     private final CrosswordParser crosswordParser;
-    private final CromulenceSolver cromulenceSolver;
+    private final PregexSolver pregexSolver;
     private final DictionaryManager dictionary;
     private final Wikinet wikinet;
 
@@ -55,7 +55,7 @@ public class WordsResource implements WordsService {
     }
 
     @Override
-    public OptimizeCromulenceResponse optimizeCromulence(OptimizeCromulenceRequest request) {
+    public PregexResponse pregex(PregexRequest request) {
         String query;
         if (request.isCanRearrange()) {
             if (request.getParts().size() == 1)
@@ -66,8 +66,8 @@ public class WordsResource implements WordsService {
                     .collect(Collectors.toList())) + ">";
         } else
             query = Joiner.on("").join(request.getParts());
-        List<CromulenceSolverResult> results = cromulenceSolver.solve(query, request.getWordLengths());
-        return new OptimizeCromulenceResponse(results);
+        List<GenericSolver.Result> results = pregexSolver.solve(query, request.getWordLengths());
+        return new PregexResponse(results);
     }
 
     @Override

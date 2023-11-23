@@ -116,14 +116,14 @@ export class FindWordsPage extends React.Component {
             }
         }
         postJson({
-            path: '/words/cromulence',
+            path: '/words/pregex',
             body: {
                 parts,
                 canRearrange: isAnagramMode,
                 wordLengths: wordLengths.length > 0 ? wordLengths.trim().split(/[^0-9]+/) : undefined,
             },
         }, response => {
-            this.setState({ words: response.results.map(result => result.words.join(' ')) })
+            this.setState({ words: response.results.map(result => result.message) })
         });
     });
     }

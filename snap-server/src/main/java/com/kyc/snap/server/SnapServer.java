@@ -6,11 +6,11 @@ import java.nio.charset.StandardCharsets;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-import com.kyc.snap.cromulence.CromulenceSolver;
 import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.opencv.OpenCvManager;
+import com.kyc.snap.solver.PregexSolver;
 import com.kyc.snap.store.FileStore;
 import com.kyc.snap.wikinet.Wikinet;
 import com.kyc.snap.words.DictionaryManager;
@@ -50,14 +50,14 @@ public class SnapServer extends Application<Configuration> {
         CrosswordParser crosswordParser = new CrosswordParser();
         DictionaryManager dictionary = new DictionaryManager();
         WordsearchSolver wordsearchSolver = new WordsearchSolver(dictionary);
-        CromulenceSolver cromulenceSolver = new CromulenceSolver(dictionary);
+        PregexSolver pregexSolver = new PregexSolver();
         FileStore store = new FileStore();
         Wikinet wikinet = new Wikinet();
 
         environment.jersey().setUrlPattern("/api/*");
 
         environment.jersey().register(new MultiPartFeature());
-        environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, cromulenceSolver, dictionary, wikinet));
+        environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, pregexSolver, dictionary, wikinet));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser, crosswordParser));
     }
