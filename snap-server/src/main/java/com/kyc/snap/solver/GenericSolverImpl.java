@@ -12,7 +12,7 @@ import one.util.streamex.StreamEx;
 
 public class GenericSolverImpl<State> implements GenericSolver<State> {
 
-    private static final int SEARCH_LIMIT = 10000;
+    private static final int SEARCH_LIMIT = 4000;
 
     private final Random random = new Random(0);
 
