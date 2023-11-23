@@ -3,15 +3,13 @@ package com.kyc.snap;
 
 import org.junit.Test;
 
-import com.kyc.snap.cromulence.CromulenceSolver;
-import com.kyc.snap.wikinet.Wikinet;
+import com.kyc.snap.solver.PregexSolver;
 import com.kyc.snap.words.DictionaryManager;
 
 public class SnapTest {
 
     DictionaryManager dictionary = new DictionaryManager();
-    CromulenceSolver cromulence = new CromulenceSolver(dictionary);
-    Wikinet wikinet = new Wikinet();
+    PregexSolver pregex = new PregexSolver();
 
     @Test
     public void test() throws Exception {
