@@ -11,7 +11,7 @@ import com.kyc.snap.opencv.OpenCvManager.Line;
 
 public class OpenCvManagerTest {
 
-    private OpenCvManager openCv = new OpenCvManager();
+    final OpenCvManager openCv = new OpenCvManager();
 
     @Test
     public void testFindLines() {

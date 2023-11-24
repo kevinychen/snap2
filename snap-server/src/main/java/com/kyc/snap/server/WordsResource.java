@@ -1,5 +1,6 @@
 package com.kyc.snap.server;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,81 +14,79 @@ import com.kyc.snap.solver.GenericSolver;
 import com.kyc.snap.solver.PregexSolver;
 import com.kyc.snap.words.EnglishDictionary;
 import com.kyc.snap.words.StringUtil;
-import com.kyc.snap.words.WordsearchSolver;
+import com.kyc.snap.words.WordSearchSolver;
 
-import lombok.Data;
 import one.util.streamex.EntryStream;
 
-@Data
-public class WordsResource implements WordsService {
-
-    private final WordsearchSolver wordsearchSolver;
-    private final CrosswordParser crosswordParser;
-    private final PregexSolver pregexSolver;
-    private final EnglishDictionary dictionary;
+public record WordsResource(
+        WordSearchSolver wordsearchSolver,
+        CrosswordParser crosswordParser,
+        PregexSolver pregexSolver,
+        EnglishDictionary dictionary) implements WordsService {
 
     @Override
-    public SolveWordsearchResponse solveWordsearch(SolveWordsearchRequest request) {
-        List<WordsearchSolver.Result> results = wordsearchSolver.find(request.getGrid(), request.getWordbank(), request.isBoggle());
-        return new SolveWordsearchResponse(results);
+    public SolveWordSearchResponse solveWordSearch(SolveWordSearchRequest request) {
+        List<WordSearchSolver.Result> results = wordsearchSolver.find(request.grid(), request.wordBank(), request.boggle());
+        return new SolveWordSearchResponse(results);
     }
 
     @Override
     public FindCrosswordResponse findCrossword(FindCrosswordRequest request) {
-        Crossword crossword = crosswordParser.parseCrossword(request.getGrid());
+        Crossword crossword = crosswordParser.parseCrossword(request.grid());
         return new FindCrosswordResponse(crossword);
     }
 
     @Override
     public ParseCrosswordCluesResponse parseCrosswordClues(ParseCrosswordCluesRequest request) {
-        CrosswordClues clues = crosswordParser.parseClues(request.getUnparsedClues());
+        CrosswordClues clues = crosswordParser.parseClues(request.unparsedClues());
         return new ParseCrosswordCluesResponse(clues);
     }
 
     @Override
     public GetCrosswordFormulasResponse getCrosswordFormulas(GetCrosswordFormulasRequest request) {
         List<CrosswordFormula> formulas = crosswordParser
-            .getFormulas(request.getCrossword(), request.getClues());
+                .getFormulas(request.crossword(), request.clues());
         return new GetCrosswordFormulasResponse(formulas);
     }
 
     @Override
     public PregexResponse pregex(PregexRequest request) {
         String query;
-        if (request.isCanRearrange()) {
-            if (request.getParts().size() == 1)
-                query = "<" + request.getParts().get(0) + ">";
+        if (request.canRearrange()) {
+            if (request.parts().size() == 1)
+                query = "<" + request.parts().get(0) + ">";
             else
-                query = "<" + Joiner.on("").join(request.getParts().stream()
-                    .map(part -> "(" + part + ")")
-                    .collect(Collectors.toList())) + ">";
+                query = request.parts().stream()
+                        .map(part -> "(" + part + ")")
+                        .collect(Collectors.joining("", "<", ">"));
         } else
-            query = Joiner.on("").join(request.getParts());
-        List<GenericSolver.Result> results = pregexSolver.solve(query, request.getWordLengths());
+            query = Joiner.on("").join(request.parts());
+        List<GenericSolver.Result> results = pregexSolver.solve(query, request.wordLengths());
         return new PregexResponse(results);
     }
 
     @Override
     public FindWordsResponse findWords(FindWordsRequest request) {
-
-        String regex = request.getRegex() == null ? null : request.getRegex().toUpperCase();
-        String containsSubseq = request.getContainsSubseq() == null ? null : clean(request.getContainsSubseq());
-        String containedSubseq = request.getContainedSubseq() == null ? null : clean(request.getContainedSubseq());
-        String contains = request.getContains() == null ? null : StringUtil.sorted(clean(request.getContains()));
-        String contained = request.getContained() == null ? null : StringUtil.sorted(clean(request.getContained()));
+        String regex = request.regex() == null ? null : request.regex().toUpperCase();
+        String containsSubsequence = request.containsSubsequence() == null ? null : clean(request.containsSubsequence());
+        String containedSubsequence = request.containedSubsequence() == null ? null : clean(request.containedSubsequence());
+        String contains = request.contains() == null ? null : StringUtil.sorted(clean(request.contains()));
+        String contained = request.contained() == null ? null : StringUtil.sorted(clean(request.contained()));
         List<String> words = EntryStream.of(dictionary.getWordFrequencies())
-            .filterKeys(word -> request.getMinLength() == null || word.length() >= request.getMinLength())
-            .filterKeys(word -> request.getMaxLength() == null || word.length() <= request.getMaxLength())
-            .filterValues(freq -> request.getMinFreq() == null || freq >= request.getMinFreq())
-            .mapKeys(String::toUpperCase)
-            .filterKeys(word -> regex == null || word.matches(regex))
-            .filterKeys(word -> containsSubseq == null || StringUtil.isSubsequence(word, containsSubseq))
-            .filterKeys(word -> containedSubseq == null || StringUtil.isSubsequence(containedSubseq, word))
-            .filterKeys(word -> contains == null || StringUtil.isSubsequence(StringUtil.sorted(word), contains))
-            .filterKeys(word -> contained == null || StringUtil.isSubsequence(contained, StringUtil.sorted(word)))
-            .keys()
-            .limit(100)
-            .toList();
+                .filterKeys(word -> request.minLength() == null || word.length() >= request.minLength())
+                .filterKeys(word -> request.maxLength() == null || word.length() <= request.maxLength())
+                .filterValues(freq -> request.minFreq() == null || freq >= request.minFreq())
+                .mapKeys(String::toUpperCase)
+                .filterKeys(word -> regex == null || word.matches(regex))
+                .filterKeys(word -> containsSubsequence == null || StringUtil.isSubsequence(word, containsSubsequence))
+                .filterKeys(word -> containedSubsequence == null || StringUtil.isSubsequence(containedSubsequence, word))
+                .filterKeys(word -> contains == null || StringUtil.isSubsequence(StringUtil.sorted(word), contains))
+                .filterKeys(word -> contained == null || StringUtil.isSubsequence(contained, StringUtil.sorted(word)))
+                .filterKeys(word -> request.lengthPattern() == null ||
+                        Arrays.stream(word.split(" ")).map(String::length).toList().equals(request.lengthPattern()))
+                .keys()
+                .limit(100)
+                .toList();
         return new FindWordsResponse(words);
     }
 

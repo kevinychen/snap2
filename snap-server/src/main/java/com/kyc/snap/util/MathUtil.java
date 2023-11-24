@@ -7,7 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class MathUtil {
+public enum MathUtil {
+    ;
 
     public static BigInteger factorial(int n) {
         BigInteger factorial = BigInteger.ONE;
@@ -42,6 +43,4 @@ public class MathUtil {
             permutation.remove(permutation.size() - 1);
         }
     }
-
-    private MathUtil() {}
 }

@@ -7,7 +7,8 @@ import java.util.TreeSet;
 import com.google.common.collect.Lists;
 import com.kyc.snap.util.MathUtil;
 
-public class StringUtil {
+public enum StringUtil {
+    ;
 
     /**
      * Caesar shifts the message.
@@ -153,8 +154,5 @@ public class StringUtil {
             }
         }
         return costs[b.length()];
-    }
-
-    private StringUtil() {
     }
 }

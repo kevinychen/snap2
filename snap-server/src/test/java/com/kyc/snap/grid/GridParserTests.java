@@ -16,7 +16,7 @@ import javax.imageio.ImageIO;
 
 public class GridParserTests {
 
-    GridParser gridParser = new GridParser(new OpenCvManager());
+    final GridParser gridParser = new GridParser(new OpenCvManager());
 
     @Test
     public void testFindGridLines() throws IOException {
@@ -34,16 +34,16 @@ public class GridParserTests {
     public void testFindImplicitGridLines() throws IOException {
         BufferedImage image = getImage("./src/test/resources/blood_bowl.png");
         GridLines gridLines = gridParser.findImplicitGridLines(image);
-        assertThat(gridLines.getHorizontalLines().size() - 1).isEqualTo(18);
-        assertThat(gridLines.getVerticalLines().size() - 1).isEqualTo(24);
+        assertThat(gridLines.horizontalLines().size() - 1).isEqualTo(18);
+        assertThat(gridLines.verticalLines().size() - 1).isEqualTo(24);
     }
 
     void testFindGridLinesHelper(String filename, int numRows, int numCols) throws IOException {
         BufferedImage image = getImage("./src/test/resources/" + filename);
         GridLines gridLines = gridParser.findGridLines(image);
         gridLines = gridParser.getInterpolatedGridLines(gridLines);
-        assertThat(gridLines.getHorizontalLines().size() - 1).isEqualTo(numRows);
-        assertThat(gridLines.getVerticalLines().size() - 1).isEqualTo(numCols);
+        assertThat(gridLines.horizontalLines().size() - 1).isEqualTo(numRows);
+        assertThat(gridLines.verticalLines().size() - 1).isEqualTo(numCols);
     }
 
     BufferedImage getImage(String path) throws IOException {

@@ -31,7 +31,7 @@ public interface DocumentService {
     @GET
     @Path("/{documentId}")
     @Produces(MediaType.APPLICATION_JSON)
-    Document getDocument(@PathParam("documentId") String documentId) throws IOException;
+    Document getDocument(@PathParam("documentId") String documentId);
 
     @POST
     @Path("/pdf")
@@ -51,11 +51,7 @@ public interface DocumentService {
     @Produces(MediaType.APPLICATION_JSON)
     Document createDocumentFromUrl(CreateDocumentFromUrlRequest request) throws Exception;
 
-    @Data
-    class CreateDocumentFromUrlRequest {
-
-        private final String url;
-    }
+    record CreateDocumentFromUrlRequest(String url) {}
 
     @POST
     @Path("/{documentId}/lines")
@@ -69,9 +65,6 @@ public interface DocumentService {
         private final Section section;
         private FindGridLinesMode findGridLinesMode = FindGridLinesMode.EXPLICIT;
         private boolean interpolate = true;
-
-        // unused
-        private int approxGridSquareSize = -1;
 
         public enum FindGridLinesMode {
 
@@ -111,12 +104,7 @@ public interface DocumentService {
         private boolean findBorders = true;
     }
 
-    @Data
-    class FindGridResponse {
-
-        private final GridPosition gridPosition;
-        private final Grid grid;
-    }
+    record FindGridResponse(GridPosition gridPosition, Grid grid) {}
 
     @POST
     @Path("/{documentId}/clues")
@@ -125,18 +113,9 @@ public interface DocumentService {
     FindCrosswordCluesResponse findCrosswordClues(
             @PathParam("documentId") String documentId, FindCrosswordCluesRequest request);
 
-    @Data
-    class FindCrosswordCluesRequest {
+    record FindCrosswordCluesRequest(Crossword crossword) {}
 
-        private final Crossword crossword;
-    }
-
-    @Data
-    class FindCrosswordCluesResponse {
-
-        private final CrosswordClues clues;
-        private final List<CrosswordFormula> formulas;
-    }
+    record FindCrosswordCluesResponse(CrosswordClues clues, List<CrosswordFormula> formulas) {}
 
     @POST
     @Path("/{documentId}/export/sheet/{spreadsheetId}/{sheetId}")
@@ -145,25 +124,16 @@ public interface DocumentService {
     boolean exportSheet(@PathParam("documentId") String documentId, @PathParam("spreadsheetId") String spreadsheetId,
             @PathParam("sheetId") int sheetId, ExportSheetRequest request);
 
-    @Data
-    class ExportSheetRequest {
+    record ExportSheetRequest(
+            Marker marker,
+            Section section,
+            GridLines gridLines,
+            Grid grid,
+            Crossword crossword,
+            CrosswordClues crosswordClues,
+            List<ImageBlob> blobs) {}
 
-        private Marker marker = null;
-
-        private final Section section;
-        private GridLines gridLines;
-        private Grid grid;
-        private Crossword crossword;
-        private CrosswordClues crosswordClues;
-        private List<ImageBlob> blobs;
-    }
-
-    @Data
-    class Marker {
-
-        private final int row;
-        private final int col;
-    }
+    record Marker(int row, int col) {}
 
     @POST
     @Path("/{documentId}/export/slide/{presentationId}/{slideId}")
@@ -172,10 +142,5 @@ public interface DocumentService {
     boolean exportSlide(@PathParam("documentId") String documentId, @PathParam("presentationId") String presentationId,
             @PathParam("slideId") String slideId, ExportSlideRequest request);
 
-    @Data
-    class ExportSlideRequest {
-
-        private final Section section;
-        private List<ImageBlob> blobs;
-    }
+    record ExportSlideRequest(Section section, List<ImageBlob> blobs) {}
 }

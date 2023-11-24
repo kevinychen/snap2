@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -23,15 +22,12 @@ import com.kyc.snap.server.HostingClient;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.core.Response;
-import lombok.Data;
 
-@Data
-public class PresentationManager {
-
-    private final GoogleCredential credential;
-    private final Presentations presentations;
-    private final String presentationId;
-    private final String slideId;
+public record PresentationManager(
+        GoogleCredential credential,
+        Presentations presentations,
+        String presentationId,
+        String slideId) {
 
     public void addImages(List<PositionedImage> images, int parentWidth, int parentHeight) {
         HostingClient hosting = new HostingClient();
@@ -46,21 +42,21 @@ public class PresentationManager {
             double slideHeight = toPts(slideSize.getHeight());
             double scale = Math.min(slideWidth / parentWidth, slideHeight / parentHeight);
             presentations
-                .batchUpdate(presentationId, new BatchUpdatePresentationRequest()
+                    .batchUpdate(presentationId, new BatchUpdatePresentationRequest()
                     .setRequests(hostedImages.stream()
-                        .map(image -> new Request()
-                            .setCreateImage(new CreateImageRequest()
-                                .setElementProperties(new PageElementProperties()
-                                    .setPageObjectId(slideId)
-                                    .setTransform(new AffineTransform()
-                                        .setTranslateX(image.getImage().x * scale)
-                                        .setTranslateY(image.getImage().y * scale)
-                                        .setScaleX(scale)
-                                        .setScaleY(scale)
-                                        .setUnit("PT")))
-                                .setUrl(image.url)))
-                        .collect(Collectors.toList())))
-                .execute();
+                            .map(image -> new Request()
+                                    .setCreateImage(new CreateImageRequest()
+                                            .setElementProperties(new PageElementProperties()
+                                                    .setPageObjectId(slideId)
+                                                    .setTransform(new AffineTransform()
+                                                            .setTranslateX(image.image().x * scale)
+                                                            .setTranslateY(image.image().y * scale)
+                                                            .setScaleX(scale)
+                                                            .setScaleY(scale)
+                                                            .setUnit("PT")))
+                                            .setUrl(image.url)))
+                            .toList()))
+                    .execute();
         } catch (GoogleJsonResponseException e) {
             throw toClientErrorException(e);
         } catch (IOException e) {
@@ -80,28 +76,14 @@ public class PresentationManager {
     }
 
     private static double toPts(Dimension dimension) {
-        switch (dimension.getUnit()) {
-            case "EMU":
-                return dimension.getMagnitude() / 12700;
-            case "PT":
-                return dimension.getMagnitude();
-            default:
-                throw new RuntimeException("Invalid dimension unit: " + dimension.getUnit());
-        }
+        return switch (dimension.getUnit()) {
+            case "EMU" -> dimension.getMagnitude() / 12700;
+            case "PT" -> dimension.getMagnitude();
+            default -> throw new RuntimeException("Invalid dimension unit: " + dimension.getUnit());
+        };
     }
 
-    @Data
-    public static class PositionedImage {
+    public record PositionedImage(BufferedImage image, int x, int y) {}
 
-        private final BufferedImage image;
-        private final int x;
-        private final int y;
-    }
-
-    @Data
-    private static class HostedImage {
-
-        private final PositionedImage image;
-        private final String url;
-    }
+    private record HostedImage(PositionedImage image, String url) {}
 }

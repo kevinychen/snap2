@@ -1,13 +1,8 @@
 package com.kyc.snap.crossword;
 
-import lombok.Data;
-
-@Data
-public class CrosswordFormula {
-
-    private final int row;
-    private final int col;
-    private final boolean isFormula;
-    private final String value;
-    private final Integer clueNumber;
-}
+public record CrosswordFormula(
+        int row,
+        int col,
+        boolean formula,
+        String value,
+        Integer clueNumber) {}

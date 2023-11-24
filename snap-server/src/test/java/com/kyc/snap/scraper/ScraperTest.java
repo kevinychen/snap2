@@ -4,6 +4,7 @@ package com.kyc.snap.scraper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,13 +15,13 @@ import org.junit.Test;
 /**
  * Tips for writing a scraper.
  *
- * Ensure that Chrome is running with the remote debugging port on:
+ * <p>Ensure that Chrome is running with the remote debugging port on:
  *
  * <pre>
  * "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --remote-debugging-port=9222
  * </pre>
  *
- * To get a selector: right click on an element, click Inspect, right click again, and click "Copy
+ * To get a selector: right-click on an element, click Inspect, right click again, and click "Copy
  * as selector".
  */
 public class ScraperTest extends Scraper {
@@ -50,7 +51,7 @@ public class ScraperTest extends Scraper {
             Process process = Runtime.getRuntime().exec(new String[]{"osascript", "-e",
                 "tell application \"Google Chrome\" to set sourceHTML to execute "
                     + "front window's active tab javascript \"document.documentElement.outerHTML\""});
-            return IOUtils.toString(process.getInputStream(), "UTF-8");
+            return IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

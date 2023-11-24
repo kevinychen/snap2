@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import one.util.streamex.StreamEx;
 
@@ -21,7 +20,7 @@ public class GenericSolverImpl<State> implements GenericSolver<State> {
         List<FullState<State>> currStates = List.of(new FullState<>(start, List.of(), 0));
         List<FullState<State>> nextStates = new ArrayList<>();
         TreeSet<Result> bestResults =
-                new TreeSet<>(Comparator.comparingDouble(Result::getScore).thenComparing(Result::getMessage).reversed());
+                new TreeSet<>(Comparator.comparingDouble(Result::score).thenComparing(Result::message).reversed());
         for (int i = 0; i < 1000 && !currStates.isEmpty(); i++) {
             List<FullState<State>> newCurrStates = new ArrayList<>();
             List<FullState<State>> newNextStates = nextStates;
@@ -61,8 +60,8 @@ public class GenericSolverImpl<State> implements GenericSolver<State> {
                 bestResults.pollLast();
         }
         return StreamEx.of(bestResults.stream())
-                .distinct(Result::getMessage)
-                .collect(Collectors.toList());
+                .distinct(Result::message)
+                .toList();
     }
 
     private double approxScoreThreshold(List<FullState<State>> states) {
@@ -78,7 +77,7 @@ public class GenericSolverImpl<State> implements GenericSolver<State> {
     private double minScoreThreshold(TreeSet<Result> bestFinalStates) {
         if (bestFinalStates.size() < MAX_NUM_RESULTS)
             return Double.NEGATIVE_INFINITY;
-        return bestFinalStates.last().score;
+        return bestFinalStates.last().score();
     }
 
     record FullState<State>(State state, List<Integer> tokens, double score) {}

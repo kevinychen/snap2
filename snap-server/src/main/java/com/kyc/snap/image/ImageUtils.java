@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import com.kyc.snap.grid.Border;
+
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -24,10 +26,8 @@ import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 
-import com.google.common.collect.ImmutableList;
-import com.kyc.snap.grid.Border;
-
-public class ImageUtils {
+public enum ImageUtils {
+    ;
 
     public static BufferedImage copy(BufferedImage image) {
         BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
@@ -105,7 +105,7 @@ public class ImageUtils {
                 int rgb = image.getRGB(x, y);
                 reds.add((rgb >> 16) & 0xff);
                 greens.add((rgb >> 8) & 0xff);
-                blues.add((rgb >> 0) & 0xff);
+                blues.add(rgb & 0xff);
             }
         Collections.sort(reds);
         Collections.sort(greens);
@@ -113,7 +113,7 @@ public class ImageUtils {
         int medianRed = reds.get(reds.size() / 2);
         int medianGreen = greens.get(reds.size() / 2);
         int medianBlue = blues.get(reds.size() / 2);
-        return (medianRed << 16) | (medianGreen << 8) | (medianBlue << 0);
+        return (medianRed << 16) | (medianGreen << 8) | medianBlue;
     }
 
     public static Border findVerticalBorder(BufferedImage image) {
@@ -133,13 +133,13 @@ public class ImageUtils {
             while (end < medianRgbs.size() && isDifferent(medianRgbs.get(end), leftRgb) & isDifferent(medianRgbs.get(end), rightRgb)) {
                 sumRed += (medianRgbs.get(end) >> 16) & 0xff;
                 sumGreen += (medianRgbs.get(end) >> 8) & 0xff;
-                sumBlue += (medianRgbs.get(end) >> 0) & 0xff;
+                sumBlue += medianRgbs.get(end) & 0xff;
                 end++;
             }
             int centerProximity = Math.abs(start + end - image.getWidth());
             if (end > start && centerProximity < minCenterProximity) {
                 int borderWidth = end - start;
-                int averageRgb = ((sumRed / borderWidth) << 16) | ((sumGreen / borderWidth) << 8) | ((sumBlue / borderWidth) << 0);
+                int averageRgb = ((sumRed / borderWidth) << 16) | ((sumGreen / borderWidth) << 8) | (sumBlue / borderWidth);
                 border = new Border(averageRgb, borderWidth);
                 minCenterProximity = centerProximity;
             }
@@ -149,7 +149,7 @@ public class ImageUtils {
     }
 
     public static List<ImageBlob> findBlobs(BufferedImage image, boolean exact) {
-        BiFunction<Integer, Integer, Boolean> similar = (rgb1, rgb2) -> exact ? rgb1 == rgb2 : !isDifferent(rgb1, rgb2);
+        BiFunction<Integer, Integer, Boolean> similar = (rgb1, rgb2) -> exact ? rgb1.equals(rgb2) : !isDifferent(rgb1, rgb2);
         boolean[][] visited = new boolean[image.getHeight()][image.getWidth()];
         for (int x = 0; x < image.getWidth(); x++)
             for (int y = 0; y < image.getHeight(); y++)
@@ -205,15 +205,15 @@ public class ImageUtils {
     }
 
     public static BufferedImage getBlobImage(BufferedImage image, ImageBlob blob) {
-        BufferedImage blobImage = new BufferedImage(blob.getWidth(), blob.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+        BufferedImage blobImage = new BufferedImage(blob.width(), blob.height(), BufferedImage.TYPE_4BYTE_ABGR);
         boolean[][] visited = new boolean[image.getHeight()][image.getWidth()];
         Deque<Point> floodfill = new ArrayDeque<>();
-        floodfill.add(blob.getInnerPoint());
+        floodfill.add(blob.innerPoint());
         while (!floodfill.isEmpty()) {
             Point p = floodfill.removeFirst();
-            if (inBounds(image, p.x, p.y) && !visited[p.y][p.x] && !blob.getFencePoints().contains(p)) {
+            if (inBounds(image, p.x, p.y) && !visited[p.y][p.x] && !blob.fencePoints().contains(p)) {
                 visited[p.y][p.x] = true;
-                blobImage.setRGB(p.x - blob.getX(), p.y - blob.getY(), image.getRGB(p.x, p.y));
+                blobImage.setRGB(p.x - blob.x(), p.y - blob.y(), image.getRGB(p.x, p.y));
                 for (Point borderingPoint : borderingPoints(p))
                     floodfill.addLast(borderingPoint);
             }
@@ -231,13 +231,13 @@ public class ImageUtils {
     }
 
     public static boolean isLight(int rgb) {
-        return ((rgb >> 16) & 0xff) + ((rgb >> 8) & 0xff) + ((rgb >> 0) & 0xff) > 3 * 128;
+        return ((rgb >> 16) & 0xff) + ((rgb >> 8) & 0xff) + (rgb & 0xff) > 3 * 128;
     }
 
     public static boolean isDifferent(int rgb1, int rgb2) {
         int redDiff = ((rgb1 >> 16) & 0xff) - ((rgb2 >> 16) & 0xff);
         int greenDiff = ((rgb1 >> 8) & 0xff) - ((rgb2 >> 8) & 0xff);
-        int blueDiff = ((rgb1 >> 0) & 0xff) - ((rgb2 >> 0) & 0xff);
+        int blueDiff = (rgb1 & 0xff) - (rgb2 & 0xff);
         return redDiff * redDiff + greenDiff * greenDiff + blueDiff * blueDiff > 3 * 64 * 64;
     }
 
@@ -250,8 +250,6 @@ public class ImageUtils {
     }
 
     public static List<Point> borderingPoints(Point p) {
-        return ImmutableList.of(new Point(p.x - 1, p.y), new Point(p.x + 1, p.y), new Point(p.x, p.y - 1), new Point(p.x, p.y + 1));
+        return List.of(new Point(p.x - 1, p.y), new Point(p.x + 1, p.y), new Point(p.x, p.y - 1), new Point(p.x, p.y + 1));
     }
-
-    private ImageUtils() {}
 }

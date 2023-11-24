@@ -1,5 +1,7 @@
 package com.kyc.snap.api;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -16,6 +18,8 @@ public interface FileService {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     StringJson uploadFile(byte[] data);
+
+    record StringJson(@JsonValue String value) {}
 
     @GET
     @Path("/{fileId}")

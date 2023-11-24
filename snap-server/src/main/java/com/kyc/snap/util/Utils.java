@@ -13,7 +13,8 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-public class Utils {
+public enum Utils {
+    ;
 
     /**
      * Replaces sets of marks that are less than minDistance with a single mark at the average point.
@@ -38,7 +39,7 @@ public class Utils {
     /**
      * Find the approximate period of the given marks.
      *
-     * https://math.stackexchange.com/questions/914288/how-to-find-the-approximate-basic-period-or-
+     * <p>https://math.stackexchange.com/questions/914288/how-to-find-the-approximate-basic-period-or-
      * gcd-of-a-list-of-numbers
      */
     public static double findApproxPeriod(Collection<Integer> marks) {
@@ -55,12 +56,12 @@ public class Utils {
 
         double coarsePeriod = IntStream.range(1, maxMark / 4)
             .mapToObj(Double::valueOf)
-            .max(Comparator.comparing(x -> scoreFunction.apply(x)))
+            .max(Comparator.comparing(scoreFunction))
             .get();
 
         double finePeriod = IntStream.range(-maxMark / 2, maxMark / 2)
             .mapToObj(x -> coarsePeriod + 4. * x / maxMark)
-            .max(Comparator.comparing(x -> scoreFunction.apply(x)))
+            .max(Comparator.comparing(scoreFunction))
             .get();
 
         return finePeriod;
@@ -128,8 +129,5 @@ public class Utils {
                 components.add(component);
             }
         return components;
-    }
-
-    private Utils() {
     }
 }

@@ -3,16 +3,10 @@ package com.kyc.snap.grid;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.ImmutableList;
 
 import lombok.Data;
 
-@Data
-public class Grid {
-
-    private final int numRows;
-    private final int numCols;
-    private final Square[][] squares;
+public record Grid(int numRows, int numCols, Square[][] squares) {
 
     public static Grid create(int numRows, int numCols) {
         Square[][] squares = new Square[numRows][numCols];
@@ -39,7 +33,7 @@ public class Grid {
 
         @JsonIgnore
         public List<Border> borders() {
-            return ImmutableList.of(topBorder, rightBorder, bottomBorder, leftBorder);
+            return List.of(topBorder, rightBorder, bottomBorder, leftBorder);
         }
     }
 }

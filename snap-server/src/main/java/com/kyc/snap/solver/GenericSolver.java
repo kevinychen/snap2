@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
-import lombok.Data;
 
 public interface GenericSolver<State> {
 
@@ -52,9 +51,5 @@ public interface GenericSolver<State> {
         String toMessage(List<Integer> tokens);
     }
 
-    @Data
-    class Result {
-        final String message;
-        final double score;
-    }
+    record Result(String message, double score) {}
 }

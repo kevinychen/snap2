@@ -5,9 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Rectangle;
 import com.kyc.snap.grid.Border.Style;
@@ -22,78 +20,73 @@ import com.kyc.snap.opencv.OpenCvManager.Line;
 import com.kyc.snap.opencv.OpenCvManager.Tuple;
 import com.kyc.snap.util.Utils;
 
-import lombok.Data;
-
-@Data
-public class GridParser {
+public record GridParser(OpenCvManager openCv) {
 
     /**
      * Minimum difference between widths of two borders in order for them to have different styles.
      */
     public static final double MIN_WIDTH_DIFF_BETWEEN_BORDER_STYLES = 1.5;
 
-    private final OpenCvManager openCv;
-
     public GridLines findGridLines(BufferedImage image) {
         List<Line> cardinalLines = openCv.findLines(
-            image,
-            Math.PI / 2,
-            (image.getWidth() + image.getHeight()) / 100);
+                image,
+                Math.PI / 2,
+                (image.getWidth() + image.getHeight()) / 100.);
 
         if (cardinalLines.size() >= 10000)
             return new GridLines(
-                new TreeSet<>(List.of(0, image.getHeight())),
-                new TreeSet<>(List.of(0, image.getWidth())));
+                    new TreeSet<>(List.of(0, image.getHeight())),
+                    new TreeSet<>(List.of(0, image.getWidth())));
 
         List<List<Line>> connectedComponents = Utils.findConnectedComponents(cardinalLines,
-            (line1, line2) -> Math.max(line1.getX1(), line1.getX2()) + 32 > Math.min(line2.getX1(), line2.getX2())
-                && Math.max(line2.getX1(), line2.getX2()) + 32 > Math.min(line1.getX1(), line1.getX2())
-                && Math.max(line1.getY1(), line1.getY2()) + 32 > Math.min(line2.getY1(), line2.getY2())
-                && Math.max(line2.getY1(), line2.getY2()) + 32 > Math.min(line1.getY1(), line1.getY2()));
+                (line1, line2) -> Math.max(line1.x1(), line1.x2()) + 32 > Math.min(line2.x1(), line2.x2())
+                        && Math.max(line2.x1(), line2.x2()) + 32 > Math.min(line1.x1(), line1.x2())
+                        && Math.max(line1.y1(), line1.y2()) + 32 > Math.min(line2.y1(), line2.y2())
+                        && Math.max(line2.y1(), line2.y2()) + 32 > Math.min(line1.y1(), line1.y2()));
 
         TreeSet<Integer> horizontalLines = new TreeSet<>();
         TreeSet<Integer> verticalLines = new TreeSet<>();
         for (List<Line> component : connectedComponents)
             if (component.size() >= 8) {
                 for (Line line : component)
-                    if (line.getY1() == line.getY2())
-                        horizontalLines.add((int) line.getY1());
-                    else if (line.getX1() == line.getX2())
-                        verticalLines.add((int) line.getX1());
+                    if (line.y1() == line.y2())
+                        horizontalLines.add((int) line.y1());
+                    else if (line.x1() == line.x2())
+                        verticalLines.add((int) line.x1());
                     else
                         throw new IllegalStateException("Expected horizontal or vertical line");
             }
 
         if (horizontalLines.isEmpty() || verticalLines.isEmpty())
             return new GridLines(
-                new TreeSet<>(List.of(0, image.getHeight())),
-                new TreeSet<>(List.of(0, image.getWidth())));
+                    new TreeSet<>(List.of(0, image.getHeight())),
+                    new TreeSet<>(List.of(0, image.getWidth())));
 
         double horizontalPeriod = Utils.findApproxPeriod(horizontalLines);
         double verticalPeriod = Utils.findApproxPeriod(verticalLines);
         return new GridLines(
-            Utils.deduplicateCloseMarks(horizontalLines, (int) horizontalPeriod / 4),
-            Utils.deduplicateCloseMarks(verticalLines, (int) verticalPeriod / 4));
+                Utils.deduplicateCloseMarks(horizontalLines, (int) horizontalPeriod / 4),
+                Utils.deduplicateCloseMarks(verticalLines, (int) verticalPeriod / 4));
     }
 
     public GridLines getInterpolatedGridLines(GridLines lines) {
         return new GridLines(
-            Utils.findInterpolatedSequence(lines.getHorizontalLines()),
-            Utils.findInterpolatedSequence(lines.getVerticalLines()));
+                Utils.findInterpolatedSequence(lines.horizontalLines()),
+                Utils.findInterpolatedSequence(lines.verticalLines()));
     }
 
     public GridLines findImplicitGridLines(BufferedImage image) {
         List<ImageBlob> blobs = ImageUtils.findBlobs(image, false);
         TreeSet<Integer> rows = Utils.findInterpolatedSequence(blobs.stream()
-            .map(blob -> blob.getY() + blob.getHeight() / 2)
-            .collect(Collectors.toList()));
+                .map(blob -> blob.y() + blob.height() / 2)
+                .toList());
         TreeSet<Integer> cols = Utils.findInterpolatedSequence(blobs.stream()
-            .map(blob -> blob.getX() + blob.getWidth() / 2)
-            .collect(Collectors.toList()));
+                .map(blob -> blob.x() + blob.width() / 2)
+                .toList());
 
         BiFunction<TreeSet<Integer>, Integer, TreeSet<Integer>> findSurroundingMarksFunction = (marks, limit) -> {
             if (marks.size() < 2)
-                return new TreeSet<>(ImmutableList.of(0, limit));
+                return new TreeSet<>(List.of(0, limit));
             List<Integer> sortedMarks = new ArrayList<>(marks);
             TreeSet<Integer> surroundingMarks = new TreeSet<>();
             surroundingMarks.add(Math.max(0, sortedMarks.get(0) - (sortedMarks.get(1) - sortedMarks.get(0)) / 2));
@@ -105,17 +98,17 @@ public class GridParser {
         };
 
         return new GridLines(
-            findSurroundingMarksFunction.apply(rows, image.getHeight()),
-            findSurroundingMarksFunction.apply(cols, image.getWidth()));
+                findSurroundingMarksFunction.apply(rows, image.getHeight()),
+                findSurroundingMarksFunction.apply(cols, image.getWidth()));
     }
 
     public GridPosition getGridPosition(GridLines lines) {
-        List<Integer> horizontalLines = new ArrayList<>(lines.getHorizontalLines());
+        List<Integer> horizontalLines = new ArrayList<>(lines.horizontalLines());
         List<Row> rows = new ArrayList<>();
         for (int i = 0; i + 1 < horizontalLines.size(); i++)
             rows.add(new Row(horizontalLines.get(i), horizontalLines.get(i + 1) - horizontalLines.get(i)));
 
-        List<Integer> verticalLines = new ArrayList<>(lines.getVerticalLines());
+        List<Integer> verticalLines = new ArrayList<>(lines.verticalLines());
         List<Col> cols = new ArrayList<>();
         for (int i = 0; i + 1 < verticalLines.size(); i++)
             cols.add(new Col(verticalLines.get(i), verticalLines.get(i + 1) - verticalLines.get(i)));
@@ -126,9 +119,9 @@ public class GridParser {
     public void findGridColors(BufferedImage image, GridPosition pos, Grid grid) {
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
-                Row row = pos.getRows().get(i);
-                Col col = pos.getCols().get(j);
-                int medianRgb = ImageUtils.medianRgb(image, col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight());
+                Row row = pos.rows().get(i);
+                Col col = pos.cols().get(j);
+                int medianRgb = ImageUtils.medianRgb(image, col.startX(), row.startY(), col.width(), row.height());
                 grid.square(i, j).setRgb(medianRgb);
             }
     }
@@ -139,23 +132,23 @@ public class GridParser {
             for (int j = 0; j < pos.getNumCols(); j++)
                 builders[i][j] = new StringBuilder();
         for (DocumentText text : texts) {
-            Rectangle r = text.getBounds();
-            int x = (int) (r.getX() + r.getWidth() / 2 - region.getX());
-            int y = (int) (r.getY() - r.getHeight() / 2 - region.getY());
+            Rectangle r = text.bounds();
+            int x = (int) (r.x() + r.width() / 2 - region.x());
+            int y = (int) (r.y() - r.height() / 2 - region.y());
             int textRow = -1;
             for (int i = 0; i < pos.getNumRows(); i++) {
-                Row row = pos.getRows().get(i);
-                if (y >= row.getStartY() && y < row.getStartY() + row.getHeight())
+                Row row = pos.rows().get(i);
+                if (y >= row.startY() && y < row.startY() + row.height())
                     textRow = i;
             }
             int textCol = -1;
             for (int i = 0; i < pos.getNumCols(); i++) {
-                Col col = pos.getCols().get(i);
-                if (x >= col.getStartX() && x < col.getStartX() + col.getWidth())
+                Col col = pos.cols().get(i);
+                if (x >= col.startX() && x < col.startX() + col.width())
                     textCol = i;
             }
             if (textRow != -1 && textCol != -1)
-                builders[textRow][textCol].append(text.getText());
+                builders[textRow][textCol].append(text.text());
         }
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++)
@@ -165,36 +158,36 @@ public class GridParser {
     public void findGridBorders(BufferedImage image, GridPosition pos, Grid grid) {
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
-                Row row = pos.getRows().get(i);
-                Col col = pos.getCols().get(j);
+                Row row = pos.rows().get(i);
+                Col col = pos.cols().get(j);
                 Square square = grid.square(i, j);
                 square.setTopBorder(ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
-                    col.getStartX(),
-                    Math.max(0, row.getStartY() - row.getHeight() / 2),
-                    col.getWidth(),
-                    row.getHeight()))));
+                        col.startX(),
+                        Math.max(0, row.startY() - row.height() / 2),
+                        col.width(),
+                        row.height()))));
                 square.setRightBorder(ImageUtils.findVerticalBorder(image.getSubimage(
-                    Math.min(image.getWidth() - col.getWidth(), col.getStartX() + col.getWidth() / 2),
-                    row.getStartY(),
-                    col.getWidth(),
-                    row.getHeight())));
+                        Math.min(image.getWidth() - col.width(), col.startX() + col.width() / 2),
+                        row.startY(),
+                        col.width(),
+                        row.height())));
                 square.setBottomBorder(ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
-                    col.getStartX(),
-                    Math.min(image.getHeight() - row.getHeight(), row.getStartY() + row.getHeight() / 2),
-                    col.getWidth(),
-                    row.getHeight()))));
+                        col.startX(),
+                        Math.min(image.getHeight() - row.height(), row.startY() + row.height() / 2),
+                        col.width(),
+                        row.height()))));
                 square.setLeftBorder(ImageUtils.findVerticalBorder(image.getSubimage(
-                    Math.max(0, col.getStartX() - col.getWidth() / 2),
-                    row.getStartY(),
-                    col.getWidth(),
-                    row.getHeight())));
+                        Math.max(0, col.startX() - col.width() / 2),
+                        row.startY(),
+                        col.width(),
+                        row.height())));
             }
     }
 
     public void findGridBorderStyles(Grid grid) {
         List<Tuple> borderWidths = new ArrayList<>();
-        for (int i = 0; i < grid.getNumRows(); i++)
-            for (int j = 0; j < grid.getNumCols(); j++) {
+        for (int i = 0; i < grid.numRows(); i++)
+            for (int j = 0; j < grid.numCols(); j++) {
                 Square square = grid.square(i, j);
                 for (Border border : square.borders())
                     if (border.getWidth() > 0)
@@ -207,7 +200,7 @@ public class GridParser {
             if (borderWidths.size() < numClusters)
                 continue;
             clusters = openCv.findClusters(borderWidths, numClusters);
-            centers = clusters.getCenters();
+            centers = clusters.centers();
             double minDistance = Double.MAX_VALUE;
             for (int i = 0; i < centers.size(); i++)
                 for (int j = i + 1; j < centers.size(); j++) {
@@ -222,10 +215,10 @@ public class GridParser {
         List<Double> sortedCenters = centers.stream()
                 .map(tuple -> tuple.get(0))
                 .sorted()
-                .collect(Collectors.toList());
+                .toList();
 
-        for (int i = 0; i < grid.getNumRows(); i++)
-            for (int j = 0; j < grid.getNumCols(); j++) {
+        for (int i = 0; i < grid.numRows(); i++)
+            for (int j = 0; j < grid.numCols(); j++) {
                 Square square = grid.square(i, j);
                 for (Border border : square.borders()) {
                     int width = border.getWidth();
@@ -233,7 +226,7 @@ public class GridParser {
                     if (width == 0)
                         styleLevel = 0;
                     else {
-                        int label = clusters.getLabels().get(new Tuple(width));
+                        int label = clusters.labels().get(new Tuple(width));
                         double center = centers.get(label).get(0);
                         styleLevel = sortedCenters.indexOf(center) + 1;
                     }

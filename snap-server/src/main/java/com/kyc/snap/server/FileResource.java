@@ -1,15 +1,9 @@
 package com.kyc.snap.server;
 
 import com.kyc.snap.api.FileService;
-import com.kyc.snap.api.StringJson;
 import com.kyc.snap.store.Store;
 
-import lombok.Data;
-
-@Data
-public class FileResource implements FileService {
-
-    private final Store store;
+public record FileResource(Store store) implements FileService {
 
     @Override
     public StringJson uploadFile(byte[] data) {

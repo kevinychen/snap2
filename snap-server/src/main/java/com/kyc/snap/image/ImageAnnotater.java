@@ -45,58 +45,58 @@ public class ImageAnnotater {
 
     public void markLines(GridLines lines) {
         g.setColor(Color.red);
-        for (int y : lines.getHorizontalLines())
+        for (int y : lines.horizontalLines())
             g.drawLine(0, y, image.getWidth(), y);
-        for (int x : lines.getVerticalLines())
+        for (int x : lines.verticalLines())
             g.drawLine(x, 0, x, image.getHeight());
     }
 
     public void markPosition(GridPosition pos) {
         g.setColor(Color.red);
-        for (Row row : pos.getRows())
-            g.drawRect(0, row.getStartY(), width, row.getHeight());
-        for (Col col : pos.getCols())
-            g.drawRect(col.getStartX(), 0, col.getWidth(), height);
+        for (Row row : pos.rows())
+            g.drawRect(0, row.startY(), width, row.height());
+        for (Col col : pos.cols())
+            g.drawRect(col.startX(), 0, col.width(), height);
     }
 
     public void markGrid(GridPosition pos, Grid grid) {
-        g.setFont(new Font("Helvetica", 0, 14));
+        g.setFont(new Font("Helvetica", Font.PLAIN, 14));
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++) {
-                Row row = pos.getRows().get(i);
-                Col col = pos.getCols().get(j);
+                Row row = pos.rows().get(i);
+                Col col = pos.cols().get(j);
                 Square square = grid.square(i, j);
 
                 g.setColor(new Color(square.getRgb()));
                 g.fillRect(
-                    col.getStartX() + col.getWidth() / 3,
-                    row.getStartY() + row.getHeight() / 3,
-                    col.getWidth() / 3,
-                    row.getHeight() / 3);
+                    col.startX() + col.width() / 3,
+                    row.startY() + row.height() / 3,
+                    col.width() / 3,
+                    row.height() / 3);
                 g.setColor(Color.red);
                 g.drawRect(
-                    col.getStartX() + col.getWidth() / 3,
-                    row.getStartY() + row.getHeight() / 3,
-                    col.getWidth() / 3,
-                    row.getHeight() / 3);
+                    col.startX() + col.width() / 3,
+                    row.startY() + row.height() / 3,
+                    col.width() / 3,
+                    row.height() / 3);
 
                 g.setColor(Color.blue);
                 g.drawString(
                     square.getText(),
-                    col.getStartX() + col.getWidth() / 3,
-                    row.getStartY() + 2 * row.getHeight() / 3);
+                    col.startX() + col.width() / 3,
+                    row.startY() + 2 * row.height() / 3);
 
                 g.setColor(new Color(square.getRightBorder().getRgb()));
                 g.fillRect(
-                    col.getStartX() + col.getWidth() * 2 / 3 + 1,
-                    row.getStartY() + row.getHeight() / 3,
+                    col.startX() + col.width() * 2 / 3 + 1,
+                    row.startY() + row.height() / 3,
                     square.getRightBorder().getWidth(),
-                    row.getHeight() / 3);
+                    row.height() / 3);
                 g.setColor(new Color(square.getBottomBorder().getRgb()));
                 g.fillRect(
-                    col.getStartX() + col.getWidth() / 3,
-                    row.getStartY() + row.getHeight() * 2 / 3 + 1,
-                    col.getWidth() / 3,
+                    col.startX() + col.width() / 3,
+                    row.startY() + row.height() * 2 / 3 + 1,
+                    col.width() / 3,
                     square.getBottomBorder().getWidth());
             }
     }

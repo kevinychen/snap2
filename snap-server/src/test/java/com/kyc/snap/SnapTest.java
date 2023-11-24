@@ -25,7 +25,7 @@ public class SnapTest {
 //        });
 //        wikipedia.getWordFrequencies().forEach((word, freq) -> {
 //            String[] split = word.split(" ");
-//            if (Arrays.stream(split).map(String::length).collect(Collectors.toList()).equals(ImmutableList.of(1, 2, 3)))
+//            if (Arrays.stream(split).map(String::length).toList().equals(List.of(1, 2, 3)))
 //                System.out.println(word);
 //        });
     }

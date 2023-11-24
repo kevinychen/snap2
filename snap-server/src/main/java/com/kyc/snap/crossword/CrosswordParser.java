@@ -31,34 +31,32 @@ import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.image.ImageUtils;
 
-import lombok.Data;
-
 public class CrosswordParser {
 
     public Crossword parseCrossword(Grid grid) {
         return Stream.of(Style.THIN, Style.THICK)
             .map(maxBorderStyle -> parseCrossword(grid, maxBorderStyle))
-            .max(Comparator.comparing(crossword -> crossword.getEntries().size()))
+            .max(Comparator.comparing(crossword -> crossword.entries().size()))
             .get();
     }
 
     private Crossword parseCrossword(Grid grid, Style maxBorderStyle) {
-        Square[][] squares = grid.getSquares();
-        CrosswordSquare[][] crosswordSquares = new CrosswordSquare[grid.getNumRows()][grid.getNumCols()];
-        for (int i = 0; i < grid.getNumRows(); i++)
-            for (int j = 0; j < grid.getNumCols(); j++) {
+        Square[][] squares = grid.squares();
+        CrosswordSquare[][] crosswordSquares = new CrosswordSquare[grid.numRows()][grid.numCols()];
+        for (int i = 0; i < grid.numRows(); i++)
+            for (int j = 0; j < grid.numCols(); j++) {
                 boolean isOpen = ImageUtils.isLight(squares[i][j].getRgb());
-                boolean canGoAcross = isOpen && j < grid.getNumCols() - 1 && ImageUtils.isLight(squares[i][j + 1].getRgb())
+                boolean canGoAcross = isOpen && j < grid.numCols() - 1 && ImageUtils.isLight(squares[i][j + 1].getRgb())
                         && squares[i][j].getRightBorder().getStyle().compareTo(maxBorderStyle) <= 0;
-                boolean canGoDown = isOpen && i < grid.getNumRows() - 1 && ImageUtils.isLight(squares[i + 1][j].getRgb())
+                boolean canGoDown = isOpen && i < grid.numRows() - 1 && ImageUtils.isLight(squares[i + 1][j].getRgb())
                         && squares[i][j].getBottomBorder().getStyle().compareTo(maxBorderStyle) <= 0;
                 crosswordSquares[i][j] = new CrosswordSquare(isOpen, canGoAcross, canGoDown);
             }
 
         int clueNumber = 1;
         List<Entry> entries = new ArrayList<>();
-        for (int i = 0; i < grid.getNumRows(); i++)
-            for (int j = 0; j < grid.getNumCols(); j++) {
+        for (int i = 0; i < grid.numRows(); i++)
+            for (int j = 0; j < grid.numCols(); j++) {
                 CrosswordSquare square = crosswordSquares[i][j];
                 boolean hasEntry = false;
                 if (square.canGoAcross && (j == 0 || !crosswordSquares[i][j - 1].canGoAcross)) {
@@ -79,7 +77,7 @@ public class CrosswordParser {
                     clueNumber++;
             }
 
-        return new Crossword(grid.getNumRows(), grid.getNumCols(), entries);
+        return new Crossword(grid.numRows(), grid.numCols(), entries);
     }
 
     public CrosswordClues parseClues(String text) {
@@ -90,17 +88,17 @@ public class CrosswordParser {
 
     public CrosswordClues parseClues(Document document, Crossword crossword) {
         List<DocumentText> texts = new ArrayList<>();
-        for (DocumentPage page : document.getPages())
-            texts.addAll(page.getTexts());
+        for (DocumentPage page : document.pages())
+            texts.addAll(page.texts());
 
         int maxAcrossClueNumber = 0;
         int maxDownClueNumber = 0;
-        int maxDimension = Math.max(crossword.getNumRows(), crossword.getNumCols());
-        for (Entry crosswordEntry : crossword.getEntries()) {
-            if (crosswordEntry.getDirection() == ClueDirection.ACROSS)
-                maxAcrossClueNumber = Math.max(maxAcrossClueNumber, crosswordEntry.getClueNumber());
-            else if (crosswordEntry.getDirection() == ClueDirection.DOWN)
-                maxDownClueNumber = Math.max(maxDownClueNumber, crosswordEntry.getClueNumber());
+        int maxDimension = Math.max(crossword.numRows(), crossword.numCols());
+        for (Entry crosswordEntry : crossword.entries()) {
+            if (crosswordEntry.direction() == ClueDirection.ACROSS)
+                maxAcrossClueNumber = Math.max(maxAcrossClueNumber, crosswordEntry.clueNumber());
+            else if (crosswordEntry.direction() == ClueDirection.DOWN)
+                maxDownClueNumber = Math.max(maxDownClueNumber, crosswordEntry.clueNumber());
         }
         return parseClues(maxAcrossClueNumber, maxDownClueNumber, maxDimension, texts);
     }
@@ -113,11 +111,11 @@ public class CrosswordParser {
         StringBuilder currLine = new StringBuilder();
         for (int i = 0; i < texts.size(); i++) {
             DocumentText text = texts.get(i);
-            currLine.append(text.getText());
+            currLine.append(text.text());
             DocumentText nextText = i + 1 == texts.size() ? null : texts.get(i + 1);
             if (nextText == null
-                || nextText.getBounds().getY() + nextText.getBounds().getHeight() < text.getBounds().getY()
-                || nextText.getBounds().getX() > text.getBounds().getX() + 10 * text.getBounds().getWidth()) {
+                || nextText.bounds().y() + nextText.bounds().height() < text.bounds().y()
+                || nextText.bounds().x() > text.bounds().x() + 10 * text.bounds().width()) {
                 lines.add(currLine.toString().replaceAll("(^\\h*)|(\\h*$)",""));
                 currLine.setLength(0);
                 while (!lines.isEmpty() && !isClueStart(lines.get(0)))
@@ -125,7 +123,7 @@ public class CrosswordParser {
                 if (!lines.isEmpty())
                     blocks.add(new Block(new ArrayList<>(lines)));
                 lines.clear();
-            } else if (nextText.getBounds().getY() > text.getBounds().getY() + text.getBounds().getHeight()) {
+            } else if (nextText.bounds().y() > text.bounds().y() + text.bounds().height()) {
                 lines.add(currLine.toString().replaceAll("(^\\h*)|(\\h*$)",""));
                 currLine.setLength(0);
             }
@@ -142,9 +140,9 @@ public class CrosswordParser {
         for (ClueDirection clueDirection : ClueDirection.values())
             if (clueDirection != ClueDirection.UNKNOWN) {
                 sections.add(new ClueSection(clueDirection, solution.get().stream()
-                    .filter(clue -> clue.direction == clueDirection)
-                    .map(clue -> new NumberedClue(clue.clueNumber, clue.clue.toString()))
-                    .collect(Collectors.toList())));
+                        .filter(clue -> clue.direction == clueDirection)
+                        .map(clue -> new NumberedClue(clue.clueNumber, clue.clue.toString()))
+                        .toList()));
             }
         return new CrosswordClues(sections);
     }
@@ -170,7 +168,7 @@ public class CrosswordParser {
         }
         for (int i = 0; i < blocks.size(); i++)
             if ((usedBitset & (1L << i)) == 0) {
-                List<String> lines = blocks.get(i).getLines();
+                List<String> lines = blocks.get(i).lines();
                 int currCluesSize = clues.size();
                 ClueDirection newClueDirection = clueDirection;
                 int newClueNumber = clueNumber;
@@ -196,7 +194,7 @@ public class CrosswordParser {
                             }
                         }
                         if (addedNewClue)
-                            clues.get(clues.size() - 1).getClue().append(" " + line);
+                            clues.get(clues.size() - 1).clue().append(" ").append(line);
                     }
                 }
                 if (newClueDirection != clueDirection || newClueNumber != clueNumber)
@@ -208,20 +206,20 @@ public class CrosswordParser {
 
     public List<CrosswordFormula> getFormulas(Crossword crossword, CrosswordClues clues) {
         TreeMultimap<ClueDirection, Integer> numbersByDirection = TreeMultimap.create();
-        for (Entry crosswordEntry : crossword.getEntries())
-            numbersByDirection.put(crosswordEntry.getDirection(), crosswordEntry.getClueNumber());
+        for (Entry crosswordEntry : crossword.entries())
+            numbersByDirection.put(crosswordEntry.direction(), crosswordEntry.clueNumber());
 
         Map<ClueKey, String> cluesByNumber = new HashMap<>();
-        for (ClueSection section : clues.getSections())
-            for (NumberedClue clue : section.getClues())
+        for (ClueSection section : clues.sections())
+            for (NumberedClue clue : section.clues())
                 cluesByNumber.put(
-                    new ClueKey(section.getDirection(), clue.getClueNumber()),
-                    clue.getClue());
-        for (Entry crosswordEntry : crossword.getEntries()) {
-            ClueKey clueKey = new ClueKey(crosswordEntry.getDirection(),
-                crosswordEntry.getClueNumber());
+                    new ClueKey(section.direction(), clue.clueNumber()),
+                    clue.clue());
+        for (Entry crosswordEntry : crossword.entries()) {
+            ClueKey clueKey = new ClueKey(crosswordEntry.direction(),
+                crosswordEntry.clueNumber());
             if (!cluesByNumber.containsKey(clueKey)) {
-                cluesByNumber.put(clueKey, "Clue " + crosswordEntry.getClueNumber());
+                cluesByNumber.put(clueKey, "Clue " + crosswordEntry.clueNumber());
             }
         }
 
@@ -230,19 +228,19 @@ public class CrosswordParser {
 
         List<CrosswordFormula> formulas = new ArrayList<>();
         formulas.add(new CrosswordFormula(
-            0, crossword.getNumCols() + 2, false, "Type answers here", null));
+            0, crossword.numCols() + 2, false, "Type answers here", null));
         formulas.add(new CrosswordFormula(
-            0, crossword.getNumCols() + 5, false, "and here", null));
-        for (Entry crosswordEntry : crossword.getEntries()) {
-            ClueKey clueKey = new ClueKey(crosswordEntry.getDirection(), crosswordEntry.getClueNumber());
+            0, crossword.numCols() + 5, false, "and here", null));
+        for (Entry crosswordEntry : crossword.entries()) {
+            ClueKey clueKey = new ClueKey(crosswordEntry.direction(), crosswordEntry.clueNumber());
             int clueRow = numbersByDirection.get(clueKey.direction).headSet(clueKey.clueNumber).size() + 1;
-            int clueCol = crossword.getNumCols() + 3 * clueKey.direction.ordinal();
+            int clueCol = crossword.numCols() + 3 * clueKey.direction.ordinal();
             formulas.add(new CrosswordFormula(clueRow, clueCol, false, cluesByNumber.get(clueKey) , null));
 
             List<String> relativeRefs = new ArrayList<>();
-            for (int k = 0; k < crosswordEntry.getNumSquares(); k++) {
-                int row = crosswordEntry.getStartRow();
-                int col = crosswordEntry.getStartCol();
+            for (int k = 0; k < crosswordEntry.numSquares(); k++) {
+                int row = crosswordEntry.startRow();
+                int col = crosswordEntry.startCol();
                 if (clueKey.direction == ClueDirection.ACROSS)
                     col += k;
                 else if (clueKey.direction == ClueDirection.DOWN)
@@ -258,29 +256,29 @@ public class CrosswordParser {
                 String.format(
                     "=CONCATENATE(%s, \" (%d)\")",
                     Joiner.on(',').join(relativeRefs),
-                    crosswordEntry.getNumSquares()), null));
+                    crosswordEntry.numSquares()), null));
         }
 
         for (Point p : gridToAnswers.keySet()) {
             Collection<AnswerPosition> answers = gridToAnswers.get(p);
             String refArray = Joiner.on(";").join(answers.stream()
-                .map(answer -> nthCharFormula(answer, p))
-                .collect(Collectors.toList()));
+                    .map(answer -> nthCharFormula(answer, p))
+                    .toList());
             String filterArray = Joiner.on(";").join(answers.stream()
-                .map(answer -> nthCharFormula(answer, p) + "<>\"\"")
-                .collect(Collectors.toList()));
+                    .map(answer -> nthCharFormula(answer, p) + "<>\"\"")
+                    .toList());
             String allCharsExpression = String.format(
-                "UNIQUE(FILTER({%s},{%s}))",
-                refArray,
-                filterArray);
+                    "UNIQUE(FILTER({%s},{%s}))",
+                    refArray,
+                    filterArray);
             Set<Integer> clueNumbers = answers.stream()
-                .filter(answer -> answer.index == 0)
-                .map(AnswerPosition::getClueNumber)
-                .collect(Collectors.toSet());
+                    .filter(answer -> answer.index == 0)
+                    .map(AnswerPosition::clueNumber)
+                    .collect(Collectors.toSet());
             formulas.add(new CrosswordFormula(p.y, p.x, true,
-                String.format("=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),\"\")",
-                    allCharsExpression),
-                clueNumbers.size() == 1 ? Iterables.getOnlyElement(clueNumbers) : null));
+                    String.format("=IFERROR(IF(COUNTA(%1$s)>1,CONCATENATE(\"[\",JOIN(\"/\",%1$s),\"]\"),%1$s),\"\")",
+                            allCharsExpression),
+                    clueNumbers.size() == 1 ? Iterables.getOnlyElement(clueNumbers) : null));
         }
         return formulas;
     }
@@ -293,49 +291,15 @@ public class CrosswordParser {
             answer.index);
     }
 
-    @Data
-    private static class CrosswordSquare {
+    private record CrosswordSquare(boolean isOpen, boolean canGoAcross, boolean canGoDown) {}
 
-        private final boolean isOpen;
-        private final boolean canGoAcross;
-        private final boolean canGoDown;
-    }
+    private record CrosswordStats(int maxAcrossClueNumber, int maxDownClueNumber, int maxDimension) {}
 
-    @Data
-    private static class CrosswordStats {
+    private record Clue(ClueDirection direction, int clueNumber, StringBuilder clue) {}
 
-        private final int maxAcrossClueNumber;
-        private final int maxDownClueNumber;
-        private final int maxDimension;
-    }
+    private record Block(List<String> lines) {}
 
-    @Data
-    private static class Clue {
+    private record ClueKey(ClueDirection direction, int clueNumber) {}
 
-        private final ClueDirection direction;
-        private final int clueNumber;
-        private final StringBuilder clue;
-    }
-
-    @Data
-    private static class Block {
-
-        private final List<String> lines;
-    }
-
-    @Data
-    private static class ClueKey {
-
-        private final ClueDirection direction;
-        private final int clueNumber;
-    }
-
-    @Data
-    private static class AnswerPosition {
-
-        private final int row;
-        private final int col;
-        private final int index;
-        private final int clueNumber;
-    }
+    private record AnswerPosition(int row, int col, int index, int clueNumber) {}
 }

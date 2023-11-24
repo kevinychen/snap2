@@ -3,6 +3,7 @@ package com.kyc.snap.google;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Set;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -12,7 +13,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.slides.v1.Slides;
-import com.google.common.collect.ImmutableSet;
 
 public class GoogleAPIManager {
 
@@ -29,7 +29,7 @@ public class GoogleAPIManager {
         try {
             HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             credential = GoogleCredential.fromStream(new FileInputStream(CREDENTIALS_FILE))
-                .createScoped(ImmutableSet.of(SheetsScopes.DRIVE));
+                .createScoped(Set.of(SheetsScopes.DRIVE));
             sheets = new Sheets.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();

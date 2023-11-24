@@ -33,7 +33,7 @@ public class GenericSolverTest {
                             EnglishTokens.wordDelimiter());
                 },
                 new EnglishModel());
-        assertThat(results.get(0).message.split(" ")).containsExactlyInAnyOrder("UNDERGROUND", "RAILROAD");
+        assertThat(results.get(0).message().split(" ")).containsExactlyInAnyOrder("UNDERGROUND", "RAILROAD");
     }
 
     @Test
@@ -64,7 +64,7 @@ public class GenericSolverTest {
                     });
                 },
                 new EnglishModel());
-        assertThat(results.get(0).message).isEqualTo("JAIL");
+        assertThat(results.get(0).message()).isEqualTo("JAIL");
     }
 
     // for profiling
