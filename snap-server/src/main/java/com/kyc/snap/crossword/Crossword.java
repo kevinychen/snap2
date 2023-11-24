@@ -2,23 +2,7 @@ package com.kyc.snap.crossword;
 
 import java.util.List;
 
-import lombok.Data;
+public record Crossword(int numRows, int numCols, List<Entry> entries) {
 
-@Data
-public class Crossword {
-
-    private final int numRows;
-    private final int numCols;
-    private final List<Entry> entries;
-
-    @Data
-    public static class Entry {
-
-        private final int startRow;
-        private final int startCol;
-        private final int numSquares;
-
-        private final ClueDirection direction;
-        private final int clueNumber;
-    }
+    public record Entry(int startRow, int startCol, int numSquares, ClueDirection direction, int clueNumber) {}
 }

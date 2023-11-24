@@ -3,6 +3,7 @@ package com.kyc.snap.opencv;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,11 +17,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.kyc.snap.image.ImageUtils;
-
-import lombok.Data;
 
 public class OpenCvManager {
 
@@ -53,7 +50,7 @@ public class OpenCvManager {
 
     public Clusters findClusters(List<Tuple> tuples, int numClusters) {
         if (tuples.isEmpty())
-            return new Clusters(0, ImmutableMap.of(), ImmutableList.of());
+            return new Clusters(0, Map.of(), List.of());
 
         int numDimensions = tuples.get(0).size();
 
@@ -102,17 +99,11 @@ public class OpenCvManager {
         return lines;
     }
 
-    @Data
-    public static class Line {
-
-        private final double x1;
-        private final double y1;
-        private final double x2;
-        private final double y2;
-    }
+    public record Line(double x1, double y1, double x2, double y2) {}
 
     public static class Tuple extends ArrayList<Double> {
 
+        @Serial
         private static final long serialVersionUID = 1L;
 
         public Tuple(double... values) {
@@ -121,11 +112,5 @@ public class OpenCvManager {
         }
     }
 
-    @Data
-    public static class Clusters {
-
-        private final double variance;
-        private final Map<Tuple, Integer> labels;
-        private final List<Tuple> centers;
-    }
+    public record Clusters(double variance, Map<Tuple, Integer> labels, List<Tuple> centers) {}
 }

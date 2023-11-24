@@ -65,7 +65,7 @@ export default class Wordsearch extends React.Component {
                         value={this.state.grid}
                     />
                     <div>
-                        {"Optional wordbank (split by tab and/or newline; non-alphanumeric chars ignored): "}
+                        {"Optional word bank (split by tab and/or newline; non-alphanumeric chars ignored): "}
                         <input
                             type="button"
                             value="Demo"
@@ -117,13 +117,13 @@ export default class Wordsearch extends React.Component {
                             >
                                 {"< Edit grid"}
                             </span><br/><br/>
-                            {results.find(result => result.inWordbank) && <>
+                            {results.find(result => result.inWordBank) && <>
                             <input
                                 type="checkbox"
                                 checked={highlightingAllWordbank}
                                 onChange={() => this.setState({ highlightingAllWordbank: !highlightingAllWordbank }, this.onHighlightWordbankChange)}
                             />
-                            {"Highlight all wordbank"}
+                            {"Highlight all word bank"}
                             {highlightingAllWordbank && <>
                             <input
                                 type="checkbox"
@@ -142,7 +142,7 @@ export default class Wordsearch extends React.Component {
                                         key={x}
                                         className={classNames({
                                             hovering: highlightedPositions[`${x}-${y}`] !== undefined,
-                                            "in-wordbank": highlightedPositions[`${x}-${y}`]?.inWordbank
+                                            "in-wordbank": highlightedPositions[`${x}-${y}`]?.inWordBank
                                         })}
                                         style={{ backgroundColor: highlightedPositions[`${x}-${y}`]?.color }}
                                     >
@@ -162,16 +162,16 @@ export default class Wordsearch extends React.Component {
                 </>}
             </div>
             <div className="output">
-                {results.map(({ word, positions, inWordbank }, index) => <div
+                {results.map(({ word, positions, inWordBank }, index) => <div
                     key={index}
-                    className={classNames("link", { hovering: index === highlightedIndex, "in-wordbank": inWordbank })}
+                    className={classNames("link", { hovering: index === highlightedIndex, "in-wordbank": inWordBank })}
                     style={{ backgroundColor: highlightedWords[index]?.color }}
                     onMouseEnter={() => {
                         if (!highlightingAllWordbank) {
                             const highlightedPositions = {};
                             const highlightedWords = {};
                             for (const { x, y } of positions) {
-                                highlightedPositions[`${x}-${y}`] = { inWordbank };
+                                highlightedPositions[`${x}-${y}`] = { inWordBank };
                             }
                             this.setState({ highlightedIndex: index, highlightedPositions, highlightedWords });
                         }
@@ -199,7 +199,7 @@ export default class Wordsearch extends React.Component {
         const highlightedWords = {};
         const highlightedPositions = {};
         if (highlightingAllWordbank) {
-            results.filter(result => result.inWordbank).forEach(
+            results.filter(result => result.inWordBank).forEach(
                 ({ positions, word }, index
             ) => {
                 const color = highlightingDifferentColors ? this.hashStringToColor(word) : '#f9ce70';
@@ -232,12 +232,12 @@ export default class Wordsearch extends React.Component {
             path: '/words/search',
             body: {
                 grid: this.getGrid(),
-                wordbank: this.getWordbank(),
+                wordBank: this.getWordbank(),
                 boggle,
             }
         }, ({ results }) => {
             this.setState({ editMode: false, results, highlightedPositions: {}, loading: false }, this.onHighlightWordbankChange);
-            if (!results.find(result => result.inWordbank)) {
+            if (!results.find(result => result.inWordBank)) {
                 this.setState({ highlightingAllWordbank: false });
             }
         });

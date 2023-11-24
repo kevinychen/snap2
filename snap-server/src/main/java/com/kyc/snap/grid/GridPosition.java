@@ -4,13 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import lombok.Data;
-
-@Data
-public class GridPosition {
-
-    private final List<Row> rows;
-    private final List<Col> cols;
+public record GridPosition(List<Row> rows, List<Col> cols) {
 
     @JsonIgnore
     public int getNumRows() {
@@ -22,17 +16,7 @@ public class GridPosition {
         return cols.size();
     }
 
-    @Data
-    public static class Row {
+    public record Row(int startY, int height) {}
 
-        private final int startY;
-        private final int height;
-    }
-
-    @Data
-    public static class Col {
-
-        private final int startX;
-        private final int width;
-    }
+    public record Col(int startX, int width) {}
 }

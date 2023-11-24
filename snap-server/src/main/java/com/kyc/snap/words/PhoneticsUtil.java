@@ -17,7 +17,8 @@ import com.google.common.collect.ImmutableMap;
  * All phones are represented by ARPABET codes, which uses ASCII characters instead of IPA symbols.
  * See https://en.wikipedia.org/wiki/ARPABET.
  */
-public class PhoneticsUtil {
+public enum PhoneticsUtil {
+    ;
 
     private static final String PHONES_FILE = "./data/cmudict.0.7a_SPHINX_40";
 
@@ -118,6 +119,4 @@ public class PhoneticsUtil {
     public static double difference(String phone1, String phone2) {
         return Integer.bitCount(PHONE_FEATURE_BITSET_MAP.get(phone1) ^ PHONE_FEATURE_BITSET_MAP.get(phone2));
     }
-
-    private PhoneticsUtil() {}
 }

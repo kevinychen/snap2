@@ -2,30 +2,12 @@ package com.kyc.snap.document;
 
 import java.util.List;
 
-import lombok.Data;
+public record Document(String id, List<DocumentPage> pages) {
 
-@Data
-public class Document {
+    /**
+     * @param compressedImageId A compressed image to send over the network
+     */
+    public record DocumentPage(String imageId, String compressedImageId, double scale, List<DocumentText> texts) {}
 
-    private final String id;
-    private final List<DocumentPage> pages;
-
-    @Data
-    public static class DocumentPage {
-
-        private final String imageId;
-
-        // A compressed image to send over the network
-        private final String compressedImageId;
-
-        private final double scale;
-        private final List<DocumentText> texts;
-    }
-
-    @Data
-    public static class DocumentText {
-
-        private final String text;
-        private final Rectangle bounds;
-    }
+    public record DocumentText(String text, Rectangle bounds) {}
 }

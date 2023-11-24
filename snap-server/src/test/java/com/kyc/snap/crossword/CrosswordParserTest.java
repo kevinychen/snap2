@@ -16,7 +16,7 @@ import com.kyc.snap.document.Pdf;
 
 public class CrosswordParserTest {
 
-    CrosswordParser crosswordParser = new CrosswordParser();
+    final CrosswordParser crosswordParser = new CrosswordParser();
 
     @Test
     public void testParseClues() throws IOException {
@@ -25,13 +25,13 @@ public class CrosswordParserTest {
             for (int page = 0; page < pdf.getNumPages(); page++)
                 texts.addAll(pdf.getTexts(page));
             CrosswordClues clues = crosswordParser.parseClues(86, 75, 17, texts);
-            assertThat(clues.getSections().get(0).getClues())
-                .extracting(NumberedClue::getClueNumber)
+            assertThat(clues.sections().get(0).clues())
+                .extracting(NumberedClue::clueNumber)
                 .containsExactly(1, 6, 11, 16, 17, 18, 19, 21, 22, 23, 25, 26, 30, 33, 35, 36, 38
                     , 39, 41, 43, 44, 45, 47, 49, 52, 54, 56, 57, 59, 61, 62, 63, 66, 67, 69, 71,
                     72, 76, 79, 81, 82, 83, 84, 85, 86);
-            assertThat(clues.getSections().get(1).getClues())
-                .extracting(NumberedClue::getClueNumber)
+            assertThat(clues.sections().get(1).clues())
+                .extracting(NumberedClue::clueNumber)
                 .containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 24, 26, 27,
                     28, 29, 30, 31, 32, 34, 37, 40, 42, 46, 48, 50, 51, 53, 55, 57, 58, 60, 64,
                     65, 68, 70, 72, 73, 74, 75, 76, 77, 78, 80);
@@ -41,13 +41,13 @@ public class CrosswordParserTest {
             for (int page = 0; page < pdf.getNumPages(); page++)
                 texts.addAll(pdf.getTexts(page));
             CrosswordClues clues = crosswordParser.parseClues(83, 77, 17, texts);
-            assertThat(clues.getSections().get(0).getClues())
-                .extracting(NumberedClue::getClueNumber)
+            assertThat(clues.sections().get(0).clues())
+                .extracting(NumberedClue::clueNumber)
                 .containsExactly(1, 6, 12, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 28, 30, 32, 33
                     , 34, 35, 39, 40, 41, 43, 47, 48, 49, 50, 51, 52, 53, 55, 57, 60, 62, 63, 64,
                     66, 68, 69, 71, 74, 75, 77, 78, 79, 80, 81, 82, 83);
-            assertThat(clues.getSections().get(1).getClues())
-                .extracting(NumberedClue::getClueNumber)
+            assertThat(clues.sections().get(1).clues())
+                .extracting(NumberedClue::clueNumber)
                 .containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 23, 25, 27, 29,
                     30, 31, 36, 37, 38, 42, 43, 44, 45, 46, 48, 49, 52, 53, 54, 56, 57, 58, 59, 61,
                     65, 66, 67, 70, 72, 73, 76, 77);

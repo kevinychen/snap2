@@ -1,18 +1,14 @@
 package com.kyc.snap.store;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.List;
 
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
-import lombok.Data;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FileStoreTest {
 
-    FileStore store = new FileStore();
+    final FileStore store = new FileStore();
 
     @Test
     public void storeAndGetBlob() {
@@ -23,20 +19,14 @@ public class FileStoreTest {
 
     @Test
     public void storeAndGetObject() {
-        Object object = new Struct(1, true, ImmutableList.of("a", "b"));
+        Object object = new Struct(1, true, List.of("a", "b"));
         String id = store.storeObject(object);
         assertThat(store.getObject(id, Struct.class)).isEqualTo(object);
 
-        Object newObject = new Struct(2, false, ImmutableList.of());
+        Object newObject = new Struct(2, false, List.of());
         store.updateObject(id, newObject);
         assertThat(store.getObject(id, Struct.class)).isEqualTo(newObject);
     }
 
-    @Data
-    private static class Struct {
-
-        private final int num;
-        private final boolean flag;
-        private final List<String> values;
-    }
+    private record Struct(int num, boolean flag, List<String> values) {}
 }

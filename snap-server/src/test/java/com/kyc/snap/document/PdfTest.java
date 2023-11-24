@@ -13,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class PdfTest {
 
-    File pdfFile = new File("src/test/resources/dummy.pdf");
-    String expectedText = "Dummy PDF file";
+    final File pdfFile = new File("src/test/resources/dummy.pdf");
+    final String expectedText = "Dummy PDF file";
 
     @Test
     public void test() throws IOException {
@@ -22,7 +22,7 @@ public class PdfTest {
             assertThat(pdf.getNumPages()).isEqualTo(1);
 
             List<DocumentText> texts = pdf.getTexts(0);
-            assertThat(texts.stream().map(text -> text.getText()).reduce("", String::concat)).isEqualTo(expectedText);
+            assertThat(texts.stream().map(DocumentText::text).reduce("", String::concat)).isEqualTo(expectedText);
         }
     }
 }

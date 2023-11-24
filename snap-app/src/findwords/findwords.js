@@ -48,8 +48,8 @@ export default class FindWords extends React.Component {
         const maxLength = document.getElementById('find-max-length').value;
         const minFreq = document.getElementById('find-min-freq').value;
         const regex = document.getElementById('find-regex').value;
-        const containsSubseq = document.getElementById('find-contains-subseq').value;
-        const containedSubseq = document.getElementById('find-contained-subseq').value;
+        const containsSubsequence = document.getElementById('find-contains-subseq').value;
+        const containedSubsequence = document.getElementById('find-contained-subseq').value;
         const contains = document.getElementById('find-contains').value;
         const contained = document.getElementById('find-contained').value;
         this.setState({ loading: true })
@@ -59,8 +59,8 @@ export default class FindWords extends React.Component {
                 maxLength: maxLength === '' ? undefined : parseInt(maxLength),
                 minFreq: minFreq === '' ? undefined : parseInt(minFreq),
                 regex: regex === '' ? undefined : regex,
-                containsSubseq: containsSubseq === '' ? undefined : containsSubseq,
-                containedSubseq: containedSubseq === '' ? undefined : containedSubseq,
+                containsSubsequence: containsSubsequence === '' ? undefined : containsSubsequence,
+                containedSubsequence: containedSubsequence === '' ? undefined : containedSubsequence,
                 contains: contains === '' ? undefined : contains,
                 contained: contained === '' ? undefined : contained,
             }
