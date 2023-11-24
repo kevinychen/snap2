@@ -50,8 +50,6 @@ Instructions for parsing other grids are similar to that of the crossword tool; 
 
 Instructions for the anagram solver [here](../../wiki/Heavy-duty-anagram-solver).
 
-Snap also comes with a Google Sheet add-on for advanced users. You can find instructions for installing it [here](../../wiki/Google-Sheet-add-on).
-
 
 Development
 -----------

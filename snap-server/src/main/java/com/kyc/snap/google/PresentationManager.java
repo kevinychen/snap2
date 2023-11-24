@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.slides.v1.Slides.Presentations;
 import com.google.api.services.slides.v1.model.AffineTransform;
 import com.google.api.services.slides.v1.model.BatchUpdatePresentationRequest;
@@ -18,11 +20,15 @@ import com.google.api.services.slides.v1.model.Size;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.server.HostingClient;
 
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.core.Response;
 import lombok.Data;
 
 @Data
 public class PresentationManager {
 
+    private final GoogleCredential credential;
     private final Presentations presentations;
     private final String presentationId;
     private final String slideId;
@@ -55,9 +61,22 @@ public class PresentationManager {
                                 .setUrl(image.url)))
                         .collect(Collectors.toList())))
                 .execute();
+        } catch (GoogleJsonResponseException e) {
+            throw toClientErrorException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private ClientErrorException toClientErrorException(GoogleJsonResponseException e) {
+        if (e.getStatusCode() == 403) {
+            return new ForbiddenException(
+                    String.format("Insufficient permissions. "
+                                    + "Please grant '%s' edit permissions to your Google slide or a parent folder and try again.",
+                            credential.getServiceAccountId()),
+                    e);
+        }
+        return new ClientErrorException(Response.Status.fromStatusCode(e.getStatusCode()), e);
     }
 
     private static double toPts(Dimension dimension) {

@@ -38,6 +38,7 @@ import com.kyc.snap.grid.GridSpreadsheetWrapper;
 import com.kyc.snap.image.ImageBlob;
 import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.store.Store;
+
 import javax.imageio.ImageIO;
 import lombok.Data;
 import okhttp3.OkHttpClient;
@@ -149,8 +150,6 @@ public class DocumentResource implements DocumentService {
         gridParser.findGridBorders(image.getImage(), gridPosition, grid);
         gridParser.findGridBorderStyles(grid);
         gridParser.findGridText(image.getTexts(), request.getSection().getRectangle(), gridPosition, grid);
-        if (request.getOcrOptions() != null)
-            gridParser.findGridText(image.getImage(), gridPosition, grid, request.getOcrOptions());
         return new FindGridResponse(gridPosition, grid);
     }
 

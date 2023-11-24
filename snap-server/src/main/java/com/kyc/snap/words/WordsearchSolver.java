@@ -18,7 +18,7 @@ public class WordsearchSolver {
 
     private static final int MAX_RESULTS = 500;
 
-    private final DictionaryManager dictionary;
+    private final EnglishDictionary dictionary;
 
     public List<Result> find(List<String> grid, Set<String> wordbank, boolean boggle) {
         int width = grid.stream().mapToInt(String::length).max().orElse(0);

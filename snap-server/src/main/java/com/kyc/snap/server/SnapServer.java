@@ -12,8 +12,7 @@ import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.solver.PregexSolver;
 import com.kyc.snap.store.FileStore;
-import com.kyc.snap.wikinet.Wikinet;
-import com.kyc.snap.words.DictionaryManager;
+import com.kyc.snap.words.EnglishDictionary;
 import com.kyc.snap.words.WordsearchSolver;
 
 import io.dropwizard.Application;
@@ -48,16 +47,15 @@ public class SnapServer extends Application<Configuration> {
         OpenCvManager openCv = new OpenCvManager();
         GridParser gridParser = new GridParser(openCv);
         CrosswordParser crosswordParser = new CrosswordParser();
-        DictionaryManager dictionary = new DictionaryManager();
+        EnglishDictionary dictionary = new EnglishDictionary();
         WordsearchSolver wordsearchSolver = new WordsearchSolver(dictionary);
         PregexSolver pregexSolver = new PregexSolver();
         FileStore store = new FileStore();
-        Wikinet wikinet = new Wikinet();
 
         environment.jersey().setUrlPattern("/api/*");
 
         environment.jersey().register(new MultiPartFeature());
-        environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, pregexSolver, dictionary, wikinet));
+        environment.jersey().register(new WordsResource(wordsearchSolver, crosswordParser, pregexSolver, dictionary));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser, crosswordParser));
     }

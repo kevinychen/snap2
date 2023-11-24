@@ -3,26 +3,17 @@ package com.kyc.snap.opencv;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.IntPointer;
 import org.bytedeco.javacpp.Loader;
-import org.bytedeco.leptonica.PIX;
-import org.bytedeco.leptonica.global.leptonica;
 import org.bytedeco.opencv.opencv_java;
-import org.bytedeco.tesseract.TessBaseAPI;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
 import org.opencv.core.TermCriteria;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import com.google.common.collect.ImmutableList;
@@ -91,39 +82,6 @@ public class OpenCvManager {
         return new Clusters(variance, clusterLabels, clusterCenters);
     }
 
-    public Map<BufferedImage, String> batchFindText(Collection<BufferedImage> images, OcrOptions options) {
-        try (TessBaseAPI api = new TessBaseAPI()) {
-            if (api.Init("./data", "eng") != 0)
-                throw new IllegalStateException("Could not initialize tesseract.");
-            if (options.allowedCharacters != null)
-                api.SetVariable("tessedit_char_whitelist", options.allowedCharacters);
-            if (options.singleCharacter) {
-                api.SetPageSegMode(10);
-                api.SetVariable("load_system_dawg", "0");
-                api.SetVariable("load_freq_dawg", "0");
-            }
-            Map<BufferedImage, String> result = new HashMap<>();
-            images.forEach(image -> {
-                MatOfByte bytes = new MatOfByte();
-                Imgcodecs.imencode(".tif", toMat(image), bytes);
-                ByteBuffer buffer = ByteBuffer.wrap(bytes.toArray());
-                try (PIX pix = leptonica.pixReadMem(buffer, buffer.capacity())) {
-                    api.SetImage(pix);
-                    api.SetRectangle(
-                        (int) (image.getWidth() * (1 - options.fullness) / 2),
-                        (int) (image.getHeight() * (1 - options.fullness) / 2),
-                        (int) (image.getWidth() * options.fullness),
-                        (int) (image.getHeight() * options.fullness));
-                    try (BytePointer textPtr = api.GetUTF8Text();
-                            IntPointer confidencePtr = api.AllWordConfidences()) {
-                        result.put(image, confidencePtr.get(0) >= options.confidenceThreshold ? textPtr.getString() : "");
-                    }
-                }
-            });
-            return result;
-        }
-    }
-
     private Mat toMat(BufferedImage image) {
         BufferedImage newImage = ImageUtils.copy(image);
         Mat mat = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
@@ -169,26 +127,5 @@ public class OpenCvManager {
         private final double variance;
         private final Map<Tuple, Integer> labels;
         private final List<Tuple> centers;
-    }
-
-    @Data
-    public static class OcrOptions {
-
-        private String allowedCharacters;
-        private boolean singleCharacter = false;
-
-        /**
-         * A number from 0 to 1 representing how much of the image should be searched for
-         * characters. For example, 0.8 represents a sub-image with the same center but with a width
-         * and height 4/5 of the original. This setting is useful to avoid borders, which can be
-         * very detrimental to Tesseract OCR results.
-         */
-        private double fullness = 0.8;
-
-        /**
-         * A number from 0 to 100 representing how confident the OCR result needs to be in order to
-         * accept it. The higher this value, the more confidence is required.
-         */
-        private int confidenceThreshold = 50;
     }
 }

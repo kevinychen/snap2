@@ -1,11 +1,8 @@
 package com.kyc.snap.grid;
 
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -22,7 +19,6 @@ import com.kyc.snap.image.ImageUtils;
 import com.kyc.snap.opencv.OpenCvManager;
 import com.kyc.snap.opencv.OpenCvManager.Clusters;
 import com.kyc.snap.opencv.OpenCvManager.Line;
-import com.kyc.snap.opencv.OpenCvManager.OcrOptions;
 import com.kyc.snap.opencv.OpenCvManager.Tuple;
 import com.kyc.snap.util.Utils;
 
@@ -134,24 +130,6 @@ public class GridParser {
                 Col col = pos.getCols().get(j);
                 int medianRgb = ImageUtils.medianRgb(image, col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight());
                 grid.square(i, j).setRgb(medianRgb);
-            }
-    }
-
-    public void findGridText(BufferedImage image, GridPosition pos, Grid grid, OcrOptions options) {
-        Map<Point, BufferedImage> subimages = new HashMap<>();
-        for (int i = 0; i < pos.getNumRows(); i++)
-            for (int j = 0; j < pos.getNumCols(); j++) {
-                Row row = pos.getRows().get(i);
-                Col col = pos.getCols().get(j);
-                subimages.put(
-                    new Point(j, i),
-                    image.getSubimage(col.getStartX(), row.getStartY(), col.getWidth(), row.getHeight()));
-            }
-        Map<BufferedImage, String> allText = openCv.batchFindText(subimages.values(), options);
-        for (int i = 0; i < pos.getNumRows(); i++)
-            for (int j = 0; j < pos.getNumCols(); j++) {
-                String text = allText.get(subimages.get(new Point(j, i)));
-                grid.square(i, j).setText(text);
             }
     }
 

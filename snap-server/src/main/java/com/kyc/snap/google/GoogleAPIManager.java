@@ -46,6 +46,6 @@ public class GoogleAPIManager {
     }
 
     public PresentationManager getPresentation(String presentationId, String slideId) {
-        return new PresentationManager(slides.presentations(), presentationId, slideId);
+        return new PresentationManager(credential, slides.presentations(), presentationId, slideId);
     }
 }
