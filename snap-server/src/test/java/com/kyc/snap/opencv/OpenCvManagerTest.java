@@ -1,13 +1,13 @@
 package com.kyc.snap.opencv;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.awt.image.BufferedImage;
 import java.util.List;
 
 import org.junit.Test;
 
 import com.kyc.snap.opencv.OpenCvManager.Line;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class OpenCvManagerTest {
 

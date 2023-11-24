@@ -1,20 +1,24 @@
 package com.kyc.snap.grid;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Data
 public class Border {
 
     public static final Border NONE = new Border(-1, 0);
 
-    private final int rgb;
-    private final int width;
+    public int rgb;
+    public int width;
 
     /**
      * Styles are relative (e.g. thin/thick), so this field is null until it is filled by comparing
      * with other borders.
      */
-    private Style style = Style.NONE;
+    public Style style = Style.NONE;
+
+    public Border(@JsonProperty("rgb") int rgb, @JsonProperty("width") int width) {
+        this.rgb = rgb;
+        this.width = width;
+    }
 
     public enum Style {
         NONE,

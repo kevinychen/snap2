@@ -8,7 +8,6 @@ import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordFormula;
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.solver.GenericSolver;
-import com.kyc.snap.words.Dictionary;
 import com.kyc.snap.words.WordSearchSolver;
 
 import javax.ws.rs.Consumes;

@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets;
@@ -49,8 +51,6 @@ import feign.jackson.JacksonEncoder;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.core.Response;
-import lombok.Builder;
-import lombok.Data;
 
 public record SpreadsheetManager(
         GoogleCredential credential,
@@ -221,18 +221,10 @@ public record SpreadsheetManager(
         executeRequests(cells.stream()
                 .map(cell -> new Request()
                         .setUpdateBorders(new UpdateBordersRequest()
-                                .setTop(new Border()
-                                        .setStyle(toStyle(cell.topBorder.getStyle()))
-                                        .setColor(toColor(cell.topBorder.getRgb())))
-                                .setRight(new Border()
-                                        .setStyle(toStyle(cell.rightBorder.getStyle()))
-                                        .setColor(toColor(cell.rightBorder.getRgb())))
-                                .setBottom(new Border()
-                                        .setStyle(toStyle(cell.bottomBorder.getStyle()))
-                                        .setColor(toColor(cell.bottomBorder.getRgb())))
-                                .setLeft(new Border()
-                                        .setStyle(toStyle(cell.leftBorder.getStyle()))
-                                        .setColor(toColor(cell.leftBorder.getRgb())))
+                                .setTop(toBorder(cell.topBorder))
+                                .setRight(toBorder(cell.rightBorder))
+                                .setBottom(toBorder(cell.bottomBorder))
+                                .setLeft(toBorder(cell.leftBorder))
                                 .setRange(getRange(cell.row, cell.col))))
                 .toList());
     }
@@ -272,34 +264,29 @@ public record SpreadsheetManager(
 
         // Passing the full URL here with an empty path in the Feign interface declaration doesn't work because there's
         // an extra ending slash, so we clip off the ending "/exec" and declare it in the Feign interface instead.
-        String serverScriptBase = properties.getGoogleServerScriptUrl().replaceAll("/exec$", "");
+        String serverScriptBase = properties.googleServerScriptUrl().replaceAll("/exec$", "");
         WebAppService webApp = Feign.builder()
                 .encoder(new JacksonEncoder())
                 .target(WebAppService.class, serverScriptBase);
 
         // Grab global lock because everything uses the same draft spreadsheet
         synchronized (SpreadsheetManager.class) {
-            webApp.removeAllImages(getAccessToken(), RemoveAllImagesRequest.builder()
-                    .spreadsheetId(properties.getDraftSpreadsheetId())
-                    .sheetId(0)
-                    .build());
-            images.stream()
-                    // images may be large, so add in parallel
-                    .parallel()
-                    .forEach(image -> webApp.insertImage(getAccessToken(), InsertImageRequest.builder()
-                            .spreadsheetId(properties.getDraftSpreadsheetId())
-                            .sheetId(0)
-                            .url(ImageUtils.toDataURL(image.image))
-                            .column(col + 1)
-                            .row(row + 1)
-                            .offsetX(image.offsetX)
-                            .offsetY(image.offsetY)
-                            .width(image.image.getWidth())
-                            .height(image.image.getHeight())
-                            .build()));
+            webApp.exec(getAccessToken(), new RemoveAllImagesRequest(properties.draftSpreadsheetId(), 0));
+            for (OverlayImage image : images) {
+                webApp.exec(getAccessToken(), new InsertImageRequest(
+                        properties.draftSpreadsheetId(),
+                        0,
+                        ImageUtils.toDataURL(image.image),
+                        col + 1,
+                        row + 1,
+                        image.offsetX,
+                        image.offsetY,
+                        image.image.getWidth(),
+                        image.image.getHeight()));
+            }
             try {
                 spreadsheets.sheets()
-                        .copyTo(properties.getDraftSpreadsheetId(), 0, new CopySheetToAnotherSpreadsheetRequest()
+                        .copyTo(properties.draftSpreadsheetId(), 0, new CopySheetToAnotherSpreadsheetRequest()
                                 .setDestinationSpreadsheetId(spreadsheetId))
                         .execute();
             } catch (IOException e) {
@@ -314,37 +301,28 @@ public record SpreadsheetManager(
 
         @RequestLine("POST /exec")
         @Headers("Authorization: Bearer {token}")
-        String removeAllImages(@Param("token") String token, RemoveAllImagesRequest request);
-
-        @RequestLine("POST /exec")
-        @Headers("Authorization: Bearer {token}")
-        String insertImage(@Param("token") String token, InsertImageRequest request);
+        void exec(@Param("token") String token, WebAppRequest request);
     }
 
-    @Data
-    @Builder
-    public static class RemoveAllImagesRequest {
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "command")
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = RemoveAllImagesRequest.class, name = "removeAllImages"),
+            @JsonSubTypes.Type(value = InsertImageRequest.class, name = "insertImage")
+    })
+    interface WebAppRequest {}
 
-        final String command = "removeAllImages";
-        final String spreadsheetId;
-        final int sheetId;
-    }
+    record RemoveAllImagesRequest(String spreadsheetId, int sheetId) implements WebAppRequest {}
 
-    @Data
-    @Builder
-    public static class InsertImageRequest {
-
-        final String command = "insertImage";
-        final String spreadsheetId;
-        final int sheetId;
-        final String url;
-        final int column;
-        final int row;
-        final int offsetX;
-        final int offsetY;
-        final int width;
-        final int height;
-    }
+    record InsertImageRequest(
+            String spreadsheetId,
+            int sheetId,
+            String url,
+            int column,
+            int row,
+            int offsetX,
+            int offsetY,
+            int width,
+            int height) implements WebAppRequest {}
 
     private void executeRequests(Request... requests) {
         executeRequests(Arrays.asList(requests));
@@ -411,6 +389,12 @@ public record SpreadsheetManager(
 
     private static Sheet findSheet(Spreadsheet spreadsheet, int sheetId) {
         return Iterables.find(spreadsheet.getSheets(), sheet -> sheet.getProperties().getSheetId() == sheetId);
+    }
+
+    private static Border toBorder(com.kyc.snap.grid.Border border) {
+        return new Border()
+                .setStyle(toStyle(border.style))
+                .setColor(toColor(border.rgb));
     }
 
     private static Color toColor(int rgb) {

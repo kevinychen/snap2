@@ -10,14 +10,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import javax.imageio.ImageIO;
-
 import com.kyc.snap.grid.Grid;
 import com.kyc.snap.grid.Grid.Square;
 import com.kyc.snap.grid.GridLines;
 import com.kyc.snap.grid.GridPosition;
 import com.kyc.snap.grid.GridPosition.Col;
 import com.kyc.snap.grid.GridPosition.Row;
+
+import javax.imageio.ImageIO;
 
 public class ImageAnnotater {
 
@@ -67,7 +67,7 @@ public class ImageAnnotater {
                 Col col = pos.cols().get(j);
                 Square square = grid.square(i, j);
 
-                g.setColor(new Color(square.getRgb()));
+                g.setColor(new Color(square.rgb));
                 g.fillRect(
                     col.startX() + col.width() / 3,
                     row.startY() + row.height() / 3,
@@ -82,22 +82,22 @@ public class ImageAnnotater {
 
                 g.setColor(Color.blue);
                 g.drawString(
-                    square.getText(),
+                    square.text,
                     col.startX() + col.width() / 3,
                     row.startY() + 2 * row.height() / 3);
 
-                g.setColor(new Color(square.getRightBorder().getRgb()));
+                g.setColor(new Color(square.rightBorder.rgb));
                 g.fillRect(
                     col.startX() + col.width() * 2 / 3 + 1,
                     row.startY() + row.height() / 3,
-                    square.getRightBorder().getWidth(),
+                    square.rightBorder.width,
                     row.height() / 3);
-                g.setColor(new Color(square.getBottomBorder().getRgb()));
+                g.setColor(new Color(square.bottomBorder.rgb));
                 g.fillRect(
                     col.startX() + col.width() / 3,
                     row.startY() + row.height() * 2 / 3 + 1,
                     col.width() / 3,
-                    square.getBottomBorder().getWidth());
+                    square.bottomBorder.width);
             }
     }
 

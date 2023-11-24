@@ -45,11 +45,11 @@ public class CrosswordParser {
         CrosswordSquare[][] crosswordSquares = new CrosswordSquare[grid.numRows()][grid.numCols()];
         for (int i = 0; i < grid.numRows(); i++)
             for (int j = 0; j < grid.numCols(); j++) {
-                boolean isOpen = ImageUtils.isLight(squares[i][j].getRgb());
-                boolean canGoAcross = isOpen && j < grid.numCols() - 1 && ImageUtils.isLight(squares[i][j + 1].getRgb())
-                        && squares[i][j].getRightBorder().getStyle().compareTo(maxBorderStyle) <= 0;
-                boolean canGoDown = isOpen && i < grid.numRows() - 1 && ImageUtils.isLight(squares[i + 1][j].getRgb())
-                        && squares[i][j].getBottomBorder().getStyle().compareTo(maxBorderStyle) <= 0;
+                boolean isOpen = ImageUtils.isLight(squares[i][j].rgb);
+                boolean canGoAcross = isOpen && j < grid.numCols() - 1 && ImageUtils.isLight(squares[i][j + 1].rgb)
+                        && squares[i][j].rightBorder.style.compareTo(maxBorderStyle) <= 0;
+                boolean canGoDown = isOpen && i < grid.numRows() - 1 && ImageUtils.isLight(squares[i + 1][j].rgb)
+                        && squares[i][j].bottomBorder.style.compareTo(maxBorderStyle) <= 0;
                 crosswordSquares[i][j] = new CrosswordSquare(isOpen, canGoAcross, canGoDown);
             }
 

@@ -121,8 +121,8 @@ public record GridParser(OpenCvManager openCv) {
             for (int j = 0; j < pos.getNumCols(); j++) {
                 Row row = pos.rows().get(i);
                 Col col = pos.cols().get(j);
-                int medianRgb = ImageUtils.medianRgb(image, col.startX(), row.startY(), col.width(), row.height());
-                grid.square(i, j).setRgb(medianRgb);
+                grid.square(i, j).rgb =
+                        ImageUtils.medianRgb(image, col.startX(), row.startY(), col.width(), row.height());
             }
     }
 
@@ -152,7 +152,7 @@ public record GridParser(OpenCvManager openCv) {
         }
         for (int i = 0; i < pos.getNumRows(); i++)
             for (int j = 0; j < pos.getNumCols(); j++)
-                grid.square(i, j).setText(builders[i][j].toString());
+                grid.square(i, j).text = builders[i][j].toString();
     }
 
     public void findGridBorders(BufferedImage image, GridPosition pos, Grid grid) {
@@ -161,26 +161,26 @@ public record GridParser(OpenCvManager openCv) {
                 Row row = pos.rows().get(i);
                 Col col = pos.cols().get(j);
                 Square square = grid.square(i, j);
-                square.setTopBorder(ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
+                square.topBorder = ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
                         col.startX(),
                         Math.max(0, row.startY() - row.height() / 2),
                         col.width(),
-                        row.height()))));
-                square.setRightBorder(ImageUtils.findVerticalBorder(image.getSubimage(
+                        row.height())));
+                square.rightBorder = ImageUtils.findVerticalBorder(image.getSubimage(
                         Math.min(image.getWidth() - col.width(), col.startX() + col.width() / 2),
                         row.startY(),
                         col.width(),
-                        row.height())));
-                square.setBottomBorder(ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
+                        row.height()));
+                square.bottomBorder = ImageUtils.findVerticalBorder(ImageUtils.rotate90DegreesClockwise(image.getSubimage(
                         col.startX(),
                         Math.min(image.getHeight() - row.height(), row.startY() + row.height() / 2),
                         col.width(),
-                        row.height()))));
-                square.setLeftBorder(ImageUtils.findVerticalBorder(image.getSubimage(
+                        row.height())));
+                square.leftBorder = ImageUtils.findVerticalBorder(image.getSubimage(
                         Math.max(0, col.startX() - col.width() / 2),
                         row.startY(),
                         col.width(),
-                        row.height())));
+                        row.height()));
             }
     }
 
@@ -190,8 +190,8 @@ public record GridParser(OpenCvManager openCv) {
             for (int j = 0; j < grid.numCols(); j++) {
                 Square square = grid.square(i, j);
                 for (Border border : square.borders())
-                    if (border.getWidth() > 0)
-                        borderWidths.add(new Tuple(border.getWidth()));
+                    if (border.width > 0)
+                        borderWidths.add(new Tuple(border.width));
             }
 
         Clusters clusters = null;
@@ -221,16 +221,15 @@ public record GridParser(OpenCvManager openCv) {
             for (int j = 0; j < grid.numCols(); j++) {
                 Square square = grid.square(i, j);
                 for (Border border : square.borders()) {
-                    int width = border.getWidth();
                     int styleLevel;
-                    if (width == 0)
+                    if (border.width == 0)
                         styleLevel = 0;
                     else {
-                        int label = clusters.labels().get(new Tuple(width));
+                        int label = clusters.labels().get(new Tuple(border.width));
                         double center = centers.get(label).get(0);
                         styleLevel = sortedCenters.indexOf(center) + 1;
                     }
-                    border.setStyle(Style.values()[styleLevel]);
+                    border.style = Style.values()[styleLevel];
                 }
             }
     }

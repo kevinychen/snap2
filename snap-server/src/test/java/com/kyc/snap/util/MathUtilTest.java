@@ -1,11 +1,11 @@
 package com.kyc.snap.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.math.BigInteger;
 import java.util.List;
 
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MathUtilTest {
 

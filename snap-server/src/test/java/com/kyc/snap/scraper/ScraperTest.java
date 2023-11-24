@@ -1,8 +1,6 @@
 
 package com.kyc.snap.scraper;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -11,6 +9,8 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.nodes.Element;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tips for writing a scraper.

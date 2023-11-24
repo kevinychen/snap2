@@ -11,7 +11,6 @@ import java.util.UUID;
 
 import com.google.common.io.ByteStreams;
 import com.kyc.snap.api.DocumentService;
-import com.kyc.snap.api.DocumentService.FindGridLinesRequest.FindGridLinesMode;
 import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordFormula;
 import com.kyc.snap.crossword.CrosswordParser;
@@ -114,37 +113,34 @@ public record DocumentResource(
 
     @Override
     public GridLines findGridLines(String documentId, FindGridLinesRequest request) {
-        BufferedImage image = getSectionImage(documentId, request.getSection()).image();
-        GridLines gridLines;
-        if (request.getFindGridLinesMode() == FindGridLinesMode.EXPLICIT)
-            gridLines = gridParser.findGridLines(image);
-        else if (request.getFindGridLinesMode() == FindGridLinesMode.IMPLICIT)
-            gridLines = gridParser.findImplicitGridLines(image);
-        else
-            throw new RuntimeException("Invalid find grid lines mode: " + request.getFindGridLinesMode());
-        if (request.isInterpolate())
+        BufferedImage image = getSectionImage(documentId, request.section()).image();
+        GridLines gridLines = switch (request.findGridLinesMode()) {
+            case EXPLICIT -> gridParser.findGridLines(image);
+            case IMPLICIT -> gridParser.findImplicitGridLines(image);
+        };
+        if (request.interpolate())
             gridLines = gridParser.getInterpolatedGridLines(gridLines);
         return gridLines;
     }
 
     @Override
     public List<ImageBlob> findBlobs(String documentId, FindBlobsRequest request) {
-        BufferedImage image = getSectionImage(documentId, request.getSection()).image();
-        return ImageUtils.findBlobs(image, request.isExact()).stream()
-                .filter(blob -> blob.width() >= request.getMinBlobSize() && blob.height() >= request.getMinBlobSize())
+        BufferedImage image = getSectionImage(documentId, request.section()).image();
+        return ImageUtils.findBlobs(image, request.exact()).stream()
+                .filter(blob -> blob.width() >= request.minBlobSize() && blob.height() >= request.minBlobSize())
                 .toList();
     }
 
     @Override
     public FindGridResponse findGrid(String documentId, FindGridRequest request) {
-        GridLines gridLines = request.getGridLines();
+        GridLines gridLines = request.gridLines();
         GridPosition gridPosition = gridParser.getGridPosition(gridLines);
-        Grid grid = Grid.create(gridPosition.getNumRows(), gridPosition.getNumCols());
-        SectionImage image = getSectionImage(documentId, request.getSection());
+        Grid grid = new Grid(gridPosition.getNumRows(), gridPosition.getNumCols());
+        SectionImage image = getSectionImage(documentId, request.section());
         gridParser.findGridColors(image.image(), gridPosition, grid);
         gridParser.findGridBorders(image.image(), gridPosition, grid);
         gridParser.findGridBorderStyles(grid);
-        gridParser.findGridText(image.texts(), request.getSection().rectangle(), gridPosition, grid);
+        gridParser.findGridText(image.texts(), request.section().rectangle(), gridPosition, grid);
         return new FindGridResponse(gridPosition, grid);
     }
 

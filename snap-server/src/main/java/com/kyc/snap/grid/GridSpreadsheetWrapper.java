@@ -51,15 +51,15 @@ public record GridSpreadsheetWrapper(SpreadsheetManager spreadsheets, int rowOff
         for (int i = 0; i < grid.numRows(); i++)
             for (int j = 0; j < grid.numCols(); j++) {
                 Square square = grid.square(i, j);
-                coloredCells.add(new ColoredCell(i + rowOffset, j + colOffset, square.getRgb()));
-                valueCells.add(new ValueCell(i + rowOffset, j + colOffset, square.getText().trim()));
+                coloredCells.add(new ColoredCell(i + rowOffset, j + colOffset, square.rgb));
+                valueCells.add(new ValueCell(i + rowOffset, j + colOffset, square.text.trim()));
                 borderedCells.add(new BorderedCell(
                         i + rowOffset,
                         j + colOffset,
-                        square.getTopBorder(),
-                        square.getRightBorder(),
-                        square.getBottomBorder(),
-                        square.getLeftBorder()));
+                        square.topBorder,
+                        square.rightBorder,
+                        square.bottomBorder,
+                        square.leftBorder));
             }
         spreadsheets.setBackgroundColors(coloredCells);
         spreadsheets.setValues(valueCells);

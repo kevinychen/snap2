@@ -1,7 +1,5 @@
 package com.kyc.snap.grid;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,7 +10,10 @@ import org.junit.Test;
 
 import com.kyc.snap.document.Pdf;
 import com.kyc.snap.opencv.OpenCvManager;
+
 import javax.imageio.ImageIO;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class GridParserTests {
 

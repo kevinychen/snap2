@@ -480,6 +480,7 @@ export default class Parser extends React.Component {
             path: `/documents/${document.id}/blobs`,
             body: {
                 section: { page, rectangle },
+                minBlobSize: 6,
                 exact: false,
             },
         }, blobs => {

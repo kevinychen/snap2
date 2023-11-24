@@ -26,12 +26,6 @@ This is needed for running the crossword tool or grid parser with HTML URLs (it 
 
 - Steps for Ubuntu can be found [here](https://blog.softhints.com/ubuntu-16-04-server-install-headless-google-chrome/).
 
-#### Setup IDE
-
-Run `./gradlew generateGrammarSource` to generate Antlr files.
-
-For Eclipse, run `./gradlew eclipse` and then import "Existing Projects into Workspace". You will also need to set up [Lombok](https://projectlombok.org/setup/eclipse).
-
 ### Starting the server
 
 Run `./gradlew run`.

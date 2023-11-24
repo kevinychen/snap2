@@ -23,7 +23,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import lombok.Data;
 
 @Path("/documents")
 public interface DocumentService {
@@ -59,18 +58,12 @@ public interface DocumentService {
     @Produces(MediaType.APPLICATION_JSON)
     GridLines findGridLines(@PathParam("documentId") String documentId, FindGridLinesRequest request);
 
-    @Data
-    class FindGridLinesRequest {
+    record FindGridLinesRequest(Section section, FindGridLinesMode findGridLinesMode, boolean interpolate) {}
 
-        private final Section section;
-        private FindGridLinesMode findGridLinesMode = FindGridLinesMode.EXPLICIT;
-        private boolean interpolate = true;
+    enum FindGridLinesMode {
 
-        public enum FindGridLinesMode {
-
-            EXPLICIT,
-            IMPLICIT,
-        }
+        EXPLICIT,
+        IMPLICIT,
     }
 
     @POST
@@ -79,13 +72,7 @@ public interface DocumentService {
     @Produces(MediaType.APPLICATION_JSON)
     List<ImageBlob> findBlobs(@PathParam("documentId") String documentId, FindBlobsRequest request);
 
-    @Data
-    class FindBlobsRequest {
-
-        private final Section section;
-        private int minBlobSize = 6;
-        private boolean exact = true;
-    }
+    record FindBlobsRequest(Section section, int minBlobSize, boolean exact) {}
 
     @POST
     @Path("/{documentId}/grid")
@@ -93,16 +80,7 @@ public interface DocumentService {
     @Produces(MediaType.APPLICATION_JSON)
     FindGridResponse findGrid(@PathParam("documentId") String documentId, FindGridRequest request);
 
-    @Data
-    class FindGridRequest {
-
-        private final Section section;
-        private final GridLines gridLines;
-
-        // unused
-        private boolean findColors = true;
-        private boolean findBorders = true;
-    }
+    record FindGridRequest(Section section, GridLines gridLines) {}
 
     record FindGridResponse(GridPosition gridPosition, Grid grid) {}
 

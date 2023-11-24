@@ -1,7 +1,5 @@
 package com.kyc.snap.crossword;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +11,8 @@ import org.junit.Test;
 import com.kyc.snap.crossword.CrosswordClues.NumberedClue;
 import com.kyc.snap.document.Document.DocumentText;
 import com.kyc.snap.document.Pdf;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CrosswordParserTest {
 

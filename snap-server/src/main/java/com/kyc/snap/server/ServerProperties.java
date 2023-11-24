@@ -1,33 +1,22 @@
 package com.kyc.snap.server;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 
-@Data
-public class ServerProperties {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record ServerProperties(
+        String draftSpreadsheetId,
+        String googleServerScriptUrl,
+        String hostingServerOrigin) {
 
-    private static ServerProperties INSTANCE = new ServerProperties();
-
-    private final String draftSpreadsheetId;
-    private final String googleServerScriptUrl;
-    private final String hostingServerOrigin;
-
-    private ServerProperties() {
-        Properties props = new Properties();
+    public static ServerProperties get() {
         try {
-            props.load(new FileInputStream("gradle.properties"));
+            return new JavaPropsMapper().readValue(new File("gradle.properties"), ServerProperties.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        draftSpreadsheetId = props.getProperty("draftSpreadsheetId");
-        googleServerScriptUrl = props.getProperty("googleServerScriptUrl");
-        hostingServerOrigin = props.getProperty("hostingServerOrigin");
-    }
-
-    public static ServerProperties get() {
-        return INSTANCE;
     }
 }

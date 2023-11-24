@@ -5,12 +5,10 @@ import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import feign.jackson.JacksonDecoder;
-import lombok.Data;
 
-@Data
 public class HostingClient {
 
-    private final String serverOrigin = ServerProperties.get().getHostingServerOrigin();
+    private final String serverOrigin = ServerProperties.get().hostingServerOrigin();
 
     /**
      * Hosts a file on the configured public server, and returns the URL to access the file.

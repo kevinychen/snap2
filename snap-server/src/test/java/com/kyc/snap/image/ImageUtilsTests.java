@@ -1,14 +1,14 @@
 package com.kyc.snap.image;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.Test;
+
 import javax.imageio.ImageIO;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ImageUtilsTests {
 
