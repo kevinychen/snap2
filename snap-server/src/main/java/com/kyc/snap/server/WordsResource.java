@@ -3,7 +3,6 @@ package com.kyc.snap.server;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Joiner;
 import com.kyc.snap.api.WordsService;
 import com.kyc.snap.crossword.Crossword;
 import com.kyc.snap.crossword.CrosswordClues;
@@ -59,7 +58,7 @@ public record WordsResource(
                         .map(part -> "(" + part + ")")
                         .collect(Collectors.joining("", "<", ">"));
         } else
-            query = Joiner.on("").join(request.parts());
+            query = String.join("", request.parts());
         List<GenericSolver.Result> results = pregexSolver.solve(query, request.wordLengths());
         return new PregexResponse(results);
     }

@@ -81,7 +81,7 @@ public class SnapServer extends Application<Configuration> {
         @Override
         protected URL getResourceUrl(String absoluteRequestedResourcePath) {
             // Redirect any frontend managed routes to root
-            if (absoluteRequestedResourcePath.matches("assets/[^\\.]+(\\.html)?")) {
+            if (absoluteRequestedResourcePath.matches("assets/[^.]+(\\.html)?")) {
                 return super.getResourceUrl("assets/index.html");
             }
             else

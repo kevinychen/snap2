@@ -162,8 +162,10 @@ public record DocumentResource(
             new GridSpreadsheetWrapper(spreadsheets, marker.row(), marker.col())
                     .toSpreadsheet(gridPosition, request.grid(), sheetData);
             if (request.crossword() != null && request.crosswordClues() != null) {
+                List<CrosswordFormula> formulas =
+                        crosswordParser.getFormulas(request.crossword(), request.crosswordClues());
                 new CrosswordSpreadsheetWrapper(spreadsheets, marker.row(), marker.col())
-                        .toSpreadsheet(request.grid(), request.crossword(), request.crosswordClues());
+                        .toSpreadsheet(request.grid(), request.crosswordClues(), formulas);
             }
         } else if (request.blobs() != null) {
             spreadsheets.createNewSheetWithImages(marker.row(), marker.col(), request.blobs().stream()

@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -228,13 +227,17 @@ public class CrosswordParser {
 
         List<CrosswordFormula> formulas = new ArrayList<>();
         formulas.add(new CrosswordFormula(
-            0, crossword.numCols() + 2, false, "Type answers here", null));
+                0, crossword.numCols() + 1, false, "Across", null));
         formulas.add(new CrosswordFormula(
-            0, crossword.numCols() + 5, false, "and here", null));
+                0, crossword.numCols() + 3, false, "Type here", null));
+        formulas.add(new CrosswordFormula(
+                0, crossword.numCols() + 4, false, "Down", null));
+        formulas.add(new CrosswordFormula(
+                0, crossword.numCols() + 6, false, "and here", null));
         for (Entry crosswordEntry : crossword.entries()) {
             ClueKey clueKey = new ClueKey(crosswordEntry.direction(), crosswordEntry.clueNumber());
             int clueRow = numbersByDirection.get(clueKey.direction).headSet(clueKey.clueNumber).size() + 1;
-            int clueCol = crossword.numCols() + 3 * clueKey.direction.ordinal();
+            int clueCol = crossword.numCols() + 3 * clueKey.direction.ordinal() + 1;
             formulas.add(new CrosswordFormula(clueRow, clueCol, false, cluesByNumber.get(clueKey) , null));
 
             List<String> relativeRefs = new ArrayList<>();
@@ -255,18 +258,18 @@ public class CrosswordParser {
             formulas.add(new CrosswordFormula(clueRow, clueCol + 1, true,
                 String.format(
                     "=CONCATENATE(%s, \" (%d)\")",
-                    Joiner.on(',').join(relativeRefs),
+                    String.join(",", relativeRefs),
                     crosswordEntry.numSquares()), null));
         }
 
         for (Point p : gridToAnswers.keySet()) {
             Collection<AnswerPosition> answers = gridToAnswers.get(p);
-            String refArray = Joiner.on(";").join(answers.stream()
+            String refArray = answers.stream()
                     .map(answer -> nthCharFormula(answer, p))
-                    .toList());
-            String filterArray = Joiner.on(";").join(answers.stream()
+                    .collect(Collectors.joining(";"));
+            String filterArray = answers.stream()
                     .map(answer -> nthCharFormula(answer, p) + "<>\"\"")
-                    .toList());
+                    .collect(Collectors.joining(";"));
             String allCharsExpression = String.format(
                     "UNIQUE(FILTER({%s},{%s}))",
                     refArray,
