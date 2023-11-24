@@ -8,11 +8,14 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.kyc.snap.solver.GenericSolver.Result;
+import com.kyc.snap.words.EnglishDictionary;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 
 public class GenericSolverTest {
+
+    final EnglishModel model = new EnglishModel(new EnglishDictionary());
 
     @Test
     public void anagram() {
@@ -32,7 +35,7 @@ public class GenericSolverTest {
                             Integer.bitCount(state) == s.length() ? null : state,
                             EnglishTokens.wordDelimiter());
                 },
-                new EnglishModel());
+                model);
         assertThat(results.get(0).message().split(" ")).containsExactlyInAnyOrder("UNDERGROUND", "RAILROAD");
     }
 
@@ -63,7 +66,7 @@ public class GenericSolverTest {
                         }
                     });
                 },
-                new EnglishModel());
+                model);
         assertThat(results.get(0).message()).isEqualTo("JAIL");
     }
 

@@ -29,12 +29,11 @@ import com.kyc.snap.antlr.PregexParser.SymbolContext;
 import com.kyc.snap.antlr.PregexParser.TermContext;
 import com.kyc.snap.antlr.PregexParser.TermsContext;
 import com.kyc.snap.antlr.PregexParser.WordBoundaryContext;
+import com.kyc.snap.solver.GenericSolver.PriorModel;
 import com.kyc.snap.solver.GenericSolver.Result;
 import com.kyc.snap.solver.GenericSolver.TransitionConsumer;
 
-public class PregexSolver {
-
-    private final EnglishModel model = new EnglishModel();
+public record PregexSolver(PriorModel model) {
 
     public List<Result> solve(String pregex, List<Integer> wordLengths) {
         if (pregex.length() > 500)

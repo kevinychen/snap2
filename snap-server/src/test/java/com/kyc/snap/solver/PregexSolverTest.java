@@ -5,12 +5,13 @@ import java.util.List;
 import org.junit.Test;
 
 import com.kyc.snap.solver.GenericSolver.Result;
+import com.kyc.snap.words.EnglishDictionary;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class PregexSolverTest {
 
-    static final PregexSolver solver = new PregexSolver();
+    static final PregexSolver solver = new PregexSolver(new EnglishModel(new EnglishDictionary()));
 
     @Test
     public void slug() {

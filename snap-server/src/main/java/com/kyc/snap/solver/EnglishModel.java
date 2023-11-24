@@ -11,7 +11,7 @@ import com.kyc.snap.words.EnglishDictionary;
 
 public class EnglishModel implements PriorModel {
 
-    private final EnglishDictionary dictionary = new EnglishDictionary();
+    private final EnglishDictionary dictionary;
     private final Cache<NextLetterFrequenciesKey, double[]> nextLetterFrequenciesCache = Caffeine.newBuilder()
             .maximumSize(100000)
             .build();
@@ -20,6 +20,10 @@ public class EnglishModel implements PriorModel {
             .build();
 
     private record NextLetterFrequenciesKey(String prevWord, String prefix) {}
+
+    public EnglishModel(EnglishDictionary dictionary) {
+        this.dictionary = dictionary;
+    }
 
     @Override
     public double[] getProbabilities(List<Integer> tokens) {

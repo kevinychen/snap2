@@ -3,6 +3,7 @@ package com.kyc.snap;
 
 import org.junit.Test;
 
+import com.kyc.snap.solver.EnglishModel;
 import com.kyc.snap.solver.PregexSolver;
 import com.kyc.snap.words.EnglishDictionary;
 import com.kyc.snap.words.WikipediaTitlesDictionary;
@@ -11,7 +12,7 @@ public class SnapTest {
 
     EnglishDictionary dictionary = new EnglishDictionary();
     WikipediaTitlesDictionary wikipedia = new WikipediaTitlesDictionary();
-    PregexSolver pregex = new PregexSolver();
+    PregexSolver pregex = new PregexSolver(new EnglishModel(dictionary));
 
     @Test
     public void test() throws Exception {

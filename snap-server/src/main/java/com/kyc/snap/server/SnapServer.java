@@ -10,6 +10,7 @@ import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.GridParser;
 import com.kyc.snap.opencv.OpenCvManager;
+import com.kyc.snap.solver.EnglishModel;
 import com.kyc.snap.solver.PregexSolver;
 import com.kyc.snap.store.FileStore;
 import com.kyc.snap.words.EnglishDictionary;
@@ -49,7 +50,7 @@ public class SnapServer extends Application<Configuration> {
         CrosswordParser crosswordParser = new CrosswordParser();
         EnglishDictionary dictionary = new EnglishDictionary();
         WordSearchSolver wordSearchSolver = new WordSearchSolver(dictionary);
-        PregexSolver pregexSolver = new PregexSolver();
+        PregexSolver pregexSolver = new PregexSolver(new EnglishModel(dictionary));
         FileStore store = new FileStore();
 
         environment.jersey().setUrlPattern("/api/*");
