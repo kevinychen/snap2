@@ -1,6 +1,5 @@
 package com.kyc.snap.server;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -82,8 +81,6 @@ public record WordsResource(
                 .filterKeys(word -> containedSubsequence == null || StringUtil.isSubsequence(containedSubsequence, word))
                 .filterKeys(word -> contains == null || StringUtil.isSubsequence(StringUtil.sorted(word), contains))
                 .filterKeys(word -> contained == null || StringUtil.isSubsequence(contained, StringUtil.sorted(word)))
-                .filterKeys(word -> request.lengthPattern() == null ||
-                        Arrays.stream(word.split(" ")).map(String::length).toList().equals(request.lengthPattern()))
                 .keys()
                 .limit(100)
                 .toList();

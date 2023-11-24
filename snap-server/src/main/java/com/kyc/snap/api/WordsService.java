@@ -66,7 +66,6 @@ public interface WordsService {
     FindWordsResponse findWords(FindWordsRequest request);
 
     record FindWordsRequest(
-            Dictionary dictionary,
             Integer minLength,
             Integer maxLength,
             Long minFreq,
@@ -74,8 +73,7 @@ public interface WordsService {
             String containsSubsequence,
             String containedSubsequence,
             String contains,
-            String contained,
-            List<Integer> lengthPattern /* WIKIPEDIA_TITLES only */) {}
+            String contained) {}
 
     record FindWordsResponse(List<String> words) {}
 }
