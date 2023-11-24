@@ -16,7 +16,7 @@ public enum DatamuseUtil {
     ;
 
     public static List<WordResult> getCommonWordsAfter(String word) {
-        return getCommonWordsAfter(word, "");
+        return getCommonWordsAfter(word, "*");
     }
 
     public static List<WordResult> getCommonWordsAfter(String word, String pattern) {
@@ -27,7 +27,7 @@ public enum DatamuseUtil {
     }
 
     public static List<WordResult> getCommonWordsBefore(String word) {
-        return getCommonWordsBefore(word, "");
+        return getCommonWordsBefore(word, "*");
     }
 
     public static List<WordResult> getCommonWordsBefore(String word, String pattern) {
