@@ -8,23 +8,10 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.api.client.util.Joiner;
 import com.google.common.collect.ImmutableMap;
-
-import feign.Feign;
-import feign.Headers;
-import feign.Param;
-import feign.RequestLine;
-import feign.form.FormEncoder;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 /**
  * All phones are represented by ARPABET codes, which uses ASCII characters instead of IPA symbols.
@@ -130,41 +117,6 @@ public class PhoneticsUtil {
      */
     public static double difference(String phone1, String phone2) {
         return Integer.bitCount(PHONE_FEATURE_BITSET_MAP.get(phone1) ^ PHONE_FEATURE_BITSET_MAP.get(phone2));
-    }
-
-    /**
-     * Returns the phones for the given words, e.g. guessPhones(["BACON"]) = {"BACON": ["B", "EY",
-     * "K", "AH", "N"]}.
-     */
-    public static Map<String, List<String>> guessPhones(Set<String> words) {
-        LextoolService lextool = Feign.builder()
-            .encoder(new FormEncoder())
-            .target(LextoolService.class, "http://www.speech.cs.cmu.edu/cgi-bin/tools/logios");
-        String html = lextool.guessPhones(Joiner.on('\n').join(words).getBytes());
-
-        Matcher matcher = Pattern.compile("DICT (\\S+)").matcher(html);
-        matcher.find();
-        String dictionaryUrl = matcher.group(1);
-        try {
-            Response response = new OkHttpClient()
-                .newCall(new Request.Builder().url(dictionaryUrl).get().build())
-                .execute();
-            return Arrays.stream(response.body().string().split("\n"))
-                .filter(line -> !line.isEmpty())
-                .map(line -> line.split("\t"))
-                .collect(Collectors.<String[], String, List<String>> toMap(
-                    parts -> parts[0],
-                    parts -> Arrays.asList(parts[1].split("\\s+"))));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    interface LextoolService {
-
-        @RequestLine("POST /lextool.pl")
-        @Headers("Content-type: multipart/form-data")
-        String guessPhones(@Param("wordfile") byte[] words);
     }
 
     private PhoneticsUtil() {}

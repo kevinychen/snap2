@@ -138,7 +138,6 @@ public interface WordsService {
     @Data
     class FindWordsRequest {
 
-        private final Dictionary dictionary;
         private Integer minLength;
         private Integer maxLength;
         private Long minFreq;
@@ -147,11 +146,6 @@ public interface WordsService {
         private String containedSubseq;
         private String contains;
         private String contained;
-        private List<Integer> lengthPattern; // WIKIPEDIA_TITLES only
-    }
-
-    enum Dictionary {
-        NORMAL, WIKIPEDIA_TITLES
     }
 
     @Data

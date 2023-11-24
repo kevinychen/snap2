@@ -39,10 +39,4 @@ public class PhoneticsUtilTest {
         assertThat(PhoneticsUtil.difference("D", "")).isGreaterThan(5);
         assertThat(PhoneticsUtil.difference("S", "AA")).isGreaterThan(5);
     }
-
-    @Test
-    public void testGuessPhones() {
-        Map<String, List<String>> phones = PhoneticsUtil.guessPhones(ImmutableSet.of("BACON"));
-        assertThat(phones).containsEntry("BACON", ImmutableList.of("B", "EY", "K", "AH", "N"));
-    }
 }

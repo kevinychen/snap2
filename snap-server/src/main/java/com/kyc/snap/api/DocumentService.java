@@ -4,7 +4,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import com.kyc.snap.crossword.Crossword;
+import com.kyc.snap.crossword.CrosswordClues;
 import com.kyc.snap.crossword.CrosswordFormula;
+import com.kyc.snap.document.Document;
+import com.kyc.snap.document.Section;
+import com.kyc.snap.grid.Grid;
+import com.kyc.snap.grid.GridLines;
+import com.kyc.snap.grid.GridPosition;
+import com.kyc.snap.image.ImageBlob;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -12,19 +23,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import org.glassfish.jersey.media.multipart.FormDataParam;
-
-import com.kyc.snap.crossword.Crossword;
-import com.kyc.snap.crossword.CrosswordClues;
-import com.kyc.snap.document.Document;
-import com.kyc.snap.document.Section;
-import com.kyc.snap.grid.Grid;
-import com.kyc.snap.grid.GridLines;
-import com.kyc.snap.grid.GridPosition;
-import com.kyc.snap.image.ImageBlob;
-import com.kyc.snap.opencv.OpenCvManager.OcrOptions;
-
 import lombok.Data;
 
 @Path("/documents")
@@ -107,19 +105,10 @@ public interface DocumentService {
 
         private final Section section;
         private final GridLines gridLines;
-        private OcrOptions ocrOptions = null;
 
         // unused
         private boolean findColors = true;
         private boolean findBorders = true;
-        private FindTextMode findTextMode = FindTextMode.NONE;
-
-        public enum FindTextMode {
-
-            NONE,
-            USE_NATIVE,
-            USE_OCR,
-        }
     }
 
     @Data

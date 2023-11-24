@@ -5,13 +5,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.google.common.collect.ImmutableSortedMap;
-
-public class DictionaryManager {
+public class EnglishDictionary implements Dictionary {
 
     public static final String WORD_FREQUENCIES_FILE = "./data/count_1w.txt";
     public static final String BIWORD_FREQUENCIES_FILE = "./data/count_2w.txt";
@@ -22,12 +19,10 @@ public class DictionaryManager {
      */
     public static final int BIWORD_FREQUENCY_MULTIPLIER = 10000;
 
-    private final SortedMap<String, Long> wordFrequencies;
-    private final Map<String, SortedMap<String, Long>> biwordFrequencies;
+    private final SortedMap<String, Long> wordFrequencies = new TreeMap<>();
+    private final Map<String, SortedMap<String, Long>> biwordFrequencies = new HashMap<>();
 
-    public DictionaryManager() {
-        wordFrequencies = new TreeMap<>();
-        biwordFrequencies = new HashMap<>();
+    public EnglishDictionary() {
         try (Scanner scanner = new Scanner(new File(WORD_FREQUENCIES_FILE));
                 Scanner scanner2 = new Scanner(new File(BIWORD_FREQUENCIES_FILE))) {
             while (scanner.hasNext())
@@ -41,19 +36,11 @@ public class DictionaryManager {
         }
     }
 
-    public Set<String> getWords() {
-        return wordFrequencies.keySet();
+    public SortedMap<String, Long> getWordFrequencies() {
+        return wordFrequencies;
     }
 
-    public Map<String, Long> getWordFrequencies() {
-        return getWordFrequencies("");
-    }
-
-    public Map<String, Long> getWordFrequencies(String prefix) {
-        return wordFrequencies.subMap(prefix, prefix + Character.MAX_VALUE);
-    }
-
-    public Map<String, Long> getWordFrequencies(String prevWord, String prefix) {
-        return biwordFrequencies.getOrDefault(prevWord, ImmutableSortedMap.of()).subMap(prefix, prefix + Character.MAX_VALUE);
+    public Map<String, SortedMap<String, Long>> getBiWordFrequencies() {
+        return biwordFrequencies;
     }
 }

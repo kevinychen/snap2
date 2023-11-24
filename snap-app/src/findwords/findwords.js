@@ -16,10 +16,7 @@ export default class FindWords extends React.Component {
         const { results, loading } = this.state;
         return <>
             <div className="block">
-                Dictionary:
-                <input type="radio" name="dictionary" value="NORMAL" defaultChecked /> Normal
-                <input type="radio" name="dictionary" value="WIKIPEDIA_TITLES" /> Wikipedia (slow!)
-                <br />
+                All fields are optional.<br />
                 has length at least <input id="find-min-length" type="number" /><br />
                 has length at most <input id="find-max-length" type="number" /><br />
                 has frequency at least <input id="find-min-freq" type="number" /> (10,000 is a good default)<br />
@@ -28,7 +25,6 @@ export default class FindWords extends React.Component {
                 is a subsequence of <input id="find-contained-subseq" type="text" /><br />
                 contains all letters of <input id="find-contains" type="text" /><br />
                 has letters all contained in <input id="find-contained" type="text" /><br />
-                (Wikipedia only) has word lengths equal to <input id="find-length-pattern" type="text" /> (enter comma-separated list)<br />
 
                 <input
                     type="button"
@@ -56,11 +52,9 @@ export default class FindWords extends React.Component {
         const containedSubseq = document.getElementById('find-contained-subseq').value;
         const contains = document.getElementById('find-contains').value;
         const contained = document.getElementById('find-contained').value;
-        const lengthPattern = document.getElementById('find-length-pattern').value;
         this.setState({ loading: true })
         postJson({
             path: '/words/find', body: {
-                dictionary: document.querySelector("input[name='dictionary']:checked").value,
                 minLength: minLength === '' ? undefined : parseInt(minLength),
                 maxLength: maxLength === '' ? undefined : parseInt(maxLength),
                 minFreq: minFreq === '' ? undefined : parseInt(minFreq),
@@ -69,7 +63,6 @@ export default class FindWords extends React.Component {
                 containedSubseq: containedSubseq === '' ? undefined : containedSubseq,
                 contains: contains === '' ? undefined : contains,
                 contained: contained === '' ? undefined : contained,
-                lengthPattern: lengthPattern === '' ? undefined : lengthPattern.split(/[^0-9]+/),
             }
         }, ({ words }) => this.setState({ results: words, loading: false }));
     }

@@ -7,11 +7,11 @@ import java.util.Map;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.kyc.snap.solver.GenericSolver.PriorModel;
-import com.kyc.snap.words.DictionaryManager;
+import com.kyc.snap.words.EnglishDictionary;
 
 public class EnglishModel implements PriorModel {
 
-    private final DictionaryManager dictionary = new DictionaryManager();
+    private final EnglishDictionary dictionary = new EnglishDictionary();
     private final Cache<NextLetterFrequenciesKey, double[]> nextLetterFrequenciesCache = Caffeine.newBuilder()
             .maximumSize(100000)
             .build();
