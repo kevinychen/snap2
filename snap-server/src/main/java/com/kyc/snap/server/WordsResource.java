@@ -10,9 +10,11 @@ import com.kyc.snap.crossword.CrosswordFormula;
 import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.solver.GenericSolver;
 import com.kyc.snap.solver.PregexSolver;
-import com.kyc.snap.words.EnglishDictionary;
+import com.kyc.snap.words.CustomDictionary;
+import com.kyc.snap.words.Dictionary;
 import com.kyc.snap.words.StringUtil;
 import com.kyc.snap.words.WordSearchSolver;
+import com.kyc.snap.words.WordSearchSolver.AllResults;
 
 import one.util.streamex.EntryStream;
 
@@ -20,12 +22,24 @@ public record WordsResource(
         WordSearchSolver wordsearchSolver,
         CrosswordParser crosswordParser,
         PregexSolver pregexSolver,
-        EnglishDictionary dictionary) implements WordsService {
+        Dictionary dictionary) implements WordsService {
 
     @Override
     public SolveWordSearchResponse solveWordSearch(SolveWordSearchRequest request) {
-        List<WordSearchSolver.Result> results = wordsearchSolver.find(request.grid(), request.wordBank(), request.boggle());
-        return new SolveWordSearchResponse(results);
+        List<Integer> wordLengths;
+        if (!request.wordBank().isEmpty())
+            wordLengths = request.fuzzy() ? List.of(0, 0) : List.of(0);
+        else if (request.boggle())
+            wordLengths = request.fuzzy() ? List.of(5, 7) : List.of(5);
+        else
+            wordLengths = request.fuzzy() ? List.of(3, 5) : List.of(3);
+
+        AllResults results = wordsearchSolver.find(
+                request.grid(),
+                request.wordBank().isEmpty() ? dictionary : new CustomDictionary(request.wordBank()),
+                request.boggle(),
+                wordLengths);
+        return new SolveWordSearchResponse(results.results(), results.hitLimit());
     }
 
     @Override

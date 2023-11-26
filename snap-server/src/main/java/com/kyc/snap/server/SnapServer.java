@@ -49,7 +49,7 @@ public class SnapServer extends Application<Configuration> {
         GridParser gridParser = new GridParser(openCv);
         CrosswordParser crosswordParser = new CrosswordParser();
         EnglishDictionary dictionary = new EnglishDictionary();
-        WordSearchSolver wordSearchSolver = new WordSearchSolver(dictionary);
+        WordSearchSolver wordSearchSolver = new WordSearchSolver();
         PregexSolver pregexSolver = new PregexSolver(new EnglishModel(dictionary));
         FileStore store = new FileStore();
 

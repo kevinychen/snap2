@@ -140,7 +140,7 @@ public enum StringUtil {
      * Find the Levenshtein distance between a and b.
      * https://en.wikipedia.org/wiki/Levenshtein_distance
      */
-    public static int levenshteinDistance(String a, String b) {
+    public static int levenshteinDistance(CharSequence a, CharSequence b) {
         int[] costs = new int[b.length() + 1];
         for (int j = 0; j <= b.length(); j++)
             costs[j] = j;
