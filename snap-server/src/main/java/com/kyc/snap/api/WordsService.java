@@ -25,9 +25,11 @@ public interface WordsService {
     @Path("words/search")
     SolveWordSearchResponse solveWordSearch(SolveWordSearchRequest request);
 
-    record SolveWordSearchRequest(List<String> grid, Set<String> wordBank, boolean boggle) {}
+    record SolveWordSearchRequest(
+            List<String> grid, Set<String> wordBank, boolean boggle, boolean fuzzy) {}
 
-    record SolveWordSearchResponse(List<WordSearchSolver.Result> results) {}
+    record SolveWordSearchResponse(List<WordSearchSolver.Result> results, boolean hitLimit) {}
+
     @POST
     @Path("words/findCrossword")
     FindCrosswordResponse findCrossword(FindCrosswordRequest request);

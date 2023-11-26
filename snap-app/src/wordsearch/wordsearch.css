@@ -1,16 +1,25 @@
 .wordsearch .grid {
     width: 100%;
-    height: calc(100vh - 400px);
+    height: calc(100vh - 450px);
 }
 
-.wordsearch .wordbank {
+.wordsearch .word-bank {
     width: 100%;
     height: 150px;
+}
+
+.wordsearch .input table td {
+    text-align: center;
+    font-family: monospace;
+    font-size: 17px;
+    height: 20px;
+    width: 20px;
 }
 
 .wordsearch .output {
     height: calc(100vh - 150px);
     overflow: scroll;
+    user-select: none;
 }
 
 .wordsearch .output .link {
@@ -23,31 +32,12 @@
     width: 180px;
 }
 
-.wordsearch .output .link.in-wordbank {
-    border-color: #fbdfa3;
-}
-
-.wordsearch .hovering {
-    background-color: #cccccc;
-}
-
-.wordsearch .grid .in-wordbank {
-    background-color: #fbdfa3;
-}
-
-.wordsearch .in-wordbank.hovering {
-    background-color: #f9ce70;
-}
-
-.wordsearch .input table td {
-    text-align: center;
-    font-family: monospace;
-    font-size: 17px;
-    height: 20px;
-    width: 20px;
-}
-
-.wordsearch .unused {
+.wordsearch .unused-letters {
     font-family: monospace;
     width: 400px;
+    height: 100px;
+}
+
+.wordsearch input[type=button] {
+    margin-right: 2px;
 }

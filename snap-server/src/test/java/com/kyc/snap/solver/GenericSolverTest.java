@@ -15,7 +15,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class GenericSolverTest {
 
-    final EnglishModel model = new EnglishModel(new EnglishDictionary());
+    static final EnglishModel model = new EnglishModel(new EnglishDictionary());
 
     @Test
     public void anagram() {
