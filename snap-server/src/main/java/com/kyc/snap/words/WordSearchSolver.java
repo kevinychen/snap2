@@ -22,6 +22,12 @@ public class WordSearchSolver {
             .maximumSize(3)
             .build();
 
+    /**
+     * @param minLengths if minLengths[d] exists, then return words within Levenshtein distance d if they have length
+     *                   at least minLengths[d]. For example, minLengths = {3, 5} returns all exact matches that are
+     *                   at least 3 letters long, and all inexact matches (with Levenshtein distance 1) that are at
+     *                   least 5 letters long.
+     */
     public AllResults find(
             List<String> grid,
             Dictionary dictionary,
@@ -81,9 +87,9 @@ public class WordSearchSolver {
                 new ArrayDeque<>(),
                 new HashSet<>(),
                 new StringBuilder(),
-                new ArrayDeque<>(List.of(List.of(new State(trie.startNodeIndex(), 0)))),
+                new ArrayDeque<>(List.of(List.of(new TriePosition(trie.startNodeIndex(), 0)))),
                 results,
-                limit).run();
+                limit).recursiveSearch();
         results.sort(Comparator.comparing(result -> -dictionary.getWordFrequencies().get(result.word)
                 * Math.pow(EnglishTokens.NUM_LETTERS, result.word.length() - 2 * result.levenshteinDistance)));
 
@@ -114,20 +120,17 @@ public class WordSearchSolver {
             Deque<Point> path,
             Set<Point> points,
             StringBuilder string,
-            Deque<List<State>> allStates,
+            Deque<List<TriePosition>> allTriePositions,
             List<Result> results,
             int[] limit) {
 
-        void run() {
+        void recursiveSearch() {
             if (limit[0] == 0)
                 return;
             limit[0]--;
 
-            if (allStates.getLast().isEmpty())
-                return;
-
-            for (State state : allStates.getLast())
-                for (String word : trie.getWords(state.nodeIndex)) {
+            for (TriePosition position : allTriePositions.getLast())
+                for (String word : trie.getWords(position.nodeIndex)) {
                     int d = StringUtil.levenshteinDistance(word, string);
                     if (d < minLengths.size() && word.length() >= minLengths.get(d))
                         results.add(new Result(List.copyOf(path), word, d));
@@ -143,30 +146,32 @@ public class WordSearchSolver {
                     if (c < 'A' || c > 'Z')
                         return;
 
+                    List<TriePosition> newPositions = new ArrayList<>();
+                    for (TriePosition position : allTriePositions.getLast()) {
+                        int nodeIndex = trie.getNodeIndex(position.nodeIndex, c);
+                        if (nodeIndex != EnglishTrie.NO_NODE)
+                            newPositions.add(new TriePosition(nodeIndex, position.numDeletions));
+                        if (position.numDeletions + 1 < minLengths.size())
+                            newPositions.add(new TriePosition(position.nodeIndex, position.numDeletions + 1));
+                    }
+                    if (newPositions.isEmpty())
+                        return;
+
                     path.add(neighbor);
                     points.add(neighbor);
                     string.append(c);
+                    allTriePositions.add(newPositions);
 
-                    List<State> newStates = new ArrayList<>();
-                    for (State state : allStates.getLast()) {
-                        int nodeIndex = trie.getNodeIndex(state.nodeIndex, c);
-                        if (nodeIndex != 0)
-                            newStates.add(new State(nodeIndex, state.numDeletions));
-                        if (state.numDeletions < minLengths.size() - 1)
-                            newStates.add(new State(state.nodeIndex, state.numDeletions + 1));
-                    }
-                    allStates.add(newStates);
-
-                    run();
+                    recursiveSearch();
 
                     Point p = path.removeLast();
                     points.remove(p);
                     string.setLength(string.length() - 1);
-                    allStates.removeLast();
+                    allTriePositions.removeLast();
                 }
             });
         }
     }
 
-    private record State(int nodeIndex, int numDeletions) {}
+    private record TriePosition(int nodeIndex, int numDeletions) {}
 }

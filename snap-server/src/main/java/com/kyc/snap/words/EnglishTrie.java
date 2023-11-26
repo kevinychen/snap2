@@ -8,6 +8,8 @@ import com.kyc.snap.solver.EnglishTokens;
 
 public class EnglishTrie {
 
+    public static final int NO_NODE = 0;
+
     private final Multimap<Integer, String> wordsByNodeIndex = ArrayListMultimap.create();
     private int[][] nodes;
     private int size = 1;
@@ -33,7 +35,7 @@ public class EnglishTrie {
     }
 
     public int getNodeIndex(int nodeIndex, char c) {
-        return nodeIndex < nodes.length ? nodes[nodeIndex][c - 'A'] : 0;
+        return nodeIndex < nodes.length ? nodes[nodeIndex][c - 'A'] : NO_NODE;
     }
 
     public Collection<String> getWords(int nodeIndex) {

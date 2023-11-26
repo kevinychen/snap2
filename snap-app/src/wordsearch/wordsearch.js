@@ -240,6 +240,9 @@ export default class Wordsearch extends React.Component {
                     key={id}
                     className="link"
                     style={{ backgroundColor: wordColors[id] || '#f1f1f1' }}
+
+                    // On mouse click, select the word if it's currently unselected, or unselect it otherwise.
+                    // When dragging, select or unselect the passed words based on whether the initial click was an add or remove.
                     onMouseDown={() => {
                         const isAdd = !selectedIds.includes(id);
                         this.setState(prevState => ({
