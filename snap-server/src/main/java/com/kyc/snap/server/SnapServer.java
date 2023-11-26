@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kyc.snap.crossword.CrosswordParser;
 import com.kyc.snap.google.GoogleAPIManager;
 import com.kyc.snap.grid.GridParser;
@@ -22,7 +23,10 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.servlets.assets.AssetServlet;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
 public class SnapServer extends Application<Configuration> {
 
@@ -59,6 +63,25 @@ public class SnapServer extends Application<Configuration> {
         environment.jersey().register(new WordsResource(wordSearchSolver, crosswordParser, pregexSolver, dictionary));
         environment.jersey().register(new FileResource(store));
         environment.jersey().register(new DocumentResource(store, googleApi, gridParser, crosswordParser));
+
+        environment.jersey().register(new ExceptionMapper<JsonProcessingException>() {
+            @Override
+            public Response toResponse(JsonProcessingException exception) {
+                 return Response.status(500)
+                        .entity("Internal error. You may be running an old version of the client, please force reload the"
+                                + " webpage (Ctrl/Cmd + Shift + R on Chrome/Firefox).")
+                        .build();
+            }
+        });
+        environment.jersey().register(new ExceptionMapper<NotFoundException>() {
+            @Override
+            public Response toResponse(NotFoundException exception) {
+                return Response.status(500)
+                        .entity("Internal error. You may be running an old version of the client, please force reload the"
+                                + " webpage (Ctrl/Cmd + Shift + R on Chrome/Firefox).")
+                        .build();
+            }
+        });
     }
 
     static class SinglePageAppAssetsBundle extends AssetsBundle {
